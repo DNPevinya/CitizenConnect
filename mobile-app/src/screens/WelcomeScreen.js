@@ -5,7 +5,8 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 export default function WelcomeScreen({ onGetStarted }) {
   return (
-    <LinearGradient colors={['#9C2CF3', '#3A49F9']} style={styles.container}>
+    // Updated Gradient: Absolute Zero to Blue Cola
+    <LinearGradient colors={['#0041C7', '#0D85D8']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
           
@@ -25,7 +26,8 @@ export default function WelcomeScreen({ onGetStarted }) {
           {/* Bottom Section */}
           <View style={styles.bottomSection}>
             <View style={styles.infoBox}>
-              <Ionicons name="shield-checkmark-outline" size={22} color="#3A49F9" style={styles.infoIcon} />
+              {/* Icon updated to True Blue */}
+              <Ionicons name="shield-checkmark-outline" size={22} color="#0160C9" style={styles.infoIcon} />
               <Text style={styles.infoText}>
                 Your feedback helps build a better Sri Lanka. Direct connection to urban authorities.
               </Text>
@@ -33,7 +35,8 @@ export default function WelcomeScreen({ onGetStarted }) {
 
             <TouchableOpacity style={styles.button} onPress={onGetStarted}>
               <Text style={styles.buttonText}>Get Started</Text>
-              <Ionicons name="arrow-forward" size={20} color="#3A49F9" />
+              {/* Arrow updated to True Blue */}
+              <Ionicons name="arrow-forward" size={20} color="#0160C9" />
             </TouchableOpacity>
 
             {/* Smaller Footer Text */}
@@ -66,7 +69,8 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    // Using Picton Blue (#3ACBE8) with low opacity for glassmorphism
+    backgroundColor: 'rgba(58, 203, 232, 0.2)', 
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 25,
@@ -123,14 +127,14 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   buttonText: {
-    color: '#3A49F9',
+    color: '#0160C9', // Updated to True Blue
     fontSize: 18,
     fontWeight: 'bold',
     marginRight: 10,
   },
   footerText: {
     color: '#fff',
-    fontSize: 10, // Made smaller
+    fontSize: 10, 
     letterSpacing: 1.5,
     marginTop: 35,
     opacity: 0.7,

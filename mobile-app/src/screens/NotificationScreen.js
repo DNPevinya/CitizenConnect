@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, FlatPath, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -35,8 +35,8 @@ export default function NotificationScreen({ onBack }) {
 
   return (
     <View style={styles.container}>
-      {/* Header with Gradient */}
-      <LinearGradient colors={['#9C2CF3', '#3A49F9']} style={styles.header}>
+      {/* Updated Header with Professional Blue Gradient */}
+      <LinearGradient colors={['#0041C7', '#0D85D8']} style={styles.header}>
         <SafeAreaView style={styles.headerContent}>
           <TouchableOpacity onPress={onBack} style={styles.backButton}>
             <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -48,7 +48,7 @@ export default function NotificationScreen({ onBack }) {
         </SafeAreaView>
       </LinearGradient>
 
-      <ScrollView contentContainerStyle={styles.listContent}>
+      <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
         {notifications.map((item) => (
           <TouchableOpacity key={item.id} style={styles.notificationCard}>
             <View style={[styles.iconContainer, styles[item.type + 'Icon']]}>
@@ -88,6 +88,8 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 10,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
   iconContainer: { width: 50, height: 50, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   textContainer: { flex: 1 },
@@ -96,11 +98,11 @@ const styles = StyleSheet.create({
   notifTime: { fontSize: 11, color: '#94A3B8' },
   notifMessage: { fontSize: 13, color: '#64748B', lineHeight: 18 },
   
-  // Dynamic Icon Colors
+  // Updated Dynamic Icon Colors to match blue palette
   successIcon: { backgroundColor: '#E8F9F1' },
   successColor: { color: '#28C76F' },
-  infoIcon: { backgroundColor: '#E0E7FF' },
-  infoColor: { color: '#3A49F9' },
-  commentIcon: { backgroundColor: '#FFF7ED' },
-  commentColor: { color: '#FF9F43' },
+  infoIcon: { backgroundColor: 'rgba(58, 203, 232, 0.15)' }, // Picton Blue tint
+  infoColor: { color: '#0160C9' }, // True Blue
+  commentIcon: { backgroundColor: '#F0F9FF' }, // Battery Charged Blue tint
+  commentColor: { color: '#1CA3DE' }, // Battery Charged Blue
 });

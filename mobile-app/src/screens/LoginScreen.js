@@ -17,7 +17,8 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
         {/* Header Section */}
         <View style={styles.header}>
           <View style={styles.iconCircle}>
-            <MaterialIcons name="account-balance" size={50} color="#3A49F9" />
+            {/* Icon updated to True Blue */}
+            <MaterialIcons name="account-balance" size={50} color="#0160C9" />
           </View>
           <Text style={styles.welcomeText}>Welcome Back</Text>
           <Text style={styles.subtitle}>
@@ -29,7 +30,8 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
         <View style={styles.form}>
           <Text style={styles.label}>Email or Phone Number</Text>
           <View style={styles.inputContainer}>
-            <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+            {/* Icons updated to Battery Charged Blue for subtle branding */}
+            <Ionicons name="mail-outline" size={20} color="#1CA3DE" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="e.g. 071 234 5678"
@@ -37,6 +39,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
               onChangeText={setEmail}
               keyboardType="email-address"
               autoCapitalize="none"
+              placeholderTextColor="#94A3B8"
             />
           </View>
 
@@ -47,16 +50,17 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
             </TouchableOpacity>
           </View>
           <View style={styles.inputContainer}>
-            <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+            <Ionicons name="lock-closed-outline" size={20} color="#1CA3DE" style={styles.inputIcon} />
             <TextInput
               style={styles.input}
               placeholder="Enter your password"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
+              placeholderTextColor="#94A3B8"
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#666" />
+              <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#64748B" />
             </TouchableOpacity>
           </View>
 
@@ -65,10 +69,10 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
             <Text style={styles.rememberText}>Keep me logged in</Text>
           </TouchableOpacity>
 
-          {/* Gradient Login Button */}
+          {/* Gradient Login Button updated with Absolute Zero and Blue Cola */}
           <TouchableOpacity onPress={onLoginSuccess}>
             <LinearGradient 
-              colors={['#9C2CF3', '#3A49F9']} 
+              colors={['#0041C7', '#0D85D8']} 
               start={{ x: 0, y: 0 }} 
               end={{ x: 1, y: 0 }} 
               style={styles.button}
@@ -83,7 +87,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
         <View style={styles.footer}>
           <Text style={styles.orText}>OR LOGIN WITH</Text>
           <TouchableOpacity style={styles.socialIcon}>
-            <Ionicons name="person-circle-outline" size={40} color="#333" />
+            <Ionicons name="person-circle-outline" size={40} color="#0160C9" />
           </TouchableOpacity>
 
           <View style={styles.signupRow}>
@@ -94,7 +98,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
           </View>
 
           <View style={styles.securityRow}>
-            <MaterialIcons name="security" size={14} color="#888" />
+            <MaterialIcons name="security" size={14} color="#1CA3DE" />
             <Text style={styles.securityText}>SECURE ENCRYPTED CONNECTION</Text>
           </View>
         </View>
@@ -121,7 +125,8 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 20,
-    backgroundColor: '#E0E7FF',
+    // Using Picton Blue with low opacity for the background
+    backgroundColor: 'rgba(58, 203, 232, 0.15)', 
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -129,7 +134,7 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1E293B',
+    color: '#0041C7', // Absolute Zero
     marginBottom: 10,
   },
   subtitle: {
@@ -156,7 +161,7 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     fontSize: 14,
-    color: '#3A49F9',
+    color: '#0160C9', // True Blue
     fontWeight: '600',
     marginTop: 15,
   },
@@ -165,7 +170,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#3ACBE8', // Picton Blue
     borderRadius: 12,
     paddingHorizontal: 15,
     height: 55,
@@ -189,7 +194,7 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#CBD5E1',
+    borderColor: '#3ACBE8', // Picton Blue
     marginRight: 10,
   },
   rememberText: {
@@ -203,7 +208,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
-    shadowColor: '#3A49F9',
+    shadowColor: '#0041C7',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -237,7 +242,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   signupLink: {
-    color: '#3A49F9',
+    color: '#0160C9', // True Blue
     fontSize: 14,
     fontWeight: 'bold',
   },
@@ -247,7 +252,7 @@ const styles = StyleSheet.create({
   },
   securityText: {
     fontSize: 10,
-    color: '#94A3B8',
+    color: '#1CA3DE', // Battery Charged Blue
     fontWeight: 'bold',
     marginLeft: 5,
     letterSpacing: 0.5,
