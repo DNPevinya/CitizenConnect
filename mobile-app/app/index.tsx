@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import LoadingScreen from '../src/screens/LoadingScreen';
 import WelcomeScreen from '../src/screens/WelcomeScreen';
 import LoginScreen from '../src/screens/LoginScreen';
@@ -7,13 +7,14 @@ import SignupScreen from '../src/screens/SignupScreen';
 import HomeScreen from '../src/screens/HomeScreen';
 import NotificationScreen from '../src/screens/NotificationScreen';
 import SubmitComplaintScreen from '../src/screens/SubmitComplaintScreen';
+import ViewComplaintsScreen from '../src/screens/ViewComplaintsScreen';
 import MainLayout from '../src/components/MainLayout';
 
 export default function Index() {
-  // Navigation State
-  const [currentStep, setCurrentStep] = useState('loading');
+  // Define navigation state with string type
+  const [currentStep, setCurrentStep] = useState<string>('loading');
 
-  // Define which screens should display the persistent Bottom Tab Bar
+  // Define screens that should display the Bottom Tab Bar
   const authenticatedTabs = ['dashboard', 'view_complaints', 'notifications', 'profile'];
 
   // --- 1. AUTHENTICATED FLOW (With Bottom Tabs) ---
@@ -21,7 +22,7 @@ export default function Index() {
     return (
       <MainLayout 
         currentTab={currentStep} 
-        onTabPress={(tab : string) => setCurrentStep(tab)}
+        onTabPress={(tab: string) => setCurrentStep(tab)}
       >
         {currentStep === 'dashboard' && (
           <HomeScreen 
@@ -35,16 +36,13 @@ export default function Index() {
           <NotificationScreen onBack={() => setCurrentStep('dashboard')} />
         )}
 
-        {/* Placeholder screens for your other tabs */}
         {currentStep === 'view_complaints' && (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text>Your Complaints History List</Text>
-          </View>
+          <ViewComplaintsScreen />
         )}
 
         {currentStep === 'profile' && (
-          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text>User Profile & Settings</Text>
+          <View style={styles.placeholderCenter}>
+            <Text style={styles.placeholderText}>User Profile & Settings</Text>
           </View>
         )}
       </MainLayout>
@@ -52,18 +50,14 @@ export default function Index() {
   }
 
   // --- 2. FULL SCREEN FLOW (No Tabs) ---
-
-  // Loading Screen
   if (currentStep === 'loading') {
     return <LoadingScreen onFinish={() => setCurrentStep('welcome')} />;
   }
 
-  // Welcome/Onboarding
   if (currentStep === 'welcome') {
     return <WelcomeScreen onGetStarted={() => setCurrentStep('login')} />;
   }
 
-  // Login Screen
   if (currentStep === 'login') {
     return (
       <LoginScreen 
@@ -73,13 +67,10 @@ export default function Index() {
     );
   }
 
-  // Registration Screen (Based on image_3bc162.png)
   if (currentStep === 'signup') {
     return <SignupScreen onBackToLogin={() => setCurrentStep('login')} />;
   }
 
-  // Submit Complaint Screen (Based on image_3d12ff.png)
-  // We hide tabs here to give the form more vertical space
   if (currentStep === 'submit_complaint') {
     return (
       <SubmitComplaintScreen 
@@ -90,3 +81,17 @@ export default function Index() {
 
   return null;
 }
+
+const styles = StyleSheet.create({
+  placeholderCenter: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC'
+  },
+  placeholderText: {
+    fontSize: 16,
+    color: '#64748B',
+    fontWeight: '500'
+  }
+});
