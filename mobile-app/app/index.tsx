@@ -32,6 +32,7 @@ export default function Index() {
   // App Onboarding & Auth
   if (currentStep === 'loading') return <LoadingScreen onFinish={() => setCurrentStep('welcome')} />;
   if (currentStep === 'welcome') return <WelcomeScreen onGetStarted={() => setCurrentStep('login')} />;
+  
   if (currentStep === 'login') {
     return (
       <LoginScreen 
@@ -40,14 +41,26 @@ export default function Index() {
       />
     );
   }
-  if (currentStep === 'signup') return <SignupScreen onBackToLogin={() => setCurrentStep('login')} />;
+
+  // FIXED: Added NavigateToTerms and NavigateToPrivacy to match your SignupScreen.js
+  if (currentStep === 'signup') {
+    return (
+      <SignupScreen 
+        onBackToLogin={() => setCurrentStep('login')} 
+        onNavigateToTerms={() => setCurrentStep('terms_page')}
+        onNavigateToPrivacy={() => setCurrentStep('privacy_page')}
+      />
+    );
+  }
 
   // Support, Legal & Settings
   if (currentStep === 'edit_profile') return <EditProfileScreen onBack={() => setCurrentStep('profile')} />;
   if (currentStep === 'help_page') return <HelpScreen onBack={() => setCurrentStep('profile')} />;
   if (currentStep === 'faq_page') return <FAQScreen onBack={() => setCurrentStep('profile')} />;
-  if (currentStep === 'terms_page') return <TermsScreen onBack={() => setCurrentStep('profile')} />;
-  if (currentStep === 'privacy_page') return <PrivacyScreen onBack={() => setCurrentStep('profile')} />;
+  
+  // FIXED: Back button logic should lead to 'signup' if they are coming from registration
+  if (currentStep === 'terms_page') return <TermsScreen onBack={() => setCurrentStep('signup')} />;
+  if (currentStep === 'privacy_page') return <PrivacyScreen onBack={() => setCurrentStep('signup')} />;
 
   // Functional Specialized Screens
   if (currentStep === 'submit_complaint') return <SubmitComplaintScreen onBack={() => setCurrentStep('dashboard')} />;
