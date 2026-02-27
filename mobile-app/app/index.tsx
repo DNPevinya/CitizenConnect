@@ -23,42 +23,106 @@ import PrivacyScreen from '../src/screens/PrivacyScreen';
 // --- Layout Component ---
 import MainLayout from '../src/components/MainLayout';
 
+// Define the shape of user data for TypeScript
+interface UserData {
+  name: string;
+  email: string;
+  phone: string;
+  district: string;
+  division: string;
+  profilePicture: string | null; // Added profilePicture to the interface
+}
+
 export default function Index() {
   // Navigation State Management
   const [currentStep, setCurrentStep] = useState<string>('loading');
+  
+  // --- USER DATA STATE (The "Bridge") ---
+  const [userName, setUserName] = useState<string>('Citizen');
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [userPhone, setUserPhone] = useState<string>('');      
+  const [userDistrict, setUserDistrict] = useState<string>(''); 
+  const [userDivision, setUserDivision] = useState<string>(''); 
+  const [userProfilePicture, setUserProfilePicture] = useState<string | null>(null); // Added state for Image
+
+  // Object to pass to Profile and Edit screens easily
+  const currentUserData: UserData = {
+    name: userName,
+    email: userEmail,
+    phone: userPhone,
+    district: userDistrict,
+    division: userDivision,
+    profilePicture: userProfilePicture, // Added to the bridge object
+  };
 
   // --- 1. FULL SCREEN OVERLAYS (No Bottom Navigation) ---
   
-  // App Onboarding & Auth
   if (currentStep === 'loading') return <LoadingScreen onFinish={() => setCurrentStep('welcome')} />;
   if (currentStep === 'welcome') return <WelcomeScreen onGetStarted={() => setCurrentStep('login')} />;
   
   if (currentStep === 'login') {
     return (
       <LoginScreen 
-        onLoginSuccess={() => setCurrentStep('dashboard')} 
+        onLoginSuccess={(name: string, email: string, phone: string, district: string, division: string, profilePic: string | null) => {
+          setUserName(name || 'Citizen');
+          setUserEmail(email || '');
+          setUserPhone(phone || '');
+          setUserDistrict(district || '');
+          setUserDivision(division || '');
+          setUserProfilePicture(profilePic || null); // Capture pic on login
+          setCurrentStep('dashboard');
+        }} 
         onCreateAccount={() => setCurrentStep('signup')} 
       />
     );
   }
 
-  // FIXED: Added NavigateToTerms and NavigateToPrivacy to match your SignupScreen.js
   if (currentStep === 'signup') {
     return (
       <SignupScreen 
         onBackToLogin={() => setCurrentStep('login')} 
         onNavigateToTerms={() => setCurrentStep('terms_page')}
         onNavigateToPrivacy={() => setCurrentStep('privacy_page')}
+        onSignupSuccess={(name: string, email: string, phone: string, district: string, division: string) => {
+          setUserName(name);
+          setUserEmail(email);
+          setUserPhone(phone);
+          setUserDistrict(district);
+          setUserDivision(division);
+          setUserProfilePicture(null); // Fresh signup has no pic yet
+          setCurrentStep('dashboard');
+        }}
       />
     );
   }
 
-  // Support, Legal & Settings
-  if (currentStep === 'edit_profile') return <EditProfileScreen onBack={() => setCurrentStep('profile')} />;
+  // Edit Profile Screen
+  if (currentStep === 'edit_profile') {
+    return (
+      <EditProfileScreen 
+      onBack={() => setCurrentStep('profile')} 
+      initialData={currentUserData} 
+      // ADD TYPES HERE: (param: type)
+      onUpdateSuccess={(
+        newName: string, 
+        newPhone: string, 
+        newDistrict: string, 
+        newDivision: string, 
+        newProfilePic: string | null
+      ) => {
+        setUserName(newName);
+        setUserPhone(newPhone);
+        setUserDistrict(newDistrict);
+        setUserDivision(newDivision);
+        setUserProfilePicture(newProfilePic);
+      }}
+      />
+    );
+  }
+
+  // Legal & Support
   if (currentStep === 'help_page') return <HelpScreen onBack={() => setCurrentStep('profile')} />;
   if (currentStep === 'faq_page') return <FAQScreen onBack={() => setCurrentStep('profile')} />;
-  
-  // FIXED: Back button logic should lead to 'signup' if they are coming from registration
   if (currentStep === 'terms_page') return <TermsScreen onBack={() => setCurrentStep('signup')} />;
   if (currentStep === 'privacy_page') return <PrivacyScreen onBack={() => setCurrentStep('signup')} />;
 
@@ -88,6 +152,7 @@ export default function Index() {
         {/* Home / Dashboard */}
         {currentStep === 'dashboard' && (
           <HomeScreen 
+            userFirstName={userName ? userName.split(' ')[0] : 'Citizen'}
             onNavigateToSubmit={() => setCurrentStep('submit_complaint')}
             onNavigateToView={() => setCurrentStep('view_complaints')}
             onNavigateToDetails={() => setCurrentStep('complaint_details')}
@@ -95,14 +160,10 @@ export default function Index() {
           />
         )}
         
-        {/* List of User Complaints */}
         {currentStep === 'view_complaints' && (
-          <ViewComplaintsScreen 
-            onNavigateToDetails={() => setCurrentStep('complaint_details')} 
-          />
+          <ViewComplaintsScreen onNavigateToDetails={() => setCurrentStep('complaint_details')} />
         )}
 
-        {/* System Notifications */}
         {currentStep === 'notifications' && (
           <NotificationScreen onBack={() => setCurrentStep('dashboard')} />
         )}
@@ -110,12 +171,23 @@ export default function Index() {
         {/* User Profile & Management */}
         {currentStep === 'profile' && (
           <ProfileScreen 
+            userName={userName}
+            userEmail={userEmail}
+            initialData={currentUserData} 
             onNavigateToEdit={() => setCurrentStep('edit_profile')}
             onNavigateToHelp={() => setCurrentStep('help_page')}
             onNavigateToFAQ={() => setCurrentStep('faq_page')}
             onNavigateToTerms={() => setCurrentStep('terms_page')}
             onNavigateToPrivacy={() => setCurrentStep('privacy_page')}
-            onLogout={() => setCurrentStep('login')}
+            onLogout={() => {
+              setUserName('Citizen'); 
+              setUserEmail('');
+              setUserPhone('');
+              setUserDistrict('');
+              setUserDivision('');
+              setUserProfilePicture(null); // Clear pic on logout
+              setCurrentStep('login');
+            }}
           />
         )}
       </MainLayout>

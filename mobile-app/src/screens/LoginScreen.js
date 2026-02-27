@@ -8,11 +8,9 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   
-  // States for validation and loading feedback
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  // --- Inline Validation Logic ---
   const validateForm = () => {
     let newErrors = {};
     const emailRegex = /\S+@\S+\.\S+/;
@@ -31,14 +29,11 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  // --- Backend Authentication ---
   const handleLogin = async () => {
     if (!validateForm()) return;
 
     setLoading(true);
     try {
-      // NOTE: Replace 'localhost' with your IPv4 address (e.g., 192.168.1.XX) 
-      // if you are testing on a physical mobile device.
       const response = await fetch('http://192.168.8.104:5000/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,10 +43,16 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
       const data = await response.json();
 
       if (response.ok) {
-        // Navigates to the home dashboard ONLY if the credentials are correct
-        onLoginSuccess();
+        // UPDATED: Now passing ALL database fields back to Index.tsx
+        // This ensures Edit Profile has the 'default' data ready to go.
+        onLoginSuccess(
+          data.user.fullName, 
+          data.user.email, 
+          data.user.phone, 
+          data.user.district, 
+          data.user.division
+        ); 
       } else {
-        // Display backend error (e.g., "Invalid email or password")
         setErrors({ server: data.message || "Invalid email or password." });
       }
     } catch (error) {
@@ -67,7 +68,6 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.content}
       >
-        {/* Header Section */}
         <View style={styles.header}>
           <View style={styles.iconCircle}>
             <MaterialIcons name="account-balance" size={50} color="#0160C9" />
@@ -78,9 +78,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
           </Text>
         </View>
 
-        {/* Input Fields */}
         <View style={styles.form}>
-          {/* Server-side Error Message */}
           {errors.server && <Text style={styles.serverErrorText}>{errors.server}</Text>}
 
           <Text style={styles.label}>Email or Phone Number</Text>
@@ -131,7 +129,6 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
             <Text style={styles.rememberText}>Keep me logged in</Text>
           </TouchableOpacity>
 
-          {/* Login Button */}
           <TouchableOpacity onPress={handleLogin} disabled={loading}>
             <LinearGradient 
               colors={['#0041C7', '#0D85D8']} 
@@ -151,7 +148,6 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
           </TouchableOpacity>
         </View>
 
-        {/* Footer Section */}
         <View style={styles.footer}>
           <Text style={styles.orText}>OR LOGIN WITH</Text>
           <TouchableOpacity style={styles.socialIcon}>
@@ -175,6 +171,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
   );
 }
 
+// ... styles remain the same
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   content: { flex: 1, paddingHorizontal: 25, justifyContent: 'center' },
@@ -187,7 +184,7 @@ const styles = StyleSheet.create({
   label: { fontSize: 14, fontWeight: '600', color: '#1E293B', marginBottom: 8, marginTop: 15 },
   forgotText: { fontSize: 14, color: '#0160C9', fontWeight: '600', marginTop: 15 },
   inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#3ACBE8', borderRadius: 12, paddingHorizontal: 15, height: 55 },
-  inputErrorBorder: { borderColor: '#EF4444' }, // Error Border color
+  inputErrorBorder: { borderColor: '#EF4444' }, 
   errorText: { color: '#EF4444', fontSize: 11, marginTop: 5, marginLeft: 2 },
   serverErrorText: { color: '#EF4444', fontSize: 13, textAlign: 'center', marginBottom: 15, fontWeight: '700' },
   inputIcon: { marginRight: 10 },

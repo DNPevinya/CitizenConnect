@@ -11,7 +11,8 @@ const locationData = {
   "Kalutara": ["Panadura", "Horana", "Beruwala"]
 };
 
-export default function SignupScreen({ onBackToLogin, onNavigateToTerms, onNavigateToPrivacy }) {
+// ADDED: onSignupSuccess to the props
+export default function SignupScreen({ onBackToLogin, onNavigateToTerms, onNavigateToPrivacy, onSignupSuccess }) {
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
@@ -21,7 +22,6 @@ export default function SignupScreen({ onBackToLogin, onNavigateToTerms, onNavig
     password: '',
   });
 
-  // State for inline error messages
   const [errors, setErrors] = useState({});
   const [isAgreed, setIsAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -48,7 +48,6 @@ export default function SignupScreen({ onBackToLogin, onNavigateToTerms, onNavig
 
     setLoading(true);
     try {
-      // Remember to use your IPv4 address here if testing on a real phone!
       const response = await fetch('http://192.168.8.104:5000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -56,8 +55,18 @@ export default function SignupScreen({ onBackToLogin, onNavigateToTerms, onNavig
       });
 
       if (response.ok) {
-        Alert.alert("Success", "Account created successfully!"); // Removed the login button
-        onBackToLogin(); // Automatically navigate back after success
+        Alert.alert("Success", "Account created successfully!");
+        
+        // --- THE GOAL FIX ---
+        // Instead of just going back to login, we pass the inserted data back to index.tsx
+        // This makes sure the "Edit Profile" screen isn't empty after signup.
+        onSignupSuccess(
+          formData.fullName,
+          formData.email,
+          formData.phone,
+          formData.district,
+          formData.division
+        );
       } else {
         const data = await response.json();
         setErrors({ server: data.message || "Registration failed." });
@@ -83,7 +92,6 @@ export default function SignupScreen({ onBackToLogin, onNavigateToTerms, onNavig
           </View>
 
           <View style={styles.form}>
-            {/* Server Error Message */}
             {errors.server && <Text style={styles.errorTextCenter}>{errors.server}</Text>}
 
             <Text style={styles.label}>FULL NAME</Text>
@@ -150,6 +158,13 @@ export default function SignupScreen({ onBackToLogin, onNavigateToTerms, onNavig
                 <Ionicons name="arrow-forward" size={20} color="#fff" />
               </LinearGradient>
             </TouchableOpacity>
+
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Already have an account? </Text>
+              <TouchableOpacity onPress={onBackToLogin}>
+                <Text style={styles.loginLink}>Login</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -157,6 +172,7 @@ export default function SignupScreen({ onBackToLogin, onNavigateToTerms, onNavig
   );
 }
 
+// ... styles remain the same
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   scrollContent: { padding: 25 },
@@ -167,7 +183,7 @@ const styles = StyleSheet.create({
   form: { marginTop: 10 },
   label: { fontSize: 11, fontWeight: '700', color: '#1E293B', marginBottom: 8, marginTop: 15 },
   inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#3ACBE8', borderRadius: 12, paddingHorizontal: 15, height: 50 },
-  inputErrorBorder: { borderColor: '#EF4444' }, // Red border for errors
+  inputErrorBorder: { borderColor: '#EF4444' },
   errorText: { color: '#EF4444', fontSize: 10, marginTop: 4, marginLeft: 5 },
   errorTextCenter: { color: '#EF4444', fontSize: 12, textAlign: 'center', marginBottom: 10, fontWeight: 'bold' },
   picker: { flex: 1, marginLeft: -10, color: '#000000' },
@@ -182,6 +198,7 @@ const styles = StyleSheet.create({
   link: { color: '#0160C9', fontWeight: 'bold' },
   button: { height: 55, borderRadius: 15, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', elevation: 4, marginTop: 20 },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginRight: 10 },
-  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 25, marginBottom: 40 },
-  loginLink: { color: '#0160C9', fontWeight: 'bold' }
+  footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 30, marginBottom: 40 },
+  footerText: { color: '#64748B', fontSize: 14 },
+  loginLink: { color: '#0160C9', fontWeight: 'bold', fontSize: 14 }
 });

@@ -5,7 +5,14 @@ import MapView, { Marker } from 'react-native-maps';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function HomeScreen({ onNavigateToSubmit, onNavigateToView, onNavigateToDetails, onNavigateToNotifications }) {
+// ADDED: userFirstName as a prop to receive the name from Index.tsx
+export default function HomeScreen({ 
+  userFirstName, 
+  onNavigateToSubmit, 
+  onNavigateToView, 
+  onNavigateToDetails, 
+  onNavigateToNotifications 
+}) {
   const stats = { total: 12, pending: 4, resolved: 8 };
   
   const activities = [
@@ -17,7 +24,8 @@ export default function HomeScreen({ onNavigateToSubmit, onNavigateToView, onNav
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.greetingText}>Ayubowan Nilasi,</Text>
+          {/* UPDATED: Displays the dynamic first name with the Ayubowan greeting */}
+          <Text style={styles.greetingText}>Ayubowan {userFirstName},</Text>
           <Text style={styles.headerTitle}>Home Dashboard</Text>
         </View>
         <TouchableOpacity style={styles.notificationBtn} onPress={onNavigateToNotifications}>
@@ -27,7 +35,7 @@ export default function HomeScreen({ onNavigateToSubmit, onNavigateToView, onNav
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Stats Row with New Palette Colors */}
+        {/* Stats Row */}
         <View style={styles.statsRow}>
           <StatCard label="TOTAL" value={stats.total} color="#0041C7" />
           <StatCard label="PENDING" value={stats.pending} color="#1CA3DE" />
@@ -36,7 +44,7 @@ export default function HomeScreen({ onNavigateToSubmit, onNavigateToView, onNav
 
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         
-        {/* Primary Action: Absolute Zero to Blue Cola Gradient */}
+        {/* Primary Action */}
         <TouchableOpacity activeOpacity={0.7} onPress={onNavigateToSubmit}>
           <LinearGradient colors={['#0041C7', '#0D85D8']} start={{x: 0, y: 0}} end={{x: 1, y: 0}} style={styles.primaryAction}>
             <View style={styles.actionIconContainer}><Ionicons name="add-circle-outline" size={24} color="#fff" /></View>
@@ -45,7 +53,7 @@ export default function HomeScreen({ onNavigateToSubmit, onNavigateToView, onNav
           </LinearGradient>
         </TouchableOpacity>
 
-        {/* Secondary Action: Using Picton Blue Accents */}
+        {/* Secondary Action */}
         <TouchableOpacity style={styles.secondaryAction} onPress={onNavigateToView}>
           <View style={[styles.actionIconContainer, { backgroundColor: '#3ACBE820' }]}>
             <Ionicons name="list-outline" size={24} color="#0160C9" />
@@ -100,7 +108,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   header: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: 25, paddingTop: 10 },
   greetingText: { fontSize: 13, color: '#64748B' },
-  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#0041C7' }, // Absolute Zero
+  headerTitle: { fontSize: 22, fontWeight: 'bold', color: '#0041C7' },
   notificationBtn: { width: 45, height: 45, borderRadius: 22, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', elevation: 3 },
   notificationDot: { position: 'absolute', top: 12, right: 12, width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444', borderWidth: 1.5, borderColor: '#fff' },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
@@ -110,7 +118,7 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 24, fontWeight: 'bold' },
   sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#1E293B', marginTop: 25, marginBottom: 15 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  seeAllLink: { color: '#0160C9', fontWeight: 'bold', marginTop: 10 }, // True Blue
+  seeAllLink: { color: '#0160C9', fontWeight: 'bold', marginTop: 10 },
   primaryAction: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 18, elevation: 4 },
   secondaryAction: { flexDirection: 'row', alignItems: 'center', padding: 15, borderRadius: 18, backgroundColor: '#fff', marginTop: 12, elevation: 2 },
   actionIconContainer: { width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
