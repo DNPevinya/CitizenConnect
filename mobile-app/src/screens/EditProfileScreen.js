@@ -19,7 +19,7 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPass, setShowPass] = useState({ old: false, new: false, confirm: false });
 
-  const SERVER_URL = "http://192.168.8.104:5000";
+  const SERVER_URL = "http://192.168.8.105:5000";
 
   // --- Data Bridge ---
   useEffect(() => {

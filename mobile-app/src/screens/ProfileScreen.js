@@ -15,7 +15,7 @@ export default function ProfileScreen({
   onLogout 
 }) {
   // Your computer's IPv4 address
-  const SERVER_URL = "http://192.168.8.104:5000";
+  const SERVER_URL = "http://192.168.8.105:5000";
 
   // --- Helper: Initials Generator ---
   const getInitials = (fullName) => {

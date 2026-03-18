@@ -48,7 +48,7 @@ export default function SignupScreen({ onBackToLogin, onNavigateToTerms, onNavig
 
     setLoading(true);
     try {
-      const response = await fetch('http://192.168.8.104:5000/api/auth/register', {
+      const response = await fetch('http://192.168.8.105:5000/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData), // This works because your state keys match backend keys
