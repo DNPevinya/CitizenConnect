@@ -1,12 +1,12 @@
-import React from 'react';
-import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState } from 'react'; // Added useState here!
+import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileScreen({ 
   userName,
   userEmail, 
-  initialData, // This now contains our profilePicture path
+  initialData, 
   onNavigateToEdit, 
   onNavigateToHelp, 
   onNavigateToFAQ, 
@@ -14,8 +14,10 @@ export default function ProfileScreen({
   onNavigateToPrivacy, 
   onLogout 
 }) {
-  // Your computer's IPv4 address
   const SERVER_URL = "http://192.168.8.105:5000";
+
+  // --- NEW STATE: Tracks if the image is broken ---
+  const [imageFailed, setImageFailed] = useState(false);
 
   // --- Helper: Initials Generator ---
   const getInitials = (fullName) => {
@@ -27,21 +29,38 @@ export default function ProfileScreen({
     return names[0][0].toUpperCase();
   };
 
+  // --- THE SHIELD: Safe URI Generator ---
+  const getProfileImage = () => {
+    // Hard-check for ghost data like the string "null"
+    if (!initialData || !initialData.profilePicture || initialData.profilePicture === '' || initialData.profilePicture === 'null') {
+      return null; 
+    }
+    if (Platform.OS === 'ios') {
+      return `${SERVER_URL}/${initialData.profilePicture.replace(/\\/g, '/').replace(/^\//, '')}`;
+    }
+    return `${SERVER_URL}${initialData.profilePicture}`;
+  };
+
+  const finalImageUri = getProfileImage();
+
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+    <SafeAreaView style={styles.container} edges={Platform.OS === 'android' ? ['top'] : []}>
+      
+      <View style={[styles.header, Platform.OS === 'ios' && { paddingTop: 60 }]}>
         <Text style={styles.headerTitle}>Profile & Settings</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.profileHeader}>
           
-          {/* --- THE IMAGE FIX --- */}
           <View style={styles.avatarWrapper}>
-            {initialData?.profilePicture ? (
+            {/* THE BULLETPROOF FIX: Check if we have a URI AND it hasn't failed */}
+            {finalImageUri && !imageFailed ? (
               <Image 
-                source={{ uri: `${SERVER_URL}${initialData.profilePicture}` }} 
+                source={{ uri: finalImageUri }} 
                 style={styles.avatarImage} 
+                // If iOS throws a fit and can't load the image, flip the state to show initials!
+                onError={() => setImageFailed(true)}
               />
             ) : (
               <View style={styles.initialsContainer}>
@@ -95,13 +114,12 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 20 },
   profileHeader: { alignItems: 'center', marginBottom: 30 },
   
-  // --- Updated Avatar Styles ---
   avatarWrapper: {
     width: 100,
     height: 100,
     borderRadius: 50,
     marginBottom: 15,
-    overflow: 'hidden', // Ensures the image stays circular
+    overflow: 'hidden', 
     borderWidth: 2,
     borderColor: '#3ACBE8',
     backgroundColor: '#E2E8F0',

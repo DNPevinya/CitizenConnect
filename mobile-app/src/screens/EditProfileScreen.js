@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Image, Alert, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -18,6 +18,9 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPass, setShowPass] = useState({ old: false, new: false, confirm: false });
+
+  // --- NEW STATE: Tracks if the image is broken ---
+  const [imageFailed, setImageFailed] = useState(false);
 
   const SERVER_URL = "http://192.168.8.105:5000";
 
@@ -40,6 +43,27 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
     return names[0][0].toUpperCase();
   };
 
+  // --- THE SHIELD: Safe URI Generator ---
+  const getProfileImage = () => {
+    // 1. If user just picked a new image from gallery, show that immediately!
+    if (image) return image; 
+    
+    // 2. Hard-check for ghost data like the string "null"
+    if (!initialData || !initialData.profilePicture || initialData.profilePicture === '' || initialData.profilePicture === 'null') {
+      return null; 
+    }
+    
+    // 3. Clean slashes for iOS
+    if (Platform.OS === 'ios') {
+      return `${SERVER_URL}/${initialData.profilePicture.replace(/\\/g, '/').replace(/^\//, '')}`;
+    }
+    
+    // 4. Default for Android
+    return `${SERVER_URL}${initialData.profilePicture}`;
+  };
+
+  const finalImageUri = getProfileImage();
+
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -57,12 +81,12 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
     if (!result.canceled) {
       setImage(result.assets[0].uri);
       setDeleteImageFlag(false); // Reset delete flag if new image is picked
+      setImageFailed(false); // Reset the error state so the new image shows!
     }
   };
 
   const handleUpdate = async () => {
     // 1. DYNAMIC VALIDATIONS
-    // Only require current password if the user is trying to change their password
     if (newPassword && !oldPassword) {
       Alert.alert("Security Required", "Please enter your current password to set a new one.");
       return;
@@ -133,8 +157,11 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    // THE SHIELD: Only Android gets the 'top' edge
+    <SafeAreaView style={styles.container} edges={Platform.OS === 'android' ? ['top'] : []}>
+      
+      {/* THE SHIELD: Only iOS gets extra top padding to fix the gap */}
+      <View style={[styles.header, Platform.OS === 'ios' && { paddingTop: 60 }]}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}>
           <Ionicons name="chevron-back" size={24} color="#0160C9" />
           <Text style={styles.backText}>Back</Text>
@@ -146,11 +173,12 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.imageSection}>
           <View style={styles.imageWrapper}>
-            {/* Conditional Rendering for Avatar */}
-            {(image || initialData.profilePicture) && !deleteImageFlag ? (
+            {/* Conditional Rendering: Check if we have a URI, we aren't deleting it, and it hasn't failed */}
+            {finalImageUri && !deleteImageFlag && !imageFailed ? (
               <Image 
-                source={{ uri: image || `${SERVER_URL}${initialData.profilePicture}` }} 
+                source={{ uri: finalImageUri }} 
                 style={styles.avatar} 
+                onError={() => setImageFailed(true)} // Bulletproof fallback
               />
             ) : (
               <View style={[styles.avatar, styles.initialsContainer]}>
@@ -167,9 +195,10 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
                 <Text style={styles.imageActionText}>Change Photo</Text>
              </TouchableOpacity>
              
-             {(image || initialData.profilePicture) && !deleteImageFlag && (
+             {/* Only show "Remove" if there's actually a valid image showing */}
+             {finalImageUri && !deleteImageFlag && !imageFailed && (
                <TouchableOpacity 
-                onPress={() => { setImage(null); setDeleteImageFlag(true); }}
+                onPress={() => { setImage(null); setDeleteImageFlag(true); setImageFailed(false); }}
                 style={{ marginLeft: 20 }}
                >
                   <Text style={[styles.imageActionText, { color: '#EF4444' }]}>Remove</Text>
