@@ -34,12 +34,13 @@ interface UserData {
 
 export default function Index() {
   const [currentStep, setCurrentStep] = useState<string>('loading');
-  
-  // --- NAVIGATION MEMORY ---
-  // This remembers the screen we were on before entering Terms/Privacy
   const [prevStep, setPrevStep] = useState<string>('');
 
-  // --- USER DATA STATE ---
+  const [userId, setUserId] = useState<string | number | null>(null);
+  
+  // 👉 ADDED: Memory state for the specific complaint you click
+  const [selectedComplaintId, setSelectedComplaintId] = useState<string | number | null>(null);
+
   const [userName, setUserName] = useState<string>('Citizen');
   const [userEmail, setUserEmail] = useState<string>('');
   const [userPhone, setUserPhone] = useState<string>('');      
@@ -47,7 +48,6 @@ export default function Index() {
   const [userDivision, setUserDivision] = useState<string>(''); 
   const [userProfilePicture, setUserProfilePicture] = useState<string | null>(null);
 
-  // --- SIGNUP DATA MEMORY ---
   const [signupData, setSignupData] = useState({
     fullName: '', phone: '', email: '', district: '', division: '', password: ''
   });
@@ -57,15 +57,16 @@ export default function Index() {
     name: userName, email: userEmail, phone: userPhone, district: userDistrict, division: userDivision, profilePicture: userProfilePicture, 
   };
 
-  // --- 1. FULL SCREEN OVERLAYS ---
   if (currentStep === 'loading') return <LoadingScreen onFinish={() => setCurrentStep('welcome')} />;
   if (currentStep === 'welcome') return <WelcomeScreen onGetStarted={() => setCurrentStep('login')} />;
   
   if (currentStep === 'login') {
     return (
       <LoginScreen 
-        onLoginSuccess={(name: string, email: string, phone: string, district: string, division: string, profilePic: string | null) => {
-          setUserName(name || 'Citizen'); setUserEmail(email || ''); setUserPhone(phone || '');
+        onLoginSuccess={(id: string | number, name: string, email: string, phone: string, district: string, division: string, profilePic: string | null) => {
+          setUserId(id); 
+          setUserName(typeof name === 'string' ? name : 'Citizen'); 
+          setUserEmail(email || ''); setUserPhone(phone || '');
           setUserDistrict(district || ''); setUserDivision(division || ''); setUserProfilePicture(profilePic || null);
           setCurrentStep('dashboard');
         }} 
@@ -82,11 +83,11 @@ export default function Index() {
         isAgreed={signupAgreed}
         setIsAgreed={setSignupAgreed}
         onBackToLogin={() => setCurrentStep('login')} 
-        // Save 'signup' as the previous step
         onNavigateToTerms={() => { setPrevStep('signup'); setCurrentStep('terms_page'); }}
         onNavigateToPrivacy={() => { setPrevStep('signup'); setCurrentStep('privacy_page'); }}
         onSignupSuccess={(name: string, email: string, phone: string, district: string, division: string) => {
-          setUserName(name); setUserEmail(email); setUserPhone(phone);
+          setUserName(typeof name === 'string' ? name : 'Citizen'); 
+          setUserEmail(email); setUserPhone(phone);
           setUserDistrict(district); setUserDivision(division); setUserProfilePicture(null);
           setSignupData({ fullName: '', phone: '', email: '', district: '', division: '', password: '' });
           setSignupAgreed(false);
@@ -109,26 +110,26 @@ export default function Index() {
     );
   }
 
-  // Legal & Support - Now dynamically returns to the previous step
   if (currentStep === 'help_page') return <HelpScreen onBack={() => setCurrentStep('profile')} />;
   if (currentStep === 'faq_page') return <FAQScreen onBack={() => setCurrentStep('profile')} />;
-  
   if (currentStep === 'terms_page') return <TermsScreen onBack={() => setCurrentStep(prevStep || 'signup')} />;
   if (currentStep === 'privacy_page') return <PrivacyScreen onBack={() => setCurrentStep(prevStep || 'signup')} />;
 
-  // Functional Specialized Screens
-  if (currentStep === 'submit_complaint') return <SubmitComplaintScreen onBack={() => setCurrentStep('dashboard')} />;
+  if (currentStep === 'submit_complaint') return <SubmitComplaintScreen onBack={() => setCurrentStep('dashboard')} userId={userId} />;
+  
   if (currentStep === 'chat_page') return <ChatScreen onBack={() => setCurrentStep('complaint_details')} complaintId="#SL-8923" />;
+  
   if (currentStep === 'complaint_details') {
     return (
       <ComplaintDetailsScreen 
+        // 👉 PASSED THE SAVED ID HERE
+        complaintId={selectedComplaintId}
         onBack={() => setCurrentStep('view_complaints')} 
         onNavigateToChat={() => setCurrentStep('chat_page')} 
       />
     );
   }
 
-  // --- 2. MAIN APP FLOW ---
   const authenticatedTabs = ['dashboard', 'view_complaints', 'notifications', 'profile'];
 
   if (authenticatedTabs.includes(currentStep)) {
@@ -136,34 +137,42 @@ export default function Index() {
       <MainLayout currentTab={currentStep} onTabPress={(tab: string) => setCurrentStep(tab)}>
         {currentStep === 'dashboard' && (
           <HomeScreen 
-            userFirstName={userName ? userName.split(' ')[0] : 'Citizen'}
+            userId={userId} // 👉 ADD THIS LINE HERE
+            userFirstName={typeof userName === 'string' && userName ? userName.split(' ')[0] : 'Citizen'}
             onNavigateToSubmit={() => setCurrentStep('submit_complaint')}
             onNavigateToView={() => setCurrentStep('view_complaints')}
-            onNavigateToDetails={() => setCurrentStep('complaint_details')}
+            onNavigateToDetails={(id?: string | number) => {
+              if (id) setSelectedComplaintId(id);
+              setCurrentStep('complaint_details');
+            }}
             onNavigateToNotifications={() => setCurrentStep('notifications')}
           />
         )}
         
         {currentStep === 'view_complaints' && (
-          <ViewComplaintsScreen onNavigateToDetails={() => setCurrentStep('complaint_details')} />
+          <ViewComplaintsScreen 
+            // 👉 JUST ADDED ": string | number" RIGHT HERE
+            onNavigateToDetails={(id: string | number) => {
+              setSelectedComplaintId(id);
+              setCurrentStep('complaint_details');
+            }} 
+            userId={userId} 
+          />
         )}
 
-        {currentStep === 'notifications' && (
-          <NotificationScreen onBack={() => setCurrentStep('dashboard')} />
-        )}
+        {currentStep === 'notifications' && <NotificationScreen onBack={() => setCurrentStep('dashboard')} />}
 
         {currentStep === 'profile' && (
           <ProfileScreen 
-            userName={userName}
-            userEmail={userEmail}
-            initialData={currentUserData} 
+            userName={userName} userEmail={userEmail} initialData={currentUserData} 
             onNavigateToEdit={() => setCurrentStep('edit_profile')}
             onNavigateToHelp={() => setCurrentStep('help_page')}
             onNavigateToFAQ={() => setCurrentStep('faq_page')}
-            // Save 'profile' as the previous step
             onNavigateToTerms={() => { setPrevStep('profile'); setCurrentStep('terms_page'); }}
             onNavigateToPrivacy={() => { setPrevStep('profile'); setCurrentStep('privacy_page'); }}
             onLogout={() => {
+              setUserId(null); 
+              setSelectedComplaintId(null); // Clear selected ID on logout
               setUserName('Citizen'); setUserEmail(''); setUserPhone('');
               setUserDistrict(''); setUserDivision(''); setUserProfilePicture(null);
               setCurrentStep('login');

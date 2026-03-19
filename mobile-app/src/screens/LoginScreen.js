@@ -7,31 +7,21 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
     let newErrors = {};
     const emailRegex = /\S+@\S+\.\S+/;
-
-    if (!email.trim()) {
-      newErrors.email = "Email or phone is required.";
-    } else if (!emailRegex.test(email) && isNaN(email)) {
-      newErrors.email = "Please enter a valid email format.";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required.";
-    }
-
+    if (!email.trim()) newErrors.email = "Email or phone is required.";
+    else if (!emailRegex.test(email) && isNaN(email)) newErrors.email = "Please enter a valid email format.";
+    if (!password) newErrors.password = "Password is required.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleLogin = async () => {
     if (!validateForm()) return;
-
     setLoading(true);
     try {
       const response = await fetch('http://192.168.8.105:5000/api/auth/login', {
@@ -39,27 +29,24 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.toLowerCase().trim(), password }),
       });
-
       const data = await response.json();
-      console.log("Login Response Data:", data); // DEBUG: Look at your terminal!
-
+      
       if (response.ok && data.user) {
-        // We now pass the 'role' as well so your app can redirect 
-        // authorities to a different screen if needed later.
+        // EXACTLY 7 ITEMS: ID is first!
         onLoginSuccess(
-          data.user.fullName, 
-          data.user.email, 
-          data.user.phone, 
-          data.user.district, 
-          data.user.division,
-          data.user.role // Added role
+          data.user.id,          
+          data.user.fullName,    
+          data.user.email,       
+          data.user.phone,       
+          data.user.district,    
+          data.user.division,    
+          data.user.profilePic || null 
         ); 
       } else {
         setErrors({ server: data.message || "Invalid email or password." });
       }
     } catch (error) {
-      console.error("Login Fetch Error:", error);
-      setErrors({ server: "Connection error. Check your Server IP and ensure Node.js is running." });
+      setErrors({ server: "Connection error. Check your Server IP." });
     } finally {
       setLoading(false);
     }
@@ -67,18 +54,13 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.content}
-      >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
         <View style={styles.header}>
           <View style={styles.iconCircle}>
             <MaterialIcons name="account-balance" size={50} color="#0160C9" />
           </View>
           <Text style={styles.welcomeText}>Welcome Back</Text>
-          <Text style={styles.subtitle}>
-            Log in to report a complaint or provide feedback to Sri Lanka Urban Public Services.
-          </Text>
+          <Text style={styles.subtitle}>Log in to report a complaint or provide feedback to Sri Lanka Urban Public Services.</Text>
         </View>
 
         <View style={styles.form}>
@@ -87,85 +69,35 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
           <Text style={styles.label}>Email or Phone Number</Text>
           <View style={[styles.inputContainer, errors.email && styles.inputErrorBorder]}>
             <Ionicons name="mail-outline" size={20} color="#1CA3DE" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. sunil@example.com"
-              value={email}
-              onChangeText={(val) => {
-                setEmail(val);
-                setErrors({ ...errors, email: null, server: null });
-              }}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              placeholderTextColor="#94A3B8"
-            />
+            <TextInput style={styles.input} placeholder="e.g. sunil@example.com" value={email} onChangeText={(val) => { setEmail(val); setErrors({ ...errors, email: null, server: null }); }} keyboardType="email-address" autoCapitalize="none" placeholderTextColor="#94A3B8" />
           </View>
           {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
           <View style={styles.labelRow}>
             <Text style={styles.label}>Password</Text>
-            <TouchableOpacity>
-              <Text style={styles.forgotText}>Forgot?</Text>
-            </TouchableOpacity>
+            <TouchableOpacity><Text style={styles.forgotText}>Forgot?</Text></TouchableOpacity>
           </View>
           <View style={[styles.inputContainer, errors.password && styles.inputErrorBorder]}>
             <Ionicons name="lock-closed-outline" size={20} color="#1CA3DE" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              value={password}
-              onChangeText={(val) => {
-                setPassword(val);
-                setErrors({ ...errors, password: null, server: null });
-              }}
-              secureTextEntry={!showPassword}
-              placeholderTextColor="#94A3B8"
-            />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-              <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#64748B" />
-            </TouchableOpacity>
+            <TextInput style={styles.input} placeholder="Enter your password" value={password} onChangeText={(val) => { setPassword(val); setErrors({ ...errors, password: null, server: null }); }} secureTextEntry={!showPassword} placeholderTextColor="#94A3B8" />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}><Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#64748B" /></TouchableOpacity>
           </View>
           {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
-          {/* Spacer View: Replaced "Keep me logged in" to maintain spacing */}
           <View style={styles.spacer} />
 
           <TouchableOpacity onPress={handleLogin} disabled={loading}>
-            <LinearGradient 
-              colors={['#0041C7', '#0D85D8']} 
-              start={{ x: 0, y: 0 }} 
-              end={{ x: 1, y: 0 }} 
-              style={[styles.button, loading && { opacity: 0.7 }]}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Text style={styles.buttonText}>Login</Text>
-                  <Ionicons name="arrow-forward" size={20} color="#fff" />
-                </>
-              )}
+            <LinearGradient colors={['#0041C7', '#0D85D8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.button, loading && { opacity: 0.7 }]}>
+              {loading ? <ActivityIndicator color="#fff" /> : <><Text style={styles.buttonText}>Login</Text><Ionicons name="arrow-forward" size={20} color="#fff" /></>}
             </LinearGradient>
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
           <Text style={styles.orText}>OR LOGIN WITH</Text>
-          <TouchableOpacity style={styles.socialIcon}>
-            <Ionicons name="person-circle-outline" size={40} color="#0160C9" />
-          </TouchableOpacity>
-
-          <View style={styles.signupRow}>
-            <Text style={styles.noAccountText}>Don't have an account? </Text>
-            <TouchableOpacity onPress={onCreateAccount}>
-              <Text style={styles.signupLink}>Create an Account</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.securityRow}>
-            <MaterialIcons name="security" size={14} color="#1CA3DE" />
-            <Text style={styles.securityText}>SECURE ENCRYPTED CONNECTION</Text>
-          </View>
+          <TouchableOpacity style={styles.socialIcon}><Ionicons name="person-circle-outline" size={40} color="#0160C9" /></TouchableOpacity>
+          <View style={styles.signupRow}><Text style={styles.noAccountText}>Don't have an account? </Text><TouchableOpacity onPress={onCreateAccount}><Text style={styles.signupLink}>Create an Account</Text></TouchableOpacity></View>
+          <View style={styles.securityRow}><MaterialIcons name="security" size={14} color="#1CA3DE" /><Text style={styles.securityText}>SECURE ENCRYPTED CONNECTION</Text></View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -189,7 +121,6 @@ const styles = StyleSheet.create({
   serverErrorText: { color: '#EF4444', fontSize: 13, textAlign: 'center', marginBottom: 15, fontWeight: '700' },
   inputIcon: { marginRight: 10 },
   input: { flex: 1, fontSize: 16, color: '#1E293B' },
-  // Added spacer style to preserve the gap before the Login button
   spacer: { marginTop: 15, marginBottom: 25 },
   button: { height: 55, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', elevation: 4 },
   buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginRight: 10 },
