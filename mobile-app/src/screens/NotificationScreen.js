@@ -2,10 +2,9 @@ import React from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 
 export default function NotificationScreen({ onBack }) {
-  // Mock data for notifications
+  // --- 🔒 LOGIC VAULT (UNTOUCHED MOCK DATA) ---
   const notifications = [
     {
       id: 1,
@@ -32,27 +31,32 @@ export default function NotificationScreen({ onBack }) {
       icon: 'message-text-outline',
     },
   ];
+  // --- END OF LOGIC ---
 
   return (
-    <View style={styles.container}>
-      {/* Updated Header with Professional Blue Gradient */}
-      <LinearGradient colors={['#0041C7', '#0D85D8']} style={styles.header}>
-        <SafeAreaView style={styles.headerContent}>
-          <TouchableOpacity onPress={onBack} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
+    <SafeAreaView style={styles.container} edges={['top']}>
+      
+      {/* 🌟 STANDARDIZED NAVBAR HEADER (Matches Home & View Complaints) 🌟 */}
+      <View style={styles.topNavBar}>
+        <View style={styles.navLeft}>
+          <TouchableOpacity onPress={onBack} style={styles.backButton} activeOpacity={0.7}>
+            <Ionicons name="arrow-back" size={24} color="#1E293B" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Notifications</Text>
-          <TouchableOpacity>
-            <Text style={styles.markReadText}>Mark all as read</Text>
-          </TouchableOpacity>
-        </SafeAreaView>
-      </LinearGradient>
+          <View>
+            <Text style={styles.greetingText}>ALERTS</Text>
+            <Text style={styles.navTitle}>Notifications</Text>
+          </View>
+        </View>
+        <TouchableOpacity style={styles.markReadBtn} activeOpacity={0.7}>
+          <Ionicons name="checkmark-done-outline" size={22} color="#0041C7" />
+        </TouchableOpacity>
+      </View>
 
       <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
         {notifications.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.notificationCard}>
+          <TouchableOpacity key={item.id} style={styles.notificationCard} activeOpacity={0.7}>
             <View style={[styles.iconContainer, styles[item.type + 'Icon']]}>
-              <MaterialCommunityIcons name={item.icon} size={24} color={styles[item.type + 'Color'].color} />
+              <MaterialCommunityIcons name={item.icon} size={26} color={styles[item.type + 'Color'].color} />
             </View>
             <View style={styles.textContainer}>
               <View style={styles.titleRow}>
@@ -65,44 +69,60 @@ export default function NotificationScreen({ onBack }) {
             </View>
           </TouchableOpacity>
         ))}
+        
+        {/* End of list indicator */}
+        <View style={styles.endOfList}>
+          <Ionicons name="checkmark-circle-outline" size={24} color="#CBD5E1" />
+          <Text style={styles.endOfListText}>You're all caught up!</Text>
+        </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
+// --- UPGRADED UI COMPONENTS ---
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
-  header: { paddingBottom: 20, borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
-  headerContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 10 },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#fff' },
-  backButton: { width: 40, height: 40, justifyContent: 'center' },
-  markReadText: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600' },
-  listContent: { padding: 20 },
+  
+  // Standardized Navbar Styles
+  topNavBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 15, paddingBottom: 15, backgroundColor: '#F8FAFC' },
+  navLeft: { flexDirection: 'row', alignItems: 'center' },
+  backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 15, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 3, borderWidth: 1, borderColor: '#E2E8F0' },
+  greetingText: { fontSize: 12, color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
+  navTitle: { fontSize: 26, fontWeight: '800', color: '#0041C7' },
+  markReadBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0, 65, 199, 0.08)', justifyContent: 'center', alignItems: 'center' },
+
+  // List & Cards
+  listContent: { paddingHorizontal: 25, paddingTop: 10, paddingBottom: 40 },
   notificationCard: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 18,
-    marginBottom: 15,
-    elevation: 2,
+    padding: 16,
+    borderRadius: 20,
+    marginBottom: 16,
+    elevation: 3,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
     borderWidth: 1,
     borderColor: '#F1F5F9',
   },
-  iconContainer: { width: 50, height: 50, borderRadius: 15, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
-  textContainer: { flex: 1 },
-  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 },
-  notifTitle: { fontSize: 15, fontWeight: 'bold', color: '#1E293B' },
-  notifTime: { fontSize: 11, color: '#94A3B8' },
-  notifMessage: { fontSize: 13, color: '#64748B', lineHeight: 18 },
+  iconContainer: { width: 52, height: 52, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  textContainer: { flex: 1, justifyContent: 'center' },
+  titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+  notifTitle: { fontSize: 16, fontWeight: '800', color: '#1E293B' },
+  notifTime: { fontSize: 11, color: '#94A3B8', fontWeight: '600' },
+  notifMessage: { fontSize: 13, color: '#64748B', lineHeight: 20, fontWeight: '500' },
   
-  // Updated Dynamic Icon Colors to match blue palette
-  successIcon: { backgroundColor: '#E8F9F1' },
+  // Dynamic Icon Colors (Matched to SmartNagara Palette)
+  successIcon: { backgroundColor: 'rgba(40, 199, 111, 0.12)' },
   successColor: { color: '#28C76F' },
-  infoIcon: { backgroundColor: 'rgba(58, 203, 232, 0.15)' }, // Picton Blue tint
-  infoColor: { color: '#0160C9' }, // True Blue
-  commentIcon: { backgroundColor: '#F0F9FF' }, // Battery Charged Blue tint
-  commentColor: { color: '#1CA3DE' }, // Battery Charged Blue
+  infoIcon: { backgroundColor: 'rgba(1, 96, 201, 0.12)' }, 
+  infoColor: { color: '#0160C9' }, 
+  commentIcon: { backgroundColor: 'rgba(28, 163, 222, 0.12)' }, 
+  commentColor: { color: '#1CA3DE' }, 
+
+  endOfList: { alignItems: 'center', justifyContent: 'center', marginTop: 30, opacity: 0.7 },
+  endOfListText: { color: '#94A3B8', fontSize: 13, fontWeight: '600', marginTop: 8 }
 });

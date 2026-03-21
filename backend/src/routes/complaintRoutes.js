@@ -5,31 +5,36 @@ const multer = require('multer');
 const path = require('path');
 
 // =========================================================================
-// 1. STORAGE CONFIGURATION
+// 1. STORAGE CONFIGURATION (UNTOUCHED LOGIC)
 // =========================================================================
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Ensures files go to the root /uploads directory
+    cb(null, 'uploads/'); 
   },
   filename: (req, file, cb) => {
-    // Generates a unique filename (e.g., COMP-1701234567.jpg) to prevent overwrites
-    cb(null, `COMP-${Date.now()}${path.extname(file.originalname)}`);
+    // Keeping your unique naming convention
+    cb(null, `COMP-${Date.now()}-${Math.floor(Math.random() * 1000)}${path.extname(file.originalname)}`);
   }
 });
 
 const upload = multer({ storage: storage });
 
 // =========================================================================
-// 2. SUBMIT A NEW COMPLAINT
+// 2. SUBMIT A NEW COMPLAINT (UPDATED FOR MULTIPLE PHOTOS)
 // =========================================================================
-router.post('/submit', upload.single('profileImage'), async (req, res) => {
+// 👉 Changed to .array('images', 3) to match the new Frontend key and limit
+router.post('/submit', upload.array('images', 3), async (req, res) => {
   const { 
     user_id, category, title, description, 
     location_text, latitude, longitude 
   } = req.body;
 
-  // Map the uploaded file to a local URL path
-  const image_url = req.file ? `/uploads/${req.file.filename}` : null;
+  // 👉 LOGIC UPGRADE: Convert multiple file paths into a single string for your DB
+  // Files are stored as: "/uploads/img1.jpg,/uploads/img2.jpg"
+  let image_url = null;
+  if (req.files && req.files.length > 0) {
+    image_url = req.files.map(file => `/uploads/${file.filename}`).join(',');
+  }
 
   try {
     const sql = `
@@ -58,7 +63,7 @@ router.post('/submit', upload.single('profileImage'), async (req, res) => {
 });
 
 // =========================================================================
-// 3. GET ALL COMPLAINTS FOR A SPECIFIC USER
+// 3. GET ALL COMPLAINTS FOR A SPECIFIC USER (UNTOUCHED)
 // =========================================================================
 router.get('/user/:userId', async (req, res) => {
   const { userId } = req.params;
@@ -74,11 +79,10 @@ router.get('/user/:userId', async (req, res) => {
 });
 
 // =========================================================================
-// 4. GET SINGLE COMPLAINT DETAILS BY ID
+// 4. GET SINGLE COMPLAINT DETAILS BY ID (UNTOUCHED)
 // =========================================================================
 router.get('/:id', async (req, res) => {
   try {
-
     const sql = `SELECT * FROM complaints WHERE complaint_id = ?`;
     const [complaint] = await db.query(sql, [req.params.id]);
     
@@ -93,7 +97,9 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// --- GET COMPLAINT STATS FOR DASHBOARD ---
+// =========================================================================
+// 5. GET DASHBOARD STATS (UNTOUCHED)
+// =========================================================================
 router.get('/stats/:userId', async (req, res) => {
     try {
         const userId = req.params.userId;

@@ -5,11 +5,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BASE_URL } from '../../src/config';
 
 export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
+  // --- 🔒 LOGIC VAULT (UNTOUCHED) ---
   const [filter, setFilter] = useState('All');
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // 👉 Search state is now always active
   const [searchQuery, setSearchQuery] = useState(''); 
 
   const SERVER_URL = BASE_URL;
@@ -23,7 +22,6 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
       const response = await fetch(`${SERVER_URL}/api/complaints/user/${userId || 1}`);
       const result = await response.json();
       
-      // Safety check to ensure we get an array
       if (result.success && Array.isArray(result.data)) {
         setComplaints(result.data);
       } else {
@@ -41,8 +39,8 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
     switch (status?.toUpperCase()) {
       case 'PENDING': return '#FF9F43';
       case 'RESOLVED': return '#28C76F';
-      case 'IN PROGRESS': return '#0160C9';
-      default: return '#FF9F43'; // Default to pending
+      case 'IN PROGRESS': return '#0041C7';
+      default: return '#FF9F43'; 
     }
   };
 
@@ -52,33 +50,33 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  // Safe filtering logic
   const safeComplaints = Array.isArray(complaints) ? complaints : [];
   
   const filteredComplaints = safeComplaints.filter(c => {
     const matchesFilter = filter === 'All' || c.status?.toUpperCase() === filter.toUpperCase();
-    
-    // Check both id and complaint_id depending on your database column names
     const displayId = c.id || c.complaint_id || '';
     const formattedId = `#SL-${displayId}`.toLowerCase();
     const searchLower = searchQuery.toLowerCase();
-    
     const matchesSearch = formattedId.includes(searchLower) || (c.title && c.title.toLowerCase().includes(searchLower));
 
     return matchesFilter && matchesSearch;
   });
+  // --- END OF LOGIC ---
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       
-      {/* 👉 Clean Header (No Filter Icon) */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Complaints</Text>
+      {/* 🌟 STANDARDIZED NAVBAR HEADER 🌟 */}
+      <View style={styles.topNavBar}>
+        <View>
+          <Text style={styles.greetingText}>OVERVIEW</Text>
+          <Text style={styles.navTitle}>My Complaints</Text>
+        </View>
       </View>
 
-      {/* 👉 Permanent Search Bar */}
+      {/* 🔍 PREMIUM SEARCH BAR */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#94A3B8" style={styles.searchIcon} />
+        <Ionicons name="search" size={20} color="#64748B" style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by ID or Title..."
@@ -87,12 +85,13 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
           onChangeText={setSearchQuery}
         />
         {searchQuery.length > 0 && (
-          <TouchableOpacity onPress={() => setSearchQuery('')}>
+          <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearBtn}>
             <Ionicons name="close-circle" size={20} color="#94A3B8" />
           </TouchableOpacity>
         )}
       </View>
 
+      {/* 🎛️ MODERN PILL FILTER TABS */}
       <View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterBar}>
           {['All', 'Pending', 'In Progress', 'Resolved'].map((tab) => (
@@ -100,6 +99,7 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
               key={tab} 
               onPress={() => setFilter(tab)} 
               style={[styles.filterTab, filter === tab && styles.filterTabActive]}
+              activeOpacity={0.7}
             >
               <Text style={[styles.filterText, filter === tab && styles.filterTextActive]}>{tab}</Text>
             </TouchableOpacity>
@@ -107,29 +107,33 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
         </ScrollView>
       </View>
 
+      {/* 📋 COMPLAINTS LIST */}
       <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
         {loading ? (
           <ActivityIndicator size="large" color="#0041C7" style={{ marginTop: 50 }} />
         ) : filteredComplaints.length === 0 ? (
-          <Text style={{ textAlign: 'center', color: '#64748B', marginTop: 50 }}>
-            {searchQuery ? "No matching complaints found." : "No complaints found."}
-          </Text>
+          <View style={styles.emptyContainer}>
+             <Ionicons name="document-text-outline" size={60} color="#CBD5E1" />
+             <Text style={styles.emptyText}>
+               {searchQuery ? "No matching complaints found." : "No complaints found."}
+             </Text>
+          </View>
         ) : (
           filteredComplaints.map((item, index) => {
-            // 👉 ABSOLUTE FIX FOR THE KEY ERROR: Uses index as an unbreakable fallback
             const displayId = item.id || item.complaint_id || '0000';
             const uniqueKey = displayId !== '0000' ? displayId.toString() : index.toString();
+            const statusColor = getStatusColor(item.status);
 
             return (
               <View key={uniqueKey} style={styles.complaintCard}>
                 <View style={styles.cardHeader}>
                   <Text style={styles.complaintId}>#SL-{displayId}</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '15' }]}>
-                    <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>{item.status?.toUpperCase() || 'PENDING'}</Text>
+                  <View style={[styles.statusBadge, { backgroundColor: statusColor + '15' }]}>
+                    <Text style={[styles.statusText, { color: statusColor }]}>{item.status?.toUpperCase() || 'PENDING'}</Text>
                   </View>
                 </View>
                 
-                <Text style={styles.complaintTitle}>{item.title || item.category}</Text>
+                <Text style={styles.complaintTitle} numberOfLines={1}>{item.title || item.category}</Text>
                 
                 <View style={styles.cardBody}>
                   <Image 
@@ -137,7 +141,7 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
                     style={styles.thumbImage} 
                   />
                   <View style={styles.textContainer}>
-                    <Text style={styles.descText} numberOfLines={3}>{item.description}</Text>
+                    <Text style={styles.descText} numberOfLines={2}>{item.description}</Text>
                     <View style={styles.dateRow}>
                       <Ionicons name="calendar-outline" size={14} color="#94A3B8" />
                       <Text style={styles.dateText}>{formatDate(item.created_at)}</Text>
@@ -147,13 +151,13 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
 
                 {item.status?.toUpperCase() === 'IN PROGRESS' && (
                   <View style={styles.progressContainer}>
-                    <View style={[styles.progressBar, { width: '60%' }]} />
+                    <View style={[styles.progressBar, { width: '60%', backgroundColor: statusColor }]} />
                   </View>
                 )}
 
-                <TouchableOpacity style={styles.viewDetailsBtn} onPress={() => onNavigateToDetails(displayId)}>
+                <TouchableOpacity style={styles.viewDetailsBtn} activeOpacity={0.7} onPress={() => onNavigateToDetails(displayId)}>
                   <Text style={styles.viewDetailsText}>View Details</Text>
-                  <Ionicons name="chevron-forward" size={14} color="#0041C7" />
+                  <Ionicons name="chevron-forward" size={16} color="#0041C7" />
                 </TouchableOpacity>
               </View>
             );
@@ -164,37 +168,50 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
   );
 }
 
+// --- UPGRADED UI COMPONENTS ---
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 10 },
-  headerTitle: { fontSize: 24, fontWeight: 'bold', color: '#1E293B' },
   
-  // 👉 NEW SEARCH BAR STYLES
-  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', marginHorizontal: 20, marginBottom: 15, paddingHorizontal: 15, height: 45, borderRadius: 12, borderWidth: 1, borderColor: '#3ACBE8' },
-  searchIcon: { marginRight: 10 },
-  searchInput: { flex: 1, fontSize: 14, color: '#1E293B' },
+  // Standardized Navbar Styles (Matching Home)
+  topNavBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, paddingTop: 15, paddingBottom: 15, backgroundColor: '#F8FAFC' },
+  greetingText: { fontSize: 12, color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
+  navTitle: { fontSize: 26, fontWeight: '800', color: '#0041C7' },
+  
+  // Premium Search Bar
+  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', marginHorizontal: 25, marginBottom: 20, paddingHorizontal: 15, height: 55, borderRadius: 16, borderWidth: 1.5, borderColor: '#E2E8F0', shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1 },
+  searchIcon: { marginRight: 12 },
+  searchInput: { flex: 1, fontSize: 16, color: '#1E293B' },
+  clearBtn: { padding: 5 },
 
-  filterBar: { paddingHorizontal: 20, paddingBottom: 15 },
-  filterTab: { paddingHorizontal: 20, paddingVertical: 8, borderRadius: 20, backgroundColor: '#fff', marginRight: 10, borderWidth: 1, borderColor: '#3ACBE8' }, 
+  // Modern Pill Filters
+  filterBar: { paddingHorizontal: 25, paddingBottom: 15 },
+  filterTab: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, backgroundColor: '#fff', marginRight: 12, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2, elevation: 1 }, 
   filterTabActive: { backgroundColor: '#0041C7', borderColor: '#0041C7' }, 
-  filterText: { fontSize: 13, color: '#0D85D8', fontWeight: '500' }, 
-  filterTextActive: { color: '#fff' },
+  filterText: { fontSize: 14, color: '#64748B', fontWeight: '600' }, 
+  filterTextActive: { color: '#fff', fontWeight: '700' },
   
-  listContent: { padding: 20, paddingBottom: 60 },
-  complaintCard: { backgroundColor: '#fff', borderRadius: 16, padding: 15, marginBottom: 15, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3, borderWidth: 1, borderColor: '#F1F5F9' },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
-  complaintId: { fontSize: 12, fontWeight: 'bold', color: '#0160C9' }, 
-  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  statusText: { fontSize: 10, fontWeight: 'bold' },
-  complaintTitle: { fontSize: 18, fontWeight: 'bold', color: '#1E293B', marginBottom: 12 },
+  // Content & Cards
+  listContent: { paddingHorizontal: 25, paddingBottom: 60 },
+  emptyContainer: { alignItems: 'center', justifyContent: 'center', marginTop: 60 },
+  emptyText: { textAlign: 'center', color: '#94A3B8', marginTop: 15, fontSize: 16, fontWeight: '500' },
+  
+  complaintCard: { backgroundColor: '#fff', borderRadius: 20, padding: 18, marginBottom: 18, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 6, borderWidth: 1, borderColor: '#F1F5F9' },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  complaintId: { fontSize: 13, fontWeight: '800', color: '#0041C7', letterSpacing: 0.5 }, 
+  statusBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  statusText: { fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
+  complaintTitle: { fontSize: 18, fontWeight: '800', color: '#1E293B', marginBottom: 15 },
+  
   cardBody: { flexDirection: 'row', marginBottom: 15 },
-  thumbImage: { width: 80, height: 80, borderRadius: 12, backgroundColor: '#F1F5F9', borderWidth: 1, borderColor: '#3ACBE8' },
-  textContainer: { flex: 1, marginLeft: 15 },
-  descText: { fontSize: 13, color: '#64748B', lineHeight: 18 },
-  dateRow: { flexDirection: 'row', alignItems: 'center', marginTop: 8 },
-  dateText: { fontSize: 11, color: '#94A3B8', marginLeft: 5 },
-  progressContainer: { height: 6, backgroundColor: '#F1F5F9', borderRadius: 3, marginBottom: 15, overflow: 'hidden' },
-  progressBar: { height: '100%', backgroundColor: '#0D85D8' }, 
-  viewDetailsBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(58, 203, 232, 0.1)', padding: 12, borderRadius: 12 }, 
-  viewDetailsText: { fontSize: 13, color: '#0041C7', fontWeight: 'bold', marginRight: 5 } 
+  thumbImage: { width: 85, height: 85, borderRadius: 16, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' },
+  textContainer: { flex: 1, marginLeft: 15, justifyContent: 'center' },
+  descText: { fontSize: 14, color: '#64748B', lineHeight: 20, marginBottom: 8 },
+  dateRow: { flexDirection: 'row', alignItems: 'center' },
+  dateText: { fontSize: 12, color: '#94A3B8', marginLeft: 6, fontWeight: '600' },
+  
+  progressContainer: { height: 6, backgroundColor: '#F1F5F9', borderRadius: 3, marginBottom: 18, overflow: 'hidden' },
+  progressBar: { height: '100%', borderRadius: 3 }, 
+  
+  viewDetailsBtn: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC', paddingVertical: 14, borderRadius: 14, borderWidth: 1, borderColor: '#E2E8F0' }, 
+  viewDetailsText: { fontSize: 14, color: '#0041C7', fontWeight: '800', marginRight: 6 } 
 });

@@ -123,7 +123,7 @@ export default function Index() {
     );
   }
 
-  if (currentStep === 'help_page') return <HelpScreen onBack={() => setCurrentStep('profile')} />;
+  if (currentStep === 'help_page') return <HelpScreen onBack={() => setCurrentStep('profile')} onNavigateToFAQ={() => setCurrentStep('faq_page')} />;
   if (currentStep === 'faq_page') return <FAQScreen onBack={() => setCurrentStep('profile')} />;
   if (currentStep === 'terms_page') return <TermsScreen onBack={() => setCurrentStep(prevStep || 'signup')} />;
   if (currentStep === 'privacy_page') return <PrivacyScreen onBack={() => setCurrentStep(prevStep || 'signup')} />;

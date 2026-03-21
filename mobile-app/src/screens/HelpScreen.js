@@ -1,19 +1,21 @@
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function HelpScreen({ onBack }) {
+export default function HelpScreen({ onBack, onNavigateToFAQ }) {
+  // --- 🔒 LOGIC VAULT: Safe Static Content ---
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color="#007AFF" />
+    <SafeAreaView style={styles.container} edges={Platform.OS === 'android' ? ['top'] : []}>
+      
+      {/* 🌟 STANDARDIZED NAVBAR HEADER 🌟 */}
+      <View style={[styles.topNavBar, Platform.OS === 'ios' && { paddingTop: 20 }]}>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn} activeOpacity={0.7}>
+          <Ionicons name="chevron-back" size={24} color="#0041C7" />
           <Text style={styles.backText}>Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>How to Use</Text>
-        <View style={{ width: 60 }} />
+        <Text style={styles.navTitle}>How to Use</Text>
+        <View style={{ width: 70 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -22,63 +24,67 @@ export default function HelpScreen({ onBack }) {
         {/* Step 1: Reporting */}
         <View style={styles.stepCard}>
           <View style={styles.stepHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: '#E0F2FE' }]}>
-              <Ionicons name="add-circle" size={24} color="#007AFF" />
+            <View style={[styles.iconCircle, { backgroundColor: 'rgba(1, 96, 201, 0.12)' }]}>
+              <Ionicons name="add-circle" size={24} color="#0160C9" />
             </View>
-            <Text style={styles.stepTitle}>1. Submit a Complaint</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.stepTitle}>1. Submit a Complaint</Text>
+            </View>
           </View>
           <Text style={styles.stepDesc}>
-            Go to the Dashboard and tap the "Submit New Complaint" button. 
-            Choose a category (like Road Repair or Waste Management), provide a 
-            clear description, and attach a photo for verification.
+            Navigate to the Home Dashboard and tap 'Submit New Complaint'. Select the relevant urban issue category, provide a detailed description, and attach photographic evidence to help authorities assess the situation quickly.
           </Text>
         </View>
 
         {/* Step 2: Location */}
         <View style={styles.stepCard}>
           <View style={styles.stepHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: '#FEF3C7' }]}>
-              <Ionicons name="location" size={24} color="#D97706" />
+            <View style={[styles.iconCircle, { backgroundColor: 'rgba(255, 159, 67, 0.12)' }]}>
+              <Ionicons name="location" size={24} color="#FF9F43" />
             </View>
-            <Text style={styles.stepTitle}>2. Automatic Tagging</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.stepTitle}>2. Automatic Tagging</Text>
+            </View>
           </View>
           <Text style={styles.stepDesc}>
-            The system will automatically detect your GPS location to ensure 
-            the complaint is sent to the correct local authority or Municipal Council.
+            SmartNagara uses your device's GPS to automatically pinpoint the exact location of the issue. This ensures your report is instantly routed to the correct department.
           </Text>
         </View>
 
         {/* Step 3: Tracking */}
         <View style={styles.stepCard}>
           <View style={styles.stepHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: '#DCFCE7' }]}>
-              <MaterialCommunityIcons name="timeline-clock" size={24} color="#16A34A" />
+            <View style={[styles.iconCircle, { backgroundColor: 'rgba(40, 199, 111, 0.12)' }]}>
+              <MaterialCommunityIcons name="timeline-clock" size={24} color="#28C76F" />
             </View>
-            <Text style={styles.stepTitle}>3. Track Progress</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.stepTitle}>3. Track Progress</Text>
+            </View>
           </View>
           <Text style={styles.stepDesc}>
-            Check the "My Complaints" section to view the status timeline. 
-            You will see when your complaint is Assigned, In Progress, or Resolved.
+            Monitor your complaint's lifecycle in real-time through the 'My Complaints' tab. Watch the status dynamically update from 'Pending' to 'In Progress' as engineers are assigned, until it is 'Resolved'.
           </Text>
         </View>
 
         {/* Step 4: Communication */}
         <View style={styles.stepCard}>
           <View style={styles.stepHeader}>
-            <View style={[styles.iconCircle, { backgroundColor: '#F3E8FF' }]}>
-              <Ionicons name="chatbubbles" size={24} color="#9333EA" />
+            <View style={[styles.iconCircle, { backgroundColor: 'rgba(28, 163, 222, 0.12)' }]}>
+              <Ionicons name="chatbubbles" size={24} color="#1CA3DE" />
             </View>
-            <Text style={styles.stepTitle}>4. Chat with Authority</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.stepTitle}>4. Chat with Authority</Text>
+            </View>
           </View>
           <Text style={styles.stepDesc}>
-            If the officers need more information, they will message you. 
-            Open the complaint details and tap "Chat with Authority" to reply.
+            Engage directly with assigned officers using the built-in chat. Provide additional details, answer queries from the field team, and receive direct updates until the issue is fixed.
           </Text>
         </View>
 
         <View style={styles.footerInfo}>
           <Text style={styles.footerNote}>Need more help?</Text>
-          <Text style={styles.footerSub}>Check our FAQ
+          <Text style={styles.footerSub}>
+            Check our <Text style={{ color: '#0041C7', fontWeight: 'bold' }} onPress={onNavigateToFAQ}>FAQ</Text> section.
           </Text>
         </View>
       </ScrollView>
@@ -86,38 +92,39 @@ export default function HelpScreen({ onBack }) {
   );
 }
 
+// --- UPGRADED UI COMPONENTS ---
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  header: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    padding: 15, 
-    borderBottomWidth: 1, 
-    borderBottomColor: '#F1F5F9' 
-  },
-  backBtn: { flexDirection: 'row', alignItems: 'center', width: 60 },
-  backText: { color: '#007AFF', fontSize: 16, marginLeft: 5 },
-  headerTitle: { fontSize: 18, fontWeight: 'bold', color: '#1E293B' },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  
+  // Standardized Navbar Styles
+  topNavBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15, backgroundColor: '#F8FAFC' },
+  backBtn: { flexDirection: 'row', alignItems: 'center', width: 70 },
+  backText: { color: '#0041C7', fontSize: 16, fontWeight: '600', marginLeft: 4 },
+  navTitle: { fontSize: 18, fontWeight: '800', color: '#1E293B' },
+  
   content: { padding: 25 },
-  intro: { fontSize: 15, color: '#64748B', lineHeight: 22, marginBottom: 30 },
+  intro: { fontSize: 15, color: '#64748B', lineHeight: 22, marginBottom: 25, fontWeight: '500' },
+  
+  // Premium Cards
   stepCard: { 
     backgroundColor: '#fff', 
-    borderRadius: 16, 
+    borderRadius: 20, 
     padding: 20, 
     marginBottom: 20, 
-    borderWidth: 1, 
-    borderColor: '#F1F5F9',
-    elevation: 2,
+    borderWidth: 1.5, 
+    borderColor: '#E2E8F0',
+    elevation: 3,
     shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6
   },
-  stepHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  iconCircle: { width: 45, height: 45, borderRadius: 22.5, justifyContent: 'center', alignItems: 'center' },
-  stepTitle: { fontSize: 17, fontWeight: 'bold', color: '#1E293B', marginLeft: 15 },
-  stepDesc: { fontSize: 14, color: '#475569', lineHeight: 22 },
-  footerInfo: { marginTop: 20, alignItems: 'center', paddingBottom: 40 },
-  footerNote: { fontSize: 16, fontWeight: 'bold', color: '#1E293B' },
-  footerSub: { fontSize: 14, color: '#94A3B8', marginTop: 5 }
+  stepHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
+  iconCircle: { width: 48, height: 48, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  stepTitle: { fontSize: 17, fontWeight: '800', color: '#1E293B' },
+  stepDesc: { fontSize: 14, color: '#64748B', lineHeight: 22, fontWeight: '500' },
+  
+  footerInfo: { marginTop: 25, alignItems: 'center', paddingBottom: 50 },
+  footerNote: { fontSize: 16, fontWeight: '800', color: '#1E293B' },
+  footerSub: { fontSize: 14, color: '#94A3B8', marginTop: 6, fontWeight: '600' }
 });
