@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BASE_URL } from '../../src/config';
 
 export default function ProfileScreen({ 
   userName,
@@ -14,7 +15,7 @@ export default function ProfileScreen({
   onNavigateToPrivacy, 
   onLogout 
 }) {
-  const SERVER_URL = "http://192.168.8.103:5000";
+  const SERVER_URL = BASE_URL;
 
   const [imageFailed, setImageFailed] = useState(false);
 

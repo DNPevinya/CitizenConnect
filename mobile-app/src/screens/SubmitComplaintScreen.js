@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker } from 'react-native-maps';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import { BASE_URL } from '../../src/config';
 
 export default function SubmitComplaintScreen({ onBack, userId }) {
   const [selectedCategory, setSelectedCategory] = useState('Urban Infrastructure & Municipal Services');
@@ -17,7 +18,7 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
   const [markerCoord, setMarkerCoord] = useState({ latitude: 6.9271, longitude: 79.8612 });
   const [locationName, setLocationName] = useState('Locating...');
 
-  const SERVER_URL = "http://192.168.8.103:5000";
+  const SERVER_URL = BASE_URL;
 
   const complaintData = {
     'Urban Infrastructure & Municipal Services': ['Garbage Collection Delay', 'Illegal Waste Dumping', 'Street Cleaning Issue', 'Drainage Blockage / Flooding', 'Broken Road / Pothole', 'Damaged Footpath', 'Traffic Signal Malfunction', 'Public Park Maintenance Issue', 'Public Space Maintenance Issue'],

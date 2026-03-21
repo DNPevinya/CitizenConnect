@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert, Modal } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BASE_URL } from '../../src/config';
 
 export default function ComplaintDetailsScreen({ onBack, onNavigateToChat, complaintId }) {
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isImageModalVisible, setImageModalVisible] = useState(false);
 
-  const SERVER_URL = "http://192.168.8.103:5000";
+  const SERVER_URL = BASE_URL;
 
   useEffect(() => {
     if (complaintId) fetchComplaintDetails();

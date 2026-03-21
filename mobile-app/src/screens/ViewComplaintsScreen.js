@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, ActivityIndicator, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BASE_URL } from '../../src/config';
 
 export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
   const [filter, setFilter] = useState('All');
@@ -11,7 +12,7 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
   // 👉 Search state is now always active
   const [searchQuery, setSearchQuery] = useState(''); 
 
-  const SERVER_URL = "http://192.168.8.103:5000";
+  const SERVER_URL = BASE_URL;
 
   useEffect(() => {
     fetchMyComplaints();

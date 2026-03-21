@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator, Image, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { BASE_URL } from '../../src/config';
 
-export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
+export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigateToForgot }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -23,30 +24,20 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
   const handleLogin = async () => {
     if (!validateForm()) return;
     setLoading(true);
+    setErrors({}); // Clear previous errors
+
     try {
-      const response = await fetch('http://192.168.8.103:5000/api/auth/login', {
-        method: 'POST',
+      // ⚠️ DOUBLE CHECK THIS IP: It must match your current laptop IP from 'ipconfig'
+      const response = await fetch(`${BASE_URL}/api/auth/login`, {
+      method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.toLowerCase().trim(), password }),
       });
+
       const data = await response.json();
       
       if (response.ok && data.user) {
-        onLoginSuccess(
-          data.user.id,          
-          data.user.fullName,    
-          data.user.email,       
-          data.user.phone,       
-          data.user.district,    
-          data.user.division,    
-          // 👉 THE BUG WAS HERE! Changed data.user.profilePic to data.user.profilePicture
-          data.user.profilePicture || null 
-        ); 
-      } else if (response.ok && data.user) {
-        
-        // 👉 ADD THIS EXACT LINE: It will pop up and tell us the truth!
-        Alert.alert("Server Check", `User ID: ${data.user.id}\nPic: ${data.user.profilePicture || "None"}`);
-
+        // SUCCESS PATH
         onLoginSuccess(
           data.user.id,          
           data.user.fullName,    
@@ -56,11 +47,14 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
           data.user.division,    
           data.user.profilePicture || null 
         ); 
-      } {
+      } else {
+        // ERROR FROM SERVER (e.g., Wrong Password)
         setErrors({ server: data.message || "Invalid email or password." });
       }
     } catch (error) {
-      setErrors({ server: "Connection error. Check your Server IP." });
+      // NETWORK ERROR (The Pink Box culprit)
+      console.error("Login Connection Error:", error);
+      setErrors({ server: "Connection error. Check your Server IP & Wi-Fi." });
     } finally {
       setLoading(false);
     }
@@ -69,49 +63,92 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
+        
         <View style={styles.header}>
-          <View style={styles.iconCircle}>
-            <MaterialIcons name="account-balance" size={50} color="#0160C9" />
+          {/* 👉 Logo integrated to match your brand style */}
+          <View style={styles.logoWrapper}>
+            <Image 
+              source={require('../../assets/images/smartlogo.png')} 
+              style={styles.logoImage}
+              resizeMode="cover"
+            />
           </View>
           <Text style={styles.welcomeText}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Log in to report a complaint or provide feedback to Sri Lanka Urban Public Services.</Text>
+          <Text style={styles.subtitle}>Log in to report a complaint or provide feedback to SmartNagara.</Text>
         </View>
 
         <View style={styles.form}>
-          {errors.server && <Text style={styles.serverErrorText}>{errors.server}</Text>}
+          {errors.server && (
+             <View style={styles.errorBanner}>
+                <Ionicons name="warning" size={18} color="#EF4444" />
+                <Text style={styles.serverErrorText}>{errors.server}</Text>
+             </View>
+          )}
 
-          <Text style={styles.label}>Email or Phone Number</Text>
+          <Text style={styles.label}>Email Address</Text>
           <View style={[styles.inputContainer, errors.email && styles.inputErrorBorder]}>
-            <Ionicons name="mail-outline" size={20} color="#1CA3DE" style={styles.inputIcon} />
-            <TextInput style={styles.input} placeholder="e.g. sunil@example.com" value={email} onChangeText={(val) => { setEmail(val); setErrors({ ...errors, email: null, server: null }); }} keyboardType="email-address" autoCapitalize="none" placeholderTextColor="#94A3B8" />
+            <Ionicons name="mail-outline" size={20} color="#0160C9" style={styles.inputIcon} />
+            <TextInput 
+              style={styles.input} 
+              placeholder="e.g. citizen@example.com" 
+              value={email} 
+              onChangeText={(val) => { setEmail(val); setErrors({ ...errors, email: null, server: null }); }} 
+              keyboardType="email-address" 
+              autoCapitalize="none" 
+              placeholderTextColor="#94A3B8" 
+            />
           </View>
           {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
           <View style={styles.labelRow}>
             <Text style={styles.label}>Password</Text>
-            <TouchableOpacity><Text style={styles.forgotText}>Forgot?</Text></TouchableOpacity>
+            <TouchableOpacity onPress={onNavigateToForgot}>
+                <Text style={styles.forgotText}>Forgot Password?</Text>
+            </TouchableOpacity>
           </View>
           <View style={[styles.inputContainer, errors.password && styles.inputErrorBorder]}>
-            <Ionicons name="lock-closed-outline" size={20} color="#1CA3DE" style={styles.inputIcon} />
-            <TextInput style={styles.input} placeholder="Enter your password" value={password} onChangeText={(val) => { setPassword(val); setErrors({ ...errors, password: null, server: null }); }} secureTextEntry={!showPassword} placeholderTextColor="#94A3B8" />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}><Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#64748B" /></TouchableOpacity>
+            <Ionicons name="lock-closed-outline" size={20} color="#0160C9" style={styles.inputIcon} />
+            <TextInput 
+              style={styles.input} 
+              placeholder="Enter your password" 
+              value={password} 
+              onChangeText={(val) => { setPassword(val); setErrors({ ...errors, password: null, server: null }); }} 
+              secureTextEntry={!showPassword} 
+              placeholderTextColor="#94A3B8" 
+            />
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#64748B" />
+            </TouchableOpacity>
           </View>
           {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
 
           <View style={styles.spacer} />
 
-          <TouchableOpacity onPress={handleLogin} disabled={loading}>
+          <TouchableOpacity onPress={handleLogin} disabled={loading} activeOpacity={0.8}>
             <LinearGradient colors={['#0041C7', '#0D85D8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.button, loading && { opacity: 0.7 }]}>
-              {loading ? <ActivityIndicator color="#fff" /> : <><Text style={styles.buttonText}>Login</Text><Ionicons name="arrow-forward" size={20} color="#fff" /></>}
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <>
+                    <Text style={styles.buttonText}>Sign In</Text>
+                    <Ionicons name="arrow-forward" size={20} color="#fff" />
+                </>
+              )}
             </LinearGradient>
           </TouchableOpacity>
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.orText}>OR LOGIN WITH</Text>
-          <TouchableOpacity style={styles.socialIcon}><Ionicons name="person-circle-outline" size={40} color="#0160C9" /></TouchableOpacity>
-          <View style={styles.signupRow}><Text style={styles.noAccountText}>Don't have an account? </Text><TouchableOpacity onPress={onCreateAccount}><Text style={styles.signupLink}>Create an Account</Text></TouchableOpacity></View>
-          <View style={styles.securityRow}><MaterialIcons name="security" size={14} color="#1CA3DE" /><Text style={styles.securityText}>SECURE ENCRYPTED CONNECTION</Text></View>
+          <View style={styles.signupRow}>
+            <Text style={styles.noAccountText}>New to SmartNagara? </Text>
+            <TouchableOpacity onPress={onCreateAccount}>
+              <Text style={styles.signupLink}>Create an Account</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.securityRow}>
+            <MaterialIcons name="security" size={14} color="#0160C9" />
+            <Text style={styles.securityText}>SECURE ENCRYPTED CONNECTION</Text>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -121,29 +158,42 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   content: { flex: 1, paddingHorizontal: 25, justifyContent: 'center' },
-  header: { alignItems: 'center', marginBottom: 30 },
-  iconCircle: { width: 80, height: 80, borderRadius: 20, backgroundColor: 'rgba(58, 203, 232, 0.15)', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
-  welcomeText: { fontSize: 28, fontWeight: 'bold', color: '#0041C7', marginBottom: 10 },
-  subtitle: { fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 20, paddingHorizontal: 20 },
-  form: { marginBottom: 20 },
-  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  label: { fontSize: 14, fontWeight: '600', color: '#1E293B', marginBottom: 8, marginTop: 15 },
-  forgotText: { fontSize: 14, color: '#0160C9', fontWeight: '600', marginTop: 15 },
-  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1, borderColor: '#3ACBE8', borderRadius: 12, paddingHorizontal: 15, height: 55 },
+  header: { alignItems: 'center', marginBottom: 35 },
+  logoWrapper: { 
+    width: 100, 
+    height: 100, 
+    borderRadius: 50, 
+    backgroundColor: '#fff', 
+    justifyContent: 'center', 
+    alignItems: 'center', 
+    marginBottom: 20, 
+    shadowColor: '#000', 
+    shadowOpacity: 0.1, 
+    shadowRadius: 10, 
+    elevation: 5, 
+    overflow: 'hidden' 
+  },
+  logoImage: { width: '130%', height: '130%' },
+  welcomeText: { fontSize: 28, fontWeight: '800', color: '#0041C7', marginBottom: 8 },
+  subtitle: { fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 22, paddingHorizontal: 20 },
+  form: { marginBottom: 10 },
+  errorBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEF2F2', padding: 12, borderRadius: 12, marginBottom: 15, borderWidth: 1, borderColor: '#FECACA' },
+  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 15 },
+  label: { fontSize: 13, fontWeight: '700', color: '#1E293B', marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.5 },
+  forgotText: { fontSize: 13, color: '#0D85D8', fontWeight: '700' },
+  inputContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#E2E8F0', borderRadius: 14, paddingHorizontal: 15, height: 58 },
   inputErrorBorder: { borderColor: '#EF4444' }, 
-  errorText: { color: '#EF4444', fontSize: 11, marginTop: 5, marginLeft: 2 },
-  serverErrorText: { color: '#EF4444', fontSize: 13, textAlign: 'center', marginBottom: 15, fontWeight: '700' },
-  inputIcon: { marginRight: 10 },
+  errorText: { color: '#EF4444', fontSize: 12, marginTop: 5, marginLeft: 2, fontWeight: '500' },
+  serverErrorText: { color: '#EF4444', fontSize: 13, fontWeight: '700', marginLeft: 8 },
+  inputIcon: { marginRight: 12 },
   input: { flex: 1, fontSize: 16, color: '#1E293B' },
-  spacer: { marginTop: 15, marginBottom: 25 },
-  button: { height: 55, borderRadius: 12, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', elevation: 4 },
+  spacer: { marginTop: 30 },
+  button: { height: 60, borderRadius: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', elevation: 4 },
   buttonText: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginRight: 10 },
-  footer: { alignItems: 'center', marginTop: 30 },
-  orText: { fontSize: 12, fontWeight: '700', color: '#94A3B8', letterSpacing: 1, marginBottom: 15 },
-  socialIcon: { marginBottom: 30 },
+  footer: { alignItems: 'center', marginTop: 20 },
   signupRow: { flexDirection: 'row', marginBottom: 25 },
-  noAccountText: { color: '#64748B', fontSize: 14 },
-  signupLink: { color: '#0160C9', fontSize: 14, fontWeight: 'bold' },
-  securityRow: { flexDirection: 'row', alignItems: 'center' },
-  securityText: { fontSize: 10, color: '#1CA3DE', fontWeight: 'bold', marginLeft: 5, letterSpacing: 0.5 },
+  noAccountText: { color: '#64748B', fontSize: 15 },
+  signupLink: { color: '#0041C7', fontSize: 15, fontWeight: 'bold' },
+  securityRow: { flexDirection: 'row', alignItems: 'center', opacity: 0.8 },
+  securityText: { fontSize: 10, color: '#0160C9', fontWeight: 'bold', marginLeft: 5, letterSpacing: 1 },
 });

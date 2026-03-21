@@ -4,6 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import MapView, { Marker } from 'react-native-maps';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { BASE_URL } from '../../src/config';
 
 export default function HomeScreen({ 
   userFirstName, 
@@ -16,7 +17,7 @@ export default function HomeScreen({
   const [stats, setStats] = useState({ total: 0, pending: 0, resolved: 0 });
   const [loadingStats, setLoadingStats] = useState(true);
 
-  const SERVER_URL = "http://192.168.8.103:5000";
+  const SERVER_URL = BASE_URL;
 
   useEffect(() => {
     fetchStats();

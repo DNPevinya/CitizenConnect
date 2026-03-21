@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DropDownPicker from 'react-native-dropdown-picker'; 
+import { BASE_URL } from '../../src/config';
 
 const locationData = {
   "Colombo": ["Bambalapitiya", "Kollupitiya", "Borella", "Cinnamon Gardens", "Dehiwala"],
@@ -66,8 +67,8 @@ export default function SignupScreen({
 
     setLoading(true);
     try {
-      const response = await fetch('http://192.168.8.103:5000/api/auth/register', {
-        method: 'POST',
+      const response = await fetch(`${BASE_URL}/api/auth/register`, {
+            method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData), 
       });

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import LoadingScreen from '../src/screens/LoadingScreen';
 import WelcomeScreen from '../src/screens/WelcomeScreen';
 import LoginScreen from '../src/screens/LoginScreen';
+import ForgotPasswordScreen from '../src/screens/ForgotPasswordScreen'; // 👉 Ensure this import exists
 import SignupScreen from '../src/screens/SignupScreen';
 import HomeScreen from '../src/screens/HomeScreen';
 import ViewComplaintsScreen from '../src/screens/ViewComplaintsScreen';
@@ -35,10 +36,7 @@ interface UserData {
 export default function Index() {
   const [currentStep, setCurrentStep] = useState<string>('loading');
   const [prevStep, setPrevStep] = useState<string>('');
-
   const [userId, setUserId] = useState<string | number | null>(null);
-  
-  // 👉 ADDED: Memory state for the specific complaint you click
   const [selectedComplaintId, setSelectedComplaintId] = useState<string | number | null>(null);
 
   const [userName, setUserName] = useState<string>('Citizen');
@@ -57,9 +55,11 @@ export default function Index() {
     name: userName, email: userEmail, phone: userPhone, district: userDistrict, division: userDivision, profilePicture: userProfilePicture, 
   };
 
+  // --- STEP 1: LOADING & WELCOME ---
   if (currentStep === 'loading') return <LoadingScreen onFinish={() => setCurrentStep('welcome')} />;
   if (currentStep === 'welcome') return <WelcomeScreen onGetStarted={() => setCurrentStep('login')} />;
   
+  // --- STEP 2: AUTHENTICATION ---
   if (currentStep === 'login') {
     return (
       <LoginScreen 
@@ -70,7 +70,19 @@ export default function Index() {
           setUserDistrict(district || ''); setUserDivision(division || ''); setUserProfilePicture(profilePic || null);
           setCurrentStep('dashboard');
         }} 
-        onCreateAccount={() => setCurrentStep('signup')} 
+        onCreateAccount={() => setCurrentStep('signup')}
+        // 👉 ADDED THIS BACK
+        onNavigateToForgot={() => setCurrentStep('forgot_password')} 
+      />
+    );
+  }
+
+  // 👉 ADDED THIS BACK
+  if (currentStep === 'forgot_password') {
+    return (
+      <ForgotPasswordScreen 
+        onBack={() => setCurrentStep('login')} 
+        onResetSuccess={() => setCurrentStep('login')}
       />
     );
   }
@@ -97,6 +109,7 @@ export default function Index() {
     );
   }
 
+  // --- STEP 3: PROFILE & PAGES ---
   if (currentStep === 'edit_profile') {
     return (
       <EditProfileScreen 
@@ -115,14 +128,13 @@ export default function Index() {
   if (currentStep === 'terms_page') return <TermsScreen onBack={() => setCurrentStep(prevStep || 'signup')} />;
   if (currentStep === 'privacy_page') return <PrivacyScreen onBack={() => setCurrentStep(prevStep || 'signup')} />;
 
+  // --- STEP 4: COMPLAINTS & DASHBOARD ---
   if (currentStep === 'submit_complaint') return <SubmitComplaintScreen onBack={() => setCurrentStep('dashboard')} userId={userId} />;
-  
   if (currentStep === 'chat_page') return <ChatScreen onBack={() => setCurrentStep('complaint_details')} complaintId="#SL-8923" />;
   
   if (currentStep === 'complaint_details') {
     return (
       <ComplaintDetailsScreen 
-        // 👉 PASSED THE SAVED ID HERE
         complaintId={selectedComplaintId}
         onBack={() => setCurrentStep('view_complaints')} 
         onNavigateToChat={() => setCurrentStep('chat_page')} 
@@ -137,7 +149,7 @@ export default function Index() {
       <MainLayout currentTab={currentStep} onTabPress={(tab: string) => setCurrentStep(tab)}>
         {currentStep === 'dashboard' && (
           <HomeScreen 
-            userId={userId} // 👉 ADD THIS LINE HERE
+            userId={userId}
             userFirstName={typeof userName === 'string' && userName ? userName.split(' ')[0] : 'Citizen'}
             onNavigateToSubmit={() => setCurrentStep('submit_complaint')}
             onNavigateToView={() => setCurrentStep('view_complaints')}
@@ -151,7 +163,6 @@ export default function Index() {
         
         {currentStep === 'view_complaints' && (
           <ViewComplaintsScreen 
-            // 👉 JUST ADDED ": string | number" RIGHT HERE
             onNavigateToDetails={(id: string | number) => {
               setSelectedComplaintId(id);
               setCurrentStep('complaint_details');
@@ -172,7 +183,7 @@ export default function Index() {
             onNavigateToPrivacy={() => { setPrevStep('profile'); setCurrentStep('privacy_page'); }}
             onLogout={() => {
               setUserId(null); 
-              setSelectedComplaintId(null); // Clear selected ID on logout
+              setSelectedComplaintId(null); 
               setUserName('Citizen'); setUserEmail(''); setUserPhone('');
               setUserDistrict(''); setUserDivision(''); setUserProfilePicture(null);
               setCurrentStep('login');

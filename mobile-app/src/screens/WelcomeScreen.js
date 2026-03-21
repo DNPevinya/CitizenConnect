@@ -1,11 +1,10 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 export default function WelcomeScreen({ onGetStarted }) {
   return (
-    // Updated Gradient: Absolute Zero to Blue Cola
     <LinearGradient colors={['#0041C7', '#0D85D8']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.content}>
@@ -13,7 +12,12 @@ export default function WelcomeScreen({ onGetStarted }) {
           {/* Top Section */}
           <View style={styles.topSection}>
             <View style={styles.iconCircle}>
-              <MaterialIcons name="account-balance" size={60} color="#fff" />
+              {/* 👉 The New Logo is here! */}
+              <Image 
+                source={require('../../assets/images/smartlogo.png')} 
+                style={styles.logoImage}
+                resizeMode="cover" 
+              />
             </View>
             <Text style={styles.title}>SmartNagara</Text>
             <Text style={styles.description}>
@@ -25,21 +29,23 @@ export default function WelcomeScreen({ onGetStarted }) {
 
           {/* Bottom Section */}
           <View style={styles.bottomSection}>
-            <View style={styles.infoBox}>
-              {/* Icon updated to True Blue */}
-              <Ionicons name="shield-checkmark-outline" size={22} color="#0160C9" style={styles.infoIcon} />
-              <Text style={styles.infoText}>
+            
+            {/* 👉 Upgraded to a modern "Glassmorphism" transparent box */}
+            <View style={styles.glassInfoBox}>
+              <View style={styles.iconWrapper}>
+                <Ionicons name="shield-checkmark" size={24} color="#3ACBE8" />
+              </View>
+              <Text style={styles.glassInfoText}>
                 Your feedback helps build a better Sri Lanka. Direct connection to government authorities.
               </Text>
             </View>
 
-            <TouchableOpacity style={styles.button} onPress={onGetStarted}>
+            {/* Premium Floating Button */}
+            <TouchableOpacity style={styles.button} onPress={onGetStarted} activeOpacity={0.8}>
               <Text style={styles.buttonText}>Get Started</Text>
-              {/* Arrow updated to True Blue */}
-              <Ionicons name="arrow-forward" size={20} color="#0160C9" />
+              <Ionicons name="arrow-forward" size={22} color="#0160C9" />
             </TouchableOpacity>
 
-            {/* Smaller Footer Text */}
             <Text style={styles.footerText}>AN INITIATIVE FOR A BETTER SRI LANKA</Text>
           </View>
 
@@ -63,82 +69,97 @@ const styles = StyleSheet.create({
   },
   topSection: {
     alignItems: 'center',
-    marginTop: 40, 
+    marginTop: 50, 
   },
   iconCircle: {
-    width: 110,
-    height: 110,
-    borderRadius: 30,
-    // Using Picton Blue (#3ACBE8) with low opacity for glassmorphism
-    backgroundColor: 'rgba(58, 203, 232, 0.2)', 
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: '#ffffff', // Solid white to blend with the logo background
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 25,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.4)',
+    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 10,
+    overflow: 'hidden', // Clips the logo perfectly into a circle
+  },
+  logoImage: {
+    width: '140%', // Zooms in to hide the white rectangular edges
+    height: '140%',
   },
   title: {
-    fontSize: 34,
-    fontWeight: 'bold',
+    fontSize: 38,
+    fontWeight: '800',
     color: '#fff',
     marginBottom: 12,
+    letterSpacing: 0.5,
   },
   description: {
-    fontSize: 18,
-    color: '#fff',
+    fontSize: 16,
+    color: '#E2E8F0',
     textAlign: 'center',
-    opacity: 0.9,
-    lineHeight: 26,
+    lineHeight: 24,
+    paddingHorizontal: 10,
+    fontWeight: '500',
   },
   bottomSection: {
     width: '100%',
     alignItems: 'center',
+    paddingBottom: 20,
   },
-  infoBox: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    padding: 18,
-    borderRadius: 18,
+  glassInfoBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.15)', // Transparent glass effect
+    padding: 20,
+    borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 30, 
+    marginBottom: 35, 
     width: '100%',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)', // Subtle white border
   },
-  infoIcon: {
-    marginRight: 12,
+  iconWrapper: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    padding: 10,
+    borderRadius: 12,
+    marginRight: 15,
   },
-  infoText: {
+  glassInfoText: {
     flex: 1,
-    color: '#2c3e50',
-    fontSize: 13,
-    lineHeight: 18,
-    fontWeight: '500',
+    color: '#ffffff',
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '600',
   },
   button: {
-    backgroundColor: '#fff',
+    backgroundColor: '#ffffff',
     width: '100%',
-    padding: 18,
+    height: 60,
     borderRadius: 30,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowRadius: 8,
+    elevation: 6,
   },
   buttonText: {
-    color: '#0160C9', // Updated to True Blue
-    fontSize: 18,
+    color: '#0160C9',
+    fontSize: 19,
     fontWeight: 'bold',
-    marginRight: 10,
+    marginRight: 12,
   },
   footerText: {
-    color: '#fff',
-    fontSize: 10, 
-    letterSpacing: 1.5,
+    color: '#94A3B8',
+    fontSize: 11, 
+    letterSpacing: 2,
     marginTop: 35,
-    opacity: 0.7,
-    fontWeight: '600',
+    fontWeight: 'bold',
     textAlign: 'center',
   },
 });

@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView, Image,
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
+import { BASE_URL } from '../../src/config';
 
 export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSuccess }) {
   // --- State Initialization ---
@@ -22,7 +23,7 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
   // --- NEW STATE: Tracks if the image is broken ---
   const [imageFailed, setImageFailed] = useState(false);
 
-  const SERVER_URL = "http://192.168.8.103:5000";
+  const SERVER_URL = BASE_URL;
 
   // --- Data Bridge ---
   useEffect(() => {
