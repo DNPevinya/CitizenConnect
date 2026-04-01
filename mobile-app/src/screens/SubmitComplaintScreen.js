@@ -168,7 +168,7 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
     <SafeAreaView style={styles.container} edges={Platform.OS === 'android' ? ['top'] : []}>
       <View style={styles.topNavBar}>
         <TouchableOpacity onPress={onBack} style={styles.backBtn}><Ionicons name="chevron-back" size={24} color="#0041C7" /><Text style={styles.backText}>Back</Text></TouchableOpacity>
-        <Text style={styles.navTitle}>Submit Complaint</Text>
+        <Text style={styles.navTitle}>New Report</Text>
         <View style={{ width: 70 }} />
       </View>
 
@@ -188,7 +188,7 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
           </View>
 
           <View style={styles.formSection}>
-            <Text style={styles.label}>2. Complaint Type</Text>
+            <Text style={styles.label}>2. Issue / Request Type</Text>
             <TouchableOpacity style={styles.dropBtn} onPress={() => setShowTypeModal(true)}><Text style={styles.dropText}>{selectedType}</Text><Ionicons name="chevron-down-circle" size={22} color="#0041C7" /></TouchableOpacity>
           </View>
 
@@ -196,7 +196,7 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
             <Text style={styles.label}>3. Description</Text>
             <TextInput 
               style={styles.input} 
-              placeholder="Describe the issue in detail..." 
+              placeholder="Describe the issue or request in detail..." 
               placeholderTextColor="#94A3B8"
               multiline 
               value={description} 

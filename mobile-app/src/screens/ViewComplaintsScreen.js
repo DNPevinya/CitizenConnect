@@ -16,6 +16,7 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
     fetchMyComplaints();
   }, []);
 
+  // The function name and API route stay the same so your backend doesn't break!
   const fetchMyComplaints = async () => {
     try {
       const response = await fetch(`${SERVER_URL}/api/complaints/user/${userId || 1}`);
@@ -27,7 +28,7 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
         setComplaints([]);
       }
     } catch (error) {
-      console.error("Error fetching complaints:", error);
+      console.error("Error fetching reports:", error);
       setComplaints([]);
     } finally {
       setLoading(false);
@@ -67,7 +68,8 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
       <View style={styles.topNavBar}>
         <View>
           <Text style={styles.greetingText}>OVERVIEW</Text>
-          <Text style={styles.navTitle}>My Complaints</Text>
+          {/* Changed Title Here */}
+          <Text style={styles.navTitle}>My Reports</Text>
         </View>
       </View>
 
@@ -102,15 +104,16 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
         </ScrollView>
       </View>
 
-      {/* 📋 COMPLAINTS LIST */}
+      {/* 📋 REPORTS LIST */}
       <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
         {loading ? (
           <ActivityIndicator size="large" color="#0041C7" style={{ marginTop: 50 }} />
         ) : filteredComplaints.length === 0 ? (
           <View style={styles.emptyContainer}>
              <Ionicons name="document-text-outline" size={60} color="#CBD5E1" />
+             {/* Changed Empty State Text Here */}
              <Text style={styles.emptyText}>
-               {searchQuery ? "No matching complaints found." : "No complaints found."}
+               {searchQuery ? "No matching reports found." : "No reports found."}
              </Text>
           </View>
         ) : (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, Image, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
@@ -7,10 +7,15 @@ export default function WelcomeScreen({ onGetStarted }) {
   return (
     <LinearGradient colors={['#0041C7', '#0D85D8']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <View style={styles.content}>       
+        
+        {/* MAGIC WRAPPER: ScrollView with flexGrow */}
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >       
           <View style={styles.topSection}>
             <View style={styles.iconCircle}>
-
               <Image 
                 source={require('../../assets/images/smartlogo.png')} 
                 style={styles.logoImage}
@@ -23,7 +28,8 @@ export default function WelcomeScreen({ onGetStarted }) {
             </Text>
           </View>
 
-          <View style={{ flex: 1 }} />
+          {/* I removed the empty flex: 1 spacer that was causing the squishing */}
+
           <View style={styles.bottomSection}>
             <View style={styles.glassInfoBox}>
               <View style={styles.iconWrapper}>
@@ -42,7 +48,7 @@ export default function WelcomeScreen({ onGetStarted }) {
             <Text style={styles.footerText}>AN INITIATIVE FOR A BETTER SRI LANKA</Text>
           </View>
 
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -55,14 +61,16 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  content: {
-    flex: 1,
+  // Replaced 'content' with 'scrollContent' and added the flexGrow magic
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 30,
     paddingVertical: 40,
+    justifyContent: 'space-between', // This automatically spaces the top and bottom out perfectly
   },
   topSection: {
     alignItems: 'center',
-    marginTop: 50, 
+    marginTop: 20, // Reduced from 50 so it breathes better on small screens
   },
   iconCircle: {
     width: 130,
@@ -102,6 +110,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     paddingBottom: 20,
+    marginTop: 40, // Added margin to ensure it never overlaps the top text on super small screens
   },
   glassInfoBox: {
     backgroundColor: 'rgba(255, 255, 255, 0.15)', 

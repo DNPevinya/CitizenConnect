@@ -9,7 +9,7 @@ export default function MainLayout({ children, currentTab, onTabPress }) {
 
       <View style={styles.tabBar}>
         <TabItem icon="home" label="Home" active={currentTab === 'dashboard'} onPress={() => onTabPress('dashboard')} />
-        <TabItem icon="list" label="Complaints" active={currentTab === 'view_complaints'} onPress={() => onTabPress('view_complaints')} />
+        <TabItem icon="document-text" label="Reports" active={currentTab === 'view_complaints'} onPress={() => onTabPress('view_complaints')} />
         <TabItem icon="notifications" label="Alerts" active={currentTab === 'notifications'} onPress={() => onTabPress('notifications')} />
         <TabItem icon="person" label="Profile" active={currentTab === 'profile'} onPress={() => onTabPress('profile')} />
       </View>

@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import MapView, { Marker } from 'react-native-maps';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BASE_URL } from '../../src/config';
@@ -40,7 +38,7 @@ export default function HomeScreen({
   };
 
   const activities = [
-    { id: 1, title: 'Waste Management', desc: 'Complaint #CMB-4920 resolved.', time: '2H AGO', color: '#28C76F', icon: 'check-circle' },
+    { id: 1, title: 'Waste Management', desc: 'Service Request #CMB-4920 resolved.', time: '2H AGO', color: '#28C76F', icon: 'check-circle' },
     { id: 2, title: 'Street Light Repair', desc: 'Assigned to Urban Dept.', time: 'YESTERDAY', color: '#FF9F43', icon: 'dots-horizontal-circle' },
   ];
 
@@ -49,7 +47,7 @@ export default function HomeScreen({
       <View style={styles.topNavBar}>
         <View>
           <Text style={styles.greetingText}>Ayubowan, {userFirstName || 'Citizen'}</Text>
-          <Text style={styles.navTitle}>Home Dashboard</Text>
+          <Text style={styles.navTitle}>SmartNagara</Text>
         </View>
         <TouchableOpacity style={styles.notificationBtn} onPress={onNavigateToNotifications} activeOpacity={0.7}>
           <Ionicons name="notifications-outline" size={24} color="#1E293B" />
@@ -61,7 +59,7 @@ export default function HomeScreen({
         
         {/* STATS SECTION */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>My Summary</Text>
+          <Text style={styles.sectionTitle}>My Activity Summary</Text>
         </View>
         
         <View style={styles.statsRow}>
@@ -71,45 +69,48 @@ export default function HomeScreen({
             </View>
           ) : (
             <>
-              <StatCard label="TOTAL" value={stats.total} color="#0041C7" icon="file-document-outline" />
-              <StatCard label="PENDING" value={stats.pending} color="#FF9F43" icon="clock-outline" />
+              <StatCard label="ALL REQUESTS" value={stats.total} color="#0041C7" icon="file-document-outline" />
+              <StatCard label="IN PROGRESS" value={stats.pending} color="#FF9F43" icon="clock-outline" />
               <StatCard label="RESOLVED" value={stats.resolved} color="#28C76F" icon="check-decagram-outline" />
             </>
           )}
         </View>
 
-        {/* QUICK ACTIONS SECTION */}
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        
-        <TouchableOpacity activeOpacity={0.8} onPress={onNavigateToSubmit}>
-          <LinearGradient colors={['#0041C7', '#0D85D8']} start={{x: 0, y: 0}} end={{x: 1, y: 1}} style={styles.primaryAction}>
-            <View style={styles.primaryActionContent}>
-              <View style={styles.actionIconContainer}>
-                <Ionicons name="add" size={26} color="#0041C7" />
-              </View>
-              <View style={styles.actionTextContainer}>
-                <Text style={styles.primaryActionText}>Submit New Complaint</Text>
-                <Text style={styles.primaryActionSubText}>Report an urban issue instantly</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={24} color="#fff" opacity={0.8} />
-          </LinearGradient>
-        </TouchableOpacity>
+        {/* --- UPDATED SERVICES UI --- */}
+        <View style={styles.servicesContainer}>
+          {/* Added the Our Services label here */}
+          <Text style={styles.servicesLabel}>OUR SERVICES</Text>
+          <Text style={styles.helpHeading}>How can we help today?</Text>
+          <Text style={styles.helpSubheading}>Submit new civic requests or track your existing reports.</Text>
 
-        <TouchableOpacity activeOpacity={0.8} style={styles.secondaryAction} onPress={onNavigateToView}>
-          <View style={[styles.actionIconContainer, { backgroundColor: '#F1F5F9' }]}>
-            <Ionicons name="list-outline" size={24} color="#0160C9" />
-          </View>
-          <View style={styles.actionTextContainer}>
-            <Text style={styles.secondaryActionText}>View My Complaints</Text>
-            <Text style={styles.secondaryActionSubText}>Check status and updates</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={24} color="#94A3B8" />
-        </TouchableOpacity>
+          {/* 1. Primary Action: The Blue Card */}
+          <TouchableOpacity activeOpacity={0.9} style={styles.blueCard} onPress={onNavigateToSubmit}>
+            {/* Watermark Icon */}
+            <MaterialCommunityIcons name="bullhorn" size={120} color="#ffffff" style={styles.watermarkIcon} />
+            
+            <View style={styles.blueIconCircle}>
+              <MaterialCommunityIcons name="bullhorn-outline" size={20} color="#ffffff" />
+            </View>
+            <Text style={styles.blueCardTitle}>Report an Issue / Request Service</Text>
+            {/* Scrubbed the word 'municipal' here */}
+            <Text style={styles.blueCardDesc}>File civic complaints or request infrastructure maintenance.</Text>
+          </TouchableOpacity>
+
+          {/* 2. Secondary Action: The White Card */}
+          <TouchableOpacity activeOpacity={0.8} style={styles.whiteCard} onPress={onNavigateToView}>
+            <View style={styles.whiteIconSquare}>
+              <MaterialCommunityIcons name="file-document-outline" size={26} color="#0041C7" />
+            </View>
+            <View style={styles.whiteCardTextContainer}>
+              <Text style={styles.whiteCardTitle}>Track My Requests</Text>
+              <Text style={styles.whiteCardDesc}>Check the status and updates of your previous submissions.</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
         {/* RECENT ACTIVITY SECTION */}
-        <View style={[styles.sectionHeader, { marginTop: 30 }]}>
-            <Text style={styles.sectionTitle}>Recent Activity</Text>
+        <View style={[styles.sectionHeader, { marginTop: 10 }]}>
+            <Text style={styles.sectionTitle}>Recent Updates</Text>
             <TouchableOpacity onPress={onNavigateToView} activeOpacity={0.6}>
               <Text style={styles.seeAllLink}>See all</Text>
             </TouchableOpacity>
@@ -121,28 +122,10 @@ export default function HomeScreen({
           </TouchableOpacity>
         ))}
 
-        {/* MAP SECTION */}
-        <Text style={[styles.sectionTitle, { marginTop: 30 }]}>City Pulse & Services</Text>
-        <Text style={styles.mapInfo}>Explore active utility points and local authorities</Text>
-        <View style={styles.mapContainer}>
-          <MapView 
-            style={styles.map} 
-            initialRegion={{ latitude: 6.9271, longitude: 79.8612, latitudeDelta: 0.05, longitudeDelta: 0.05 }}
-          >
-            <Marker 
-              coordinate={{ latitude: 6.9271, longitude: 79.8612 }} 
-              title="Colombo Municipal Council"
-              description="Local Authority Headquarters"
-              pinColor="#0041C7" 
-            />
-          </MapView>
-        </View>
-        
       </ScrollView>
     </SafeAreaView>
   );
 }
-
 
 const StatCard = ({ label, value, color, icon }) => (
   <View style={styles.statCard}>
@@ -182,22 +165,29 @@ const styles = StyleSheet.create({
   
   // Stats
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 15 },
-  statCard: { width: '31%', backgroundColor: '#fff', paddingVertical: 18, paddingHorizontal: 12, borderRadius: 20, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 5, alignItems: 'center', borderWidth: 1, borderColor: '#F1F5F9' },
+  statCard: { width: '31%', backgroundColor: '#fff', paddingVertical: 18, paddingHorizontal: 10, borderRadius: 20, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 5, alignItems: 'center', borderWidth: 1, borderColor: '#F1F5F9' },
   statIconWrapper: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  statLabel: { fontSize: 10, fontWeight: '800', color: '#94A3B8', marginTop: 4, letterSpacing: 0.5 },
-  statValue: { fontSize: 28, fontWeight: '900', lineHeight: 30 },
+  statLabel: { fontSize: 9, fontWeight: '800', color: '#94A3B8', marginTop: 4, letterSpacing: 0.5, textAlign: 'center' },
+  statValue: { fontSize: 26, fontWeight: '900', lineHeight: 30 },
   loaderContainer: { flex: 1, padding: 30, justifyContent: 'center', alignItems: 'center' },
   
-  // Quick Actions
-  primaryAction: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderRadius: 24, marginTop: 15, elevation: 5, shadowColor: '#0041C7', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 8 },
-  primaryActionContent: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  secondaryAction: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 20, borderRadius: 24, backgroundColor: '#fff', marginTop: 15, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.05, shadowRadius: 5, borderWidth: 1, borderColor: '#F1F5F9' },
-  actionIconContainer: { width: 46, height: 46, borderRadius: 16, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
-  actionTextContainer: { flex: 1, justifyContent: 'center' },
-  primaryActionText: { color: '#fff', fontSize: 17, fontWeight: '800', marginBottom: 2 },
-  primaryActionSubText: { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '500' },
-  secondaryActionText: { color: '#1E293B', fontSize: 17, fontWeight: '800', marginBottom: 2 },
-  secondaryActionSubText: { color: '#64748B', fontSize: 12, fontWeight: '500' },
+  // --- NEW SERVICES UI STYLES ---
+  servicesContainer: { marginTop: 35, marginBottom: 5 },
+  servicesLabel: { fontSize: 11, fontWeight: '800', color: '#0041C7', letterSpacing: 1.5, marginBottom: 8, textTransform: 'uppercase' },
+  helpHeading: { fontSize: 20, fontWeight: '800', color: '#1E293B', marginBottom: 6 },
+  helpSubheading: { fontSize: 13, color: '#64748B', fontWeight: '500', marginBottom: 20, lineHeight: 18 },
+  
+  blueCard: { backgroundColor: '#004AE0', borderRadius: 20, padding: 22, overflow: 'hidden', elevation: 6, shadowColor: '#004AE0', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 8, marginBottom: 15 },
+  watermarkIcon: { position: 'absolute', right: -20, top: 30, opacity: 0.1, transform: [{ rotate: '-15deg' }] },
+  blueIconCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  blueCardTitle: { fontSize: 18, fontWeight: '800', color: '#ffffff', marginBottom: 6, width: '85%' },
+  blueCardDesc: { fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: '500', lineHeight: 18, width: '90%' },
+  
+  whiteCard: { backgroundColor: '#ffffff', borderRadius: 20, padding: 20, flexDirection: 'row', alignItems: 'center', elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.05, shadowRadius: 5, borderWidth: 1, borderColor: '#F1F5F9' },
+  whiteIconSquare: { width: 52, height: 52, borderRadius: 16, backgroundColor: '#EEF2FF', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
+  whiteCardTextContainer: { flex: 1, paddingRight: 10 },
+  whiteCardTitle: { fontSize: 16, fontWeight: '800', color: '#1E293B', marginBottom: 3 },
+  whiteCardDesc: { fontSize: 12, color: '#64748B', fontWeight: '500', lineHeight: 16 },
   
   // Activity Cards
   activityCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 20, marginTop: 12, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.03, shadowRadius: 3, borderWidth: 1, borderColor: '#F8FAFC' },
@@ -205,9 +195,4 @@ const styles = StyleSheet.create({
   actTitle: { fontSize: 16, fontWeight: '800', color: '#1E293B', marginBottom: 3 },
   actDesc: { fontSize: 13, color: '#64748B', fontWeight: '500' },
   actTime: { fontSize: 11, color: '#94A3B8', fontWeight: '800', letterSpacing: 0.5 },
-  
-  // Map
-  mapInfo: { fontSize: 13, color: '#64748B', marginTop: 5, marginBottom: 15, fontWeight: '500' },
-  mapContainer: { height: 220, borderRadius: 24, overflow: 'hidden', marginTop: 5, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 6, borderWidth: 1, borderColor: '#E2E8F0' },
-  map: { width: '100%', height: '100%' },
 });
