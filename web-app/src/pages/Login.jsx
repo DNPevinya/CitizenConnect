@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -55,7 +56,7 @@ export default function Login() {
               <div>
                 <div className="flex justify-between items-center mb-1.5">
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">Password</label>
-                  <a href="#" className="text-xs font-bold text-blue-600 hover:text-blue-800">Forgot Password?</a>
+                  <a href="/forgot-password" className="text-xs font-bold text-blue-600 hover:text-blue-800">Forgot Password?</a>
                 </div>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -122,17 +123,18 @@ export default function Login() {
         </div>
       </div>
 
-      {/*  FOOTER */}
-      <div className="w-full p-4 border-t border-slate-200 bg-white">
-        <div className="flex flex-col sm:flex-row justify-between items-center max-w-7xl mx-auto px-4">
-          <p className="text-xs text-slate-500 font-medium">&copy; 2026 National Governance Digital Division</p>
-          <div className="flex space-x-6 mt-2 sm:mt-0">
-            <a href="#" className="text-xs text-slate-500 hover:text-slate-800 font-medium">Privacy Policy</a>
-            <a href="#" className="text-xs text-slate-500 hover:text-slate-800 font-medium">Terms of Conditions</a>
+      {/* FOOTER */}
+      <div className="w-full p-4 border-t border-slate-200 bg-transparent">
+        <div className="flex flex-col items-center justify-center max-w-7xl mx-auto px-4">
+          <p className="text-xs text-slate-500 font-medium mb-2">&copy; 2026 National Governance Digital Division. All Rights Reserved.</p>
+          <div className="flex space-x-4">
+            <a href="#" className="text-xs text-slate-400 hover:text-slate-600 font-medium">Privacy Policy</a>
+            <span className="text-slate-300">|</span>
+            <a href="#" className="text-xs text-slate-400 hover:text-slate-600 font-medium">Terms of Conditions</a>
           </div>
         </div>
       </div>
-
+      
     </div>
   );
 }
