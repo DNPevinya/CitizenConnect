@@ -3,11 +3,13 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
-export default function Settings() {
+// ADD { role = 'admin' } HERE
+export default function Settings({ role = 'admin' }) {
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       
-      <Sidebar />
+      {/* PASS THE ROLE TO THE SIDEBAR HERE */}
+      <Sidebar role={role} />
 
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         

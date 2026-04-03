@@ -1,12 +1,22 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
-import AdminDashboard from './pages/AdminDashboard'; 
-import AdminComplaints from './pages/AdminComplaints'; 
+
+// Admin Pages
+import AdminDashboard from './pages/AdminDashboard';
+import AdminComplaints from './pages/AdminComplaints';
 import AdminAuthorities from './pages/AdminAuthorities';
 import AdminUserManagement from './pages/AdminUserManagement';
 import AdminAnalytics from './pages/AdminAnalytics';
+
+// Officer Pages
+import OfficerDashboard from './pages/OfficerDashboard';
+import OfficerComplaints from './pages/OfficerComplaints'; // <-- NEW
+import OfficerComplaintDetails from './pages/OfficerComplaintDetails';
+
+// Shared Pages
 import Settings from './pages/Settings';
 
 export default function App() {
@@ -16,12 +26,21 @@ export default function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        
+        {/* --- ADMIN ROUTES --- */}
         <Route path="/dashboard" element={<AdminDashboard />} />
         <Route path="/complaints" element={<AdminComplaints />} />
         <Route path="/authorities" element={<AdminAuthorities />} />
         <Route path="/users" element={<AdminUserManagement />} />
         <Route path="/analytics" element={<AdminAnalytics />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings" element={<Settings role="admin" />} /> {/* Admin Settings */}
+
+        {/* --- OFFICER ROUTES --- */}
+        <Route path="/officer/dashboard" element={<OfficerDashboard />} />
+        <Route path="/officer/complaints" element={<OfficerComplaints />} /> {/* NEW */}
+        <Route path="/officer/complaint-details" element={<OfficerComplaintDetails />} />
+        <Route path="/officer/settings" element={<Settings role="officer" />} /> {/* Officer Settings */}
+        
       </Routes>
     </Router>
   );

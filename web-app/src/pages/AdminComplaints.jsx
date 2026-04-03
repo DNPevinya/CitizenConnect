@@ -114,7 +114,7 @@ export default function AdminComplaints() {
                   <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC]">
                     <th className="px-6 py-4 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">ID</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Subject</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Category</th>
+                    <th className="px-6 py-4 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Assigned Authority</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Status</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Date Submitted</th>
                     <th className="px-6 py-4 text-[10px] font-bold text-[#64748B] uppercase tracking-wider text-right">Actions</th>
