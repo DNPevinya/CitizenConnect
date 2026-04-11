@@ -1,14 +1,47 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
+  const navigate = useNavigate(); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState(''); 
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    console.log("Logging in with:", email, password);
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        localStorage.setItem('urbanSyncUser', JSON.stringify(data.user));
+
+        if (data.user.role === 'officer') {
+          navigate('/officer/dashboard');
+        } else if (data.user.role === 'super_admin') {
+          navigate('/admin/dashboard');
+        } else {
+          setError("Authorized personnel only. Please use the mobile app.");
+        }
+      } else {
+        setError(data.message || "Login failed. Check your credentials.");
+      }
+    } catch (err) {
+      console.error("Login connection error:", err);
+      setError("Cannot connect to server. Is your backend running?");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -30,9 +63,13 @@ export default function Login() {
               <p className="text-slate-500 text-sm">Access the administrative dashboard and complaint management system.</p>
             </div>
 
+            {error && (
+              <div className="mb-6 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-xs font-bold animate-pulse">
+                {error}
+              </div>
+            )}
+
             <form onSubmit={handleLogin} className="space-y-4">
-              
-              {/* Email Input */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase tracking-wide">Username or Official Email</label>
                 <div className="relative">
@@ -42,9 +79,10 @@ export default function Login() {
                     </svg>
                   </div>
                   <input
-                    type="text"
+                    type="email"
                     required
-                    className="block w-full pl-11 pr-3 py-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-slate-50 text-slate-800 placeholder-slate-400"
+                    disabled={isSubmitting}
+                    className="block w-full pl-11 pr-3 py-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-slate-50 text-slate-800 placeholder-slate-400 disabled:opacity-50"
                     placeholder="Enter your credentials"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -52,11 +90,10 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Password Input */}
               <div>
                 <div className="flex justify-between items-center mb-1.5">
                   <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide">Password</label>
-                  <a href="/forgot-password" className="text-xs font-bold text-blue-600 hover:text-blue-800">Forgot Password?</a>
+                  <a href="/forgot-password" size="xs" className="text-xs font-bold text-blue-600 hover:text-blue-800">Forgot Password?</a>
                 </div>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -67,7 +104,8 @@ export default function Login() {
                   <input
                     type={showPassword ? "text" : "password"}
                     required
-                    className="block w-full pl-11 pr-11 py-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-slate-50 text-slate-800 placeholder-slate-400"
+                    disabled={isSubmitting}
+                    className="block w-full pl-11 pr-11 py-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-slate-50 text-slate-800 placeholder-slate-400 disabled:opacity-50"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -88,16 +126,15 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Login Button */}
               <button 
                 type="submit" 
-                className="w-full py-3.5 px-4 bg-[#1D4ED8] hover:bg-blue-800 text-white text-sm font-bold rounded-xl shadow-lg transition-all flex justify-center items-center mt-3"
+                disabled={isSubmitting}
+                className="w-full py-3.5 px-4 bg-[#1D4ED8] hover:bg-blue-800 text-white text-sm font-bold rounded-xl shadow-lg transition-all flex justify-center items-center mt-3 disabled:bg-slate-400"
               >
-                Secure Login 
+                {isSubmitting ? "Authenticating..." : "Secure Login"}
                 <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
               </button>
             </form>
-
 
             <div className="mt-8">
               <p className="text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Authorized roles for this gateway:</p>
@@ -123,7 +160,6 @@ export default function Login() {
         </div>
       </div>
 
-      {/* FOOTER */}
       <div className="w-full p-4 border-t border-slate-200 bg-transparent">
         <div className="flex flex-col items-center justify-center max-w-7xl mx-auto px-4">
           <p className="text-xs text-slate-500 font-medium mb-2">&copy; 2026 National Governance Digital Division. All Rights Reserved.</p>

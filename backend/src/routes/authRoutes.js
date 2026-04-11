@@ -14,12 +14,13 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-//  REGISTRATION 
+// =========================================================================
+// 1. REGISTRATION (CITIZENS ONLY)
+// =========================================================================
 router.post('/register', async (req, res) => {
     const { fullName, phone, email, district, division, password } = req.body;
 
     try {
-        // 1. Check if email exists in the users table
         const [existingUser] = await db.query("SELECT * FROM users WHERE email = ?", [email]);
         if (existingUser.length > 0) {
             return res.status(400).json({ message: "This email is already registered." });
@@ -28,16 +29,12 @@ router.post('/register', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // 2. Insert into 'users' table 
         const userSql = `INSERT INTO users (email, password, role) VALUES (?, ?, 'citizen')`;
         const [userResult] = await db.query(userSql, [email, hashedPassword]);
         
         const newUserId = userResult.insertId; 
 
-        // 3. Insert into 'citizens' table 
-        const citizenSql = `INSERT INTO citizens (user_id, fullName, phone, district, division) 
-                            VALUES (?, ?, ?, ?, ?)`;
-        
+        const citizenSql = `INSERT INTO citizens (user_id, fullName, phone, district, division) VALUES (?, ?, ?, ?, ?)`;
         await db.query(citizenSql, [newUserId, fullName, phone, district, division]);
 
         res.status(201).json({ message: "Citizen registered successfully!" });
@@ -48,46 +45,49 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// --- LOGIN (JOINING USERS AND CITIZENS) ---
+// =========================================================================
+// 2. SMART LOGIN (CITIZENS, OFFICERS, ADMINS)
+// =========================================================================
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        // Use an INNER JOIN to get the login credentials and profile details in one go
-        const loginQuery = `
-            SELECT u.user_id, u.email, u.password, u.role, 
-                   c.fullName, c.phone, c.district, c.division, c.profilePicture
-            FROM users u
-            JOIN citizens c ON u.user_id = c.user_id
-            WHERE u.email = ?
-        `;
-
-        const [users] = await db.query(loginQuery, [email]);
+        const [users] = await db.query(`SELECT * FROM users WHERE email = ?`, [email]);
         
         if (users.length === 0) {
             return res.status(401).json({ message: "Invalid email or password." });
         }
 
         const user = users[0];
-        const isMatch = await bcrypt.compare(password, user.password);
+
+        const isBcryptMatch = await bcrypt.compare(password, user.password);
+        const isPlainTextMatch = password === user.password; 
         
-        if (!isMatch) {
+        if (!isBcryptMatch && !isPlainTextMatch) {
             return res.status(401).json({ message: "Invalid email or password." });
         }
 
-        res.status(200).json({ 
-            message: "Login successful!",
-            user: {
-                id: user.user_id,
-                fullName: user.fullName,
-                email: user.email,
-                role: user.role,
-                phone: user.phone,
-                district: user.district,
-                division: user.division,
-                profilePicture: user.profilePicture || null 
+        let userProfile = { id: user.user_id, email: user.email, role: user.role };
+
+        if (user.role === 'citizen') {
+            const [citizens] = await db.query(`SELECT * FROM citizens WHERE user_id = ?`, [user.user_id]);
+            if (citizens.length > 0) {
+                userProfile.fullName = citizens[0].fullName;
+                userProfile.phone = citizens[0].phone;
+                userProfile.district = citizens[0].district;
+                userProfile.division = citizens[0].division;
+                userProfile.profilePicture = citizens[0].profilePicture || null;
             }
-        });
+        } 
+        else if (user.role === 'officer') {
+            const [officers] = await db.query(`SELECT * FROM officers WHERE user_id = ?`, [user.user_id]);
+            if (officers.length > 0) {
+                userProfile.fullName = officers[0].full_name;
+                userProfile.authority_id = officers[0].authority_id;
+            }
+        }
+
+        res.status(200).json({ message: "Login successful!", user: userProfile });
 
     } catch (error) {
         console.error("Login DB Error:", error);
@@ -95,12 +95,13 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// --- UPDATE PROFILE (UPDATING CITIZENS TABLE) ---
+// =========================================================================
+// 3. UPDATE PROFILE (CITIZENS ONLY)
+// =========================================================================
 router.put('/update-profile', upload.single('profileImage'), async (req, res) => {
     const { email, fullName, phone, district, division, currentPassword, newPassword, deleteImage } = req.body;
 
     try {
-        // 1. Fetch data from both tables to verify
         const fetchSql = `
             SELECT u.*, c.profilePicture 
             FROM users u 
@@ -112,24 +113,19 @@ router.put('/update-profile', upload.single('profileImage'), async (req, res) =>
         
         const user = users[0];
 
-        // 2. Password Change Logic (Updates 'users' table)
         let finalPassword = user.password;
         if (newPassword && newPassword.trim() !== "") {
-            if (!currentPassword) {
-                return res.status(400).json({ message: "Current password required." });
-            }
+            if (!currentPassword) return res.status(400).json({ message: "Current password required." });
+            
             const isMatch = await bcrypt.compare(currentPassword, user.password);
-            if (!isMatch) {
-                return res.status(401).json({ message: "Incorrect current password." });
-            }
+            if (!isMatch) return res.status(401).json({ message: "Incorrect current password." });
+            
             const salt = await bcrypt.genSalt(10);
             finalPassword = await bcrypt.hash(newPassword, salt);
             
-            // Update the users table specifically for the password
             await db.query("UPDATE users SET password = ? WHERE user_id = ?", [finalPassword, user.user_id]);
         }
 
-        // 3. Image Logic
         let profilePicPath = user.profilePicture; 
         if (deleteImage === 'true') {
             profilePicPath = null;
@@ -137,7 +133,6 @@ router.put('/update-profile', upload.single('profileImage'), async (req, res) =>
             profilePicPath = `/uploads/${req.file.filename}`;
         }
 
-        // 4. Update 'citizens' table for profile info
         const updateCitizenSql = `
             UPDATE citizens 
             SET fullName = ?, phone = ?, district = ?, division = ?, profilePicture = ?
@@ -146,10 +141,7 @@ router.put('/update-profile', upload.single('profileImage'), async (req, res) =>
         
         await db.query(updateCitizenSql, [fullName, phone, district, division, profilePicPath, user.user_id]);
 
-        res.status(200).json({ 
-            message: "Profile updated successfully!",
-            profilePicture: profilePicPath 
-        });
+        res.status(200).json({ message: "Profile updated successfully!", profilePicture: profilePicPath });
 
     } catch (error) {
         console.error("Update Error:", error);

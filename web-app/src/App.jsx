@@ -13,7 +13,7 @@ import AdminAnalytics from './pages/AdminAnalytics';
 
 // Officer Pages
 import OfficerDashboard from './pages/OfficerDashboard';
-import OfficerComplaints from './pages/OfficerComplaints'; // <-- NEW
+import OfficerComplaints from './pages/OfficerComplaints'; 
 import OfficerComplaintDetails from './pages/OfficerComplaintDetails';
 
 // Shared Pages
@@ -28,18 +28,18 @@ export default function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         
         {/* --- ADMIN ROUTES --- */}
-        <Route path="/dashboard" element={<AdminDashboard />} />
-        <Route path="/complaints" element={<AdminComplaints />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/complaints" element={<AdminComplaints />} />
         <Route path="/authorities" element={<AdminAuthorities />} />
         <Route path="/users" element={<AdminUserManagement />} />
         <Route path="/analytics" element={<AdminAnalytics />} />
-        <Route path="/settings" element={<Settings role="admin" />} /> {/* Admin Settings */}
+        <Route path="/settings" element={<Settings role="admin" />} />
 
         {/* --- OFFICER ROUTES --- */}
         <Route path="/officer/dashboard" element={<OfficerDashboard />} />
-        <Route path="/officer/complaints" element={<OfficerComplaints />} /> {/* NEW */}
+        <Route path="/officer/complaints" element={<OfficerComplaints />} /> 
         <Route path="/officer/complaint-details" element={<OfficerComplaintDetails />} />
-        <Route path="/officer/settings" element={<Settings role="officer" />} /> {/* Officer Settings */}
+        <Route path="/officer/settings" element={<Settings role="officer" />} />
         
       </Routes>
     </Router>
