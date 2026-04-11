@@ -4,6 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { BASE_URL } from '../../src/config';
 
+// 1. ADDED: Import AsyncStorage to save the user data
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigateToForgot }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +39,21 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
       const data = await response.json();
       
       if (response.ok && data.user) {
+        
+        // 2. ADDED: Save the user data to the phone's memory BEFORE navigating away!
+        const userObj = {
+          id: data.user.id,
+          fullName: data.user.fullName,
+          email: data.user.email,
+          phone: data.user.phone,
+          district: data.user.district,
+          division: data.user.division,
+          profilePicture: data.user.profilePicture || null 
+        };
+        await AsyncStorage.setItem('user', JSON.stringify(userObj));
+        console.log("SUCCESS: User saved to mobile storage in LoginScreen!");
+
+        // 3. Proceed with existing login success logic
         onLoginSuccess(
           data.user.id,          
           data.user.fullName,    

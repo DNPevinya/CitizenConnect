@@ -160,3 +160,16 @@ router.put('/update-profile', upload.single('profileImage'), async (req, res) =>
 });
 
 module.exports = router;
+
+// GET ALL NOTIFICATIONS FOR A SPECIFIC CITIZEN
+router.get('/notifications/:userId', async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      "SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC", 
+      [req.params.userId]
+    );
+    res.status(200).json({ success: true, data: rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching notifications" });
+  }
+});

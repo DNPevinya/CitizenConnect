@@ -1,36 +1,77 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// IMPORT YOUR BASE_URL SO IT CONNECTS TO THE RIGHT PLACE!
+import { BASE_URL } from '../../src/config'; 
+
+const getNotificationStyle = (message) => {
+  const text = message.toUpperCase();
+  if (text.includes('RESOLVED')) {
+    return { type: 'success', icon: 'check-circle', title: 'Complaint Resolved' };
+  } else if (text.includes('IN PROGRESS')) {
+    return { type: 'info', icon: 'account-hard-hat', title: 'Work In Progress' };
+  } else {
+    return { type: 'comment', icon: 'bell-outline', title: 'System Update' };
+  }
+};
+
+const formatTime = (dateString) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
 
 export default function NotificationScreen({ onBack }) {
-  // MOCK DATA ---
-  const notifications = [
-    {
-      id: 1,
-      title: 'Complaint Resolved',
-      message: 'Your complaint #CMB-4920 (Waste Management) has been marked as resolved.',
-      time: '2 hours ago',
-      type: 'success',
-      icon: 'check-circle',
-    },
-    {
-      id: 2,
-      title: 'Engineer Assigned',
-      message: 'An officer from the Urban Development Dept has been assigned to your request.',
-      time: 'Yesterday',
-      type: 'info',
-      icon: 'account-hard-hat',
-    },
-    {
-      id: 3,
-      title: 'New Comment',
-      message: 'The Road Authority added a comment to your report: "Work will start on Monday."',
-      time: '2 days ago',
-      type: 'comment',
-      icon: 'message-text-outline',
-    },
-  ];
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchNotifications = async () => {
+    try {
+      // 1. Get the logged-in citizen's ID
+      const userData = await AsyncStorage.getItem('user');
+      console.log("Notification Screen - Raw User Data from Storage:", userData);
+
+      if (!userData) {
+        console.log("No user found in storage.");
+        setLoading(false);
+        return;
+      }
+      
+      const parsedUser = JSON.parse(userData);
+      const userId = parsedUser.id; 
+      
+      console.log(`Fetching notifications for User ID: ${userId}`);
+      console.log(`Using URL: ${BASE_URL}/api/auth/notifications/${userId}`);
+
+      // 2. Fetch using your BASE_URL
+      const response = await fetch(`${BASE_URL}/api/auth/notifications/${userId}`);
+      const result = await response.json();
+
+      if (result.success) {
+        console.log(`Found ${result.data.length} notifications!`);
+        setNotifications(result.data);
+      } else {
+        console.log("Backend returned success: false");
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchNotifications();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -50,38 +91,60 @@ export default function NotificationScreen({ onBack }) {
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-        {notifications.map((item) => (
-          <TouchableOpacity key={item.id} style={styles.notificationCard} activeOpacity={0.7}>
-            <View style={[styles.iconContainer, styles[item.type + 'Icon']]}>
-              <MaterialCommunityIcons name={item.icon} size={26} color={styles[item.type + 'Color'].color} />
-            </View>
-            <View style={styles.textContainer}>
-              <View style={styles.titleRow}>
-                <Text style={styles.notifTitle}>{item.title}</Text>
-                <Text style={styles.notifTime}>{item.time}</Text>
-              </View>
-              <Text style={styles.notifMessage} numberOfLines={2}>
-                {item.message}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-        
-        <View style={styles.endOfList}>
-          <Ionicons name="checkmark-circle-outline" size={24} color="#CBD5E1" />
-          <Text style={styles.endOfListText}>You're all caught up!</Text>
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#0041C7" />
         </View>
-      </ScrollView>
+      ) : (
+        <ScrollView 
+          contentContainerStyle={styles.listContent} 
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#0041C7']} />
+          }
+        >
+          {notifications.length === 0 ? (
+            <View style={styles.endOfList}>
+              <Ionicons name="notifications-off-outline" size={40} color="#CBD5E1" style={{ marginBottom: 10 }} />
+              <Text style={styles.endOfListText}>You have no new notifications.</Text>
+            </View>
+          ) : (
+            notifications.map((item) => {
+              const { type, icon, title } = getNotificationStyle(item.message);
+              
+              return (
+                <TouchableOpacity key={item.notification_id} style={styles.notificationCard} activeOpacity={0.7}>
+                  <View style={[styles.iconContainer, styles[type + 'Icon']]}>
+                    <MaterialCommunityIcons name={icon} size={26} color={styles[type + 'Color'].color} />
+                  </View>
+                  <View style={styles.textContainer}>
+                    <View style={styles.titleRow}>
+                      <Text style={styles.notifTitle}>{title}</Text>
+                      <Text style={styles.notifTime}>{formatTime(item.created_at)}</Text>
+                    </View>
+                    <Text style={styles.notifMessage} numberOfLines={2}>
+                      {item.message}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          )}
+          
+          {notifications.length > 0 && (
+            <View style={styles.endOfList}>
+              <Ionicons name="checkmark-circle-outline" size={24} color="#CBD5E1" />
+              <Text style={styles.endOfListText}>You're all caught up!</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
 
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
-  
-
   topNavBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 15, paddingBottom: 15, backgroundColor: '#F8FAFC' },
   navLeft: { flexDirection: 'row', alignItems: 'center' },
   backButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center', marginRight: 15, elevation: 2, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 3, borderWidth: 1, borderColor: '#E2E8F0' },
@@ -89,7 +152,6 @@ const styles = StyleSheet.create({
   navTitle: { fontSize: 26, fontWeight: '800', color: '#0041C7' },
   markReadBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0, 65, 199, 0.08)', justifyContent: 'center', alignItems: 'center' },
 
-  // List & Cards
   listContent: { paddingHorizontal: 25, paddingTop: 10, paddingBottom: 40 },
   notificationCard: {
     flexDirection: 'row',
@@ -111,6 +173,8 @@ const styles = StyleSheet.create({
   notifTitle: { fontSize: 16, fontWeight: '800', color: '#1E293B' },
   notifTime: { fontSize: 11, color: '#94A3B8', fontWeight: '600' },
   notifMessage: { fontSize: 13, color: '#64748B', lineHeight: 20, fontWeight: '500' },
+  
+  // Theme Colors
   successIcon: { backgroundColor: 'rgba(40, 199, 111, 0.12)' },
   successColor: { color: '#28C76F' },
   infoIcon: { backgroundColor: 'rgba(1, 96, 201, 0.12)' }, 

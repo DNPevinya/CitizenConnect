@@ -122,3 +122,43 @@ router.get('/stats/:userId', async (req, res) => {
 });
 
 module.exports = router;
+
+// =========================================================================
+// UPDATE COMPLAINT STATUS
+// =========================================================================
+router.patch('/update-status/:id', async (req, res) => {
+  const { status } = req.body;
+  const complaintId = req.params.id;
+
+  try {
+    // 1. Get the user_id and title of the complaint so we can personalize the message
+    const [complaintData] = await db.query(
+      "SELECT user_id, title FROM complaints WHERE complaint_id = ?", 
+      [complaintId]
+    );
+
+    if (complaintData.length === 0) {
+      return res.status(404).json({ success: false, message: "Complaint not found" });
+    }
+
+    const { user_id, title } = complaintData[0];
+
+    // 2. Update the complaint status
+    const updateSql = `UPDATE complaints SET status = ? WHERE complaint_id = ?`;
+    await db.query(updateSql, [status, complaintId]);
+    
+    // 3. AUTO-NOTIFICATION: Create the message based on the new status
+    const notificationMsg = `Update on "${title}": Your complaint is now ${status.toUpperCase()}.`;
+    const notifSql = `INSERT INTO notifications (user_id, complaint_id, message) VALUES (?, ?, ?)`;
+    await db.query(notifSql, [user_id, complaintId, notificationMsg]);
+
+    res.status(200).json({ 
+      success: true, 
+      message: "Status updated and notification sent to citizen!" 
+    });
+
+  } catch (error) {
+    console.error("Update Status & Notif Error:", error);
+    res.status(500).json({ success: false, message: "Failed to update status." });
+  }
+});
