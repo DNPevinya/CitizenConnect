@@ -101,13 +101,26 @@ router.get('/admin/all', async (req, res) => {
   } catch (error) { res.status(500).json({ success: false, message: "Failed to fetch all complaints." }); }
 });
 
-// 5. GET SINGLE COMPLAINT DETAILS
+// GET SINGLE COMPLAINT DETAILS (Updated with Authority Name)
 router.get('/:id', async (req, res) => {
   try {
-    const [complaint] = await db.query(`SELECT * FROM complaints WHERE complaint_id = ?`, [req.params.id]);
-    if (complaint.length > 0) res.status(200).json({ success: true, data: complaint[0] });
-    else res.status(404).json({ success: false, message: "Complaint not found" });
-  } catch (error) { res.status(500).json({ success: false, message: "Failed to fetch complaint details." }); }
+    const sql = `
+      SELECT c.*, a.name as authority_name 
+      FROM complaints c 
+      LEFT JOIN authorities a ON c.authority_id = a.authority_id 
+      WHERE c.complaint_id = ?
+    `;
+    const [complaint] = await db.query(sql, [req.params.id]);
+    
+    if (complaint.length > 0) {
+      res.status(200).json({ success: true, data: complaint[0] });
+    } else {
+      res.status(404).json({ success: false, message: "Complaint not found" });
+    }
+  } catch (error) {
+    console.error("Fetch Details Error:", error);
+    res.status(500).json({ success: false, message: "Failed to fetch complaint details." });
+  }
 });
 
 // 6. GET CITIZEN DASHBOARD STATS

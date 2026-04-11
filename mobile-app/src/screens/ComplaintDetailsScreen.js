@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Image, ActivityIndicator, Alert, Modal, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
+import { WebView } from 'react-native-webview'; 
 import { BASE_URL } from '../../src/config';
 
-export default function ComplaintDetailsScreen({ onBack, onNavigateToChat, complaintId }) {
+export default function ComplaintDetailsScreen({ onBack, complaintId }) {
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [cancelling, setCancelling] = useState(false);
   const [isImageModalVisible, setImageModalVisible] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState(null); 
 
@@ -29,14 +30,34 @@ export default function ComplaintDetailsScreen({ onBack, onNavigateToChat, compl
     }
   };
 
-  const handleOptionsClick = () => {
+  const handleCancelComplaint = () => {
     Alert.alert(
-      "Complaint Options",
-      "What would you like to do?",
+      "Cancel Complaint",
+      "Are you sure you want to withdraw this complaint? This cannot be undone.",
       [
-        { text: "Cancel Complaint", onPress: () => Alert.alert("Cancelled", "Complaint has been withdrawn."), style: "destructive" },
-        { text: "Report a Delay", onPress: () => Alert.alert("Reported", "A delay report has been sent to the authority.") },
-        { text: "Close", style: "cancel" }
+        { text: "No, Keep it", style: "cancel" },
+        { 
+          text: "Yes, Cancel", 
+          style: "destructive", 
+          onPress: async () => {
+            setCancelling(true);
+            try {
+              const response = await fetch(`${SERVER_URL}/api/complaints/update-status/${complaintId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'CANCELLED' })
+              });
+              if (response.ok) {
+                Alert.alert("Withdrawn", "Your complaint has been cancelled.");
+                onBack(); 
+              }
+            } catch (err) {
+              Alert.alert("Error", "Could not cancel at this time.");
+            } finally {
+              setCancelling(false);
+            }
+          }
+        }
       ]
     );
   };
@@ -64,7 +85,8 @@ export default function ComplaintDetailsScreen({ onBack, onNavigateToChat, compl
 
   const displayId = complaint.id || complaint.complaint_id || '0000';
   const status = complaint.status ? complaint.status.toUpperCase() : 'PENDING';
-  const assignedAuthority = complaint.assigned_authority ? complaint.assigned_authority : null;
+  
+  const assignedAuthority = complaint.authority_name || null; 
   
   const locationText = complaint.location_text || "Unknown Location";
   const locationParts = locationText.split(',');
@@ -83,6 +105,7 @@ export default function ComplaintDetailsScreen({ onBack, onNavigateToChat, compl
       case 'PENDING': return '#FF9F43';
       case 'RESOLVED': return '#28C76F';
       case 'IN PROGRESS': return '#0041C7';
+      case 'CANCELLED': return '#64748B';
       default: return '#FF9F43';
     }
   };
@@ -91,7 +114,7 @@ export default function ComplaintDetailsScreen({ onBack, onNavigateToChat, compl
 
   const imageList = complaint.image_url 
     ? complaint.image_url.split(',').map(url => `${SERVER_URL}${url.trim()}`)
-    : ['https://via.placeholder.com/400x200?text=No+Image+Provided'];
+    : [];
 
   const openImageModal = (url) => {
     setSelectedImageUrl(url);
@@ -140,17 +163,40 @@ export default function ComplaintDetailsScreen({ onBack, onNavigateToChat, compl
            </View>
         </View>
 
-        <Text style={styles.sectionLabel}>EVIDENCE PHOTOS</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScrollContainer}>
-          {imageList.map((url, index) => (
-            <TouchableOpacity key={index} activeOpacity={0.8} onPress={() => openImageModal(url)} style={styles.imageWrapper}>
-              <Image source={{ uri: url }} style={styles.mainImage} />
-              <View style={styles.viewPhotoOverlay}>
-                <Ionicons name="expand" size={14} color="#fff" />
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <Text style={styles.sectionLabel}>GEO-LOCATION PIN</Text>
+        <View style={styles.mapCard}>
+          {complaint.latitude ? (
+            <WebView
+              scrollEnabled={false}
+              source={{ html: `
+                <style>body{margin:0;padding:0;}</style>
+                <iframe width="100%" height="100%" frameborder="0" src="https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(complaint.longitude)-0.005},${parseFloat(complaint.latitude)-0.005},${parseFloat(complaint.longitude)+0.005},${parseFloat(complaint.latitude)+0.005}&layer=mapnik&marker=${complaint.latitude},${complaint.longitude}"></iframe>
+              ` }}
+              style={styles.map}
+            />
+          ) : (
+            <View style={styles.noMap}>
+              <Ionicons name="location-outline" size={24} color="#94A3B8" />
+              <Text style={styles.noMapText}>GPS Location not provided</Text>
+            </View>
+          )}
+        </View>
+
+        {imageList.length > 0 && (
+          <>
+            <Text style={styles.sectionLabel}>EVIDENCE PHOTOS</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imageScrollContainer}>
+              {imageList.map((url, index) => (
+                <TouchableOpacity key={index} activeOpacity={0.8} onPress={() => openImageModal(url)} style={styles.imageWrapper}>
+                  <Image source={{ uri: url }} style={styles.mainImage} />
+                  <View style={styles.viewPhotoOverlay}>
+                    <Ionicons name="expand" size={14} color="#fff" />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </>
+        )}
 
         <Text style={styles.sectionLabel}>DESCRIPTION</Text>
         <View style={styles.descCard}>
@@ -163,7 +209,8 @@ export default function ComplaintDetailsScreen({ onBack, onNavigateToChat, compl
           </View>
           <View style={{ flex: 1 }}>
             <Text style={[styles.authorityLabel, { color: assignedAuthority ? '#0041C7' : '#64748B' }]}>ASSIGNED AUTHORITY</Text>
-            <Text style={[styles.authorityName, { color: assignedAuthority ? '#1E293B' : '#94A3B8' }]} numberOfLines={1}>
+            {/* Removed numberOfLines={1} so the text can wrap correctly */}
+            <Text style={[styles.authorityName, { color: assignedAuthority ? '#1E293B' : '#94A3B8' }]}>
               {assignedAuthority ? assignedAuthority : "Pending Assignment"}
             </Text>
           </View>
@@ -193,7 +240,7 @@ export default function ComplaintDetailsScreen({ onBack, onNavigateToChat, compl
                 {assignedAuthority ? `Assigned to Authority` : "Awaiting Assignment"}
               </Text>
               <Text style={styles.timelineDate}>
-                {assignedAuthority ? (complaint.updated_at ? formatDateTime(complaint.updated_at) : "Recently Assigned") : "Pending"}
+                {assignedAuthority ? "Verified by dispatch" : "Pending"}
               </Text>
             </View>
           </View>
@@ -227,14 +274,22 @@ export default function ComplaintDetailsScreen({ onBack, onNavigateToChat, compl
       </ScrollView>
 
       <View style={styles.bottomBar}>
-        <TouchableOpacity style={{ flex: 1 }} onPress={onNavigateToChat} activeOpacity={0.8}>
-           <LinearGradient colors={['#0041C7', '#0D85D8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.chatButton}>
-             <Ionicons name="chatbubbles" size={20} color="#fff" />
-             <Text style={styles.chatButtonText}>Chat with Authority</Text>
-           </LinearGradient>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.optionsButton} onPress={handleOptionsClick} activeOpacity={0.7}>
-          <Ionicons name="ellipsis-vertical" size={24} color="#64748B" />
+        <TouchableOpacity 
+          style={[styles.cancelButton, (status === 'RESOLVED' || status === 'CANCELLED' || cancelling) && styles.cancelBtnDisabled]} 
+          onPress={handleCancelComplaint} 
+          disabled={status === 'RESOLVED' || status === 'CANCELLED' || cancelling}
+          activeOpacity={0.8}
+        >
+          {cancelling ? (
+            <ActivityIndicator color="#EF4444" />
+          ) : (
+            <>
+              <Ionicons name="trash-outline" size={20} color={status === 'RESOLVED' || status === 'CANCELLED' ? "#94A3B8" : "#EF4444"} />
+              <Text style={[styles.cancelButtonText, (status === 'RESOLVED' || status === 'CANCELLED') && styles.cancelTextDisabled]}>
+                Cancel Complaint
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -255,6 +310,7 @@ const styles = StyleSheet.create({
   navTitle: { fontSize: 18, fontWeight: '900', color: '#1E293B' },
   headerSubtitle: { fontSize: 10, color: '#0160C9', fontWeight: '800', letterSpacing: 1, marginTop: 2 },
   scrollContent: { padding: 20, paddingBottom: 100 },
+  
   summaryCard: { backgroundColor: '#fff', borderRadius: 20, padding: 20, marginBottom: 25, borderWidth: 1.5, borderColor: '#E2E8F0', elevation: 2, shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 5 },
   cardHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   complaintIdText: { fontSize: 15, fontWeight: '900', color: '#0041C7', letterSpacing: 0.5 },
@@ -264,22 +320,26 @@ const styles = StyleSheet.create({
   locationRow: { flexDirection: 'row', alignItems: 'flex-start' },
   locationText: { fontSize: 14, color: '#64748B', marginLeft: 6, fontWeight: '600', flex: 1, lineHeight: 20 },
   sectionLabel: { fontSize: 12, fontWeight: '800', color: '#64748B', letterSpacing: 1, marginBottom: 12, marginLeft: 5 },
+  
+  mapCard: { height: 180, borderRadius: 20, overflow: 'hidden', marginBottom: 25, borderWidth: 1.5, borderColor: '#E2E8F0', elevation: 2, shadowColor: '#000', shadowOpacity: 0.03 },
+  map: { flex: 1 },
+  noMap: { flex: 1, backgroundColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center' },
+  noMapText: { marginTop: 8, color: '#94A3B8', fontSize: 13, fontWeight: '600' },
+  
   imageScrollContainer: { flexDirection: 'row', marginBottom: 25 },
   imageWrapper: { width: 280, height: 180, borderRadius: 16, overflow: 'hidden', marginRight: 15, borderWidth: 1, borderColor: '#E2E8F0', backgroundColor: '#F1F5F9' },
   mainImage: { width: '100%', height: '100%' },
   viewPhotoOverlay: { position: 'absolute', bottom: 10, right: 10, backgroundColor: 'rgba(15, 23, 42, 0.7)', width: 32, height: 32, borderRadius: 16, justifyContent: 'center', alignItems: 'center' },
   
-  // Description Card
   descCard: { backgroundColor: '#fff', borderRadius: 16, padding: 20, marginBottom: 25, borderWidth: 1.5, borderColor: '#E2E8F0' },
   descText: { fontSize: 15, color: '#334155', lineHeight: 24, fontWeight: '500' },
   
-  // Authority Card
-  authorityCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 20, borderRadius: 20, marginBottom: 25, borderWidth: 1.5, borderColor: '#E2E8F0', elevation: 2, shadowOpacity: 0.03 },
+  // UPDATED AUTHORITY CARD STYLES FOR WRAPPING
+  authorityCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#fff', padding: 20, borderRadius: 20, marginBottom: 25, borderWidth: 1.5, borderColor: '#E2E8F0', elevation: 2, shadowOpacity: 0.03 },
   authorityIconBox: { width: 48, height: 48, borderRadius: 14, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   authorityLabel: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5, marginBottom: 2 },
-  authorityName: { fontSize: 16, fontWeight: '800' },
+  authorityName: { fontSize: 16, fontWeight: '800', lineHeight: 22, flexWrap: 'wrap' },
   
-  // Timeline Card
   timelineCard: { backgroundColor: '#fff', borderRadius: 20, padding: 25, paddingBottom: 30, borderWidth: 1.5, borderColor: '#E2E8F0', elevation: 2, shadowOpacity: 0.03, shadowRadius: 5 },
   timelineRow: { flexDirection: 'row', marginBottom: 30, position: 'relative' },
   timelineLine: { position: 'absolute', left: 13, top: 28, bottom: -30, width: 2 },
@@ -288,13 +348,12 @@ const styles = StyleSheet.create({
   timelineTitleActive: { fontSize: 15, fontWeight: '800' },
   timelineDate: { fontSize: 13, color: '#94A3B8', marginTop: 4, fontWeight: '500' },
   
-  // Bottom Bar
-  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', padding: 20, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E2E8F0', alignItems: 'center' },
-  chatButton: { flexDirection: 'row', height: 55, borderRadius: 16, justifyContent: 'center', alignItems: 'center', marginRight: 15 },
-  chatButtonText: { color: '#fff', fontSize: 16, fontWeight: '800', marginLeft: 10, letterSpacing: 0.5 },
-  optionsButton: { width: 55, height: 55, backgroundColor: '#F8FAFC', borderRadius: 16, justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: '#E2E8F0' },
+  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 20, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: '#E2E8F0', alignItems: 'center' },
+  cancelButton: { flexDirection: 'row', height: 55, width: '100%', borderRadius: 16, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FEF2F2', borderWidth: 1, borderColor: '#FECACA' },
+  cancelBtnDisabled: { backgroundColor: '#F8FAFC', borderColor: '#E2E8F0' },
+  cancelButtonText: { color: '#EF4444', fontSize: 16, fontWeight: '800', marginLeft: 10, letterSpacing: 0.5 },
+  cancelTextDisabled: { color: '#94A3B8' },
 
-  // Modal
   modalBackground: { flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.95)', justifyContent: 'center', alignItems: 'center' },
   closeModalBtn: { position: 'absolute', top: 50, right: 25, zIndex: 10 },
   fullScreenImage: { width: '100%', height: '80%' }
