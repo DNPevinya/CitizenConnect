@@ -240,7 +240,7 @@ export default function ComplaintDetailsScreen({ onBack, complaintId }) {
                 {assignedAuthority ? `Assigned to Authority` : "Awaiting Assignment"}
               </Text>
               <Text style={styles.timelineDate}>
-                {assignedAuthority ? "Verified by dispatch" : "Pending"}
+                {assignedAuthority ? "Automatically assigned by UrbanSync" : "Pending system assignment"}
               </Text>
             </View>
           </View>
