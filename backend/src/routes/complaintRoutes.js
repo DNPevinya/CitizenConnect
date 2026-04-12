@@ -160,5 +160,63 @@ router.get('/stats/:userId', async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// CRITICAL: Keep this at the absolute bottom
+// 1. GLOBAL STATS (Total, Pending, Resolved for the whole country)
+router.get('/admin/stats', async (req, res) => {
+  try {
+    const [total] = await db.query('SELECT COUNT(*) as count FROM complaints');
+    const [pending] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE status = 'PENDING'");
+    const [resolved] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE status = 'RESOLVED'");
+    const [inProgress] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE status = 'IN PROGRESS'");
+
+    res.json({ 
+      success: true, 
+      data: { 
+        total: total[0].count, 
+        pending: pending[0].count, 
+        resolved: resolved[0].count,
+        active: inProgress[0].count
+      } 
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Stats sync failed" });
+  }
+});
+
+// 2. PERFORMANCE BY AUTHORITY (For the Progress Bars)
+router.get('/admin/performance', async (req, res) => {
+  try {
+    const query = `
+      SELECT a.name, a.department, COUNT(c.complaint_id) as total_cases
+      FROM authorities a
+      LEFT JOIN complaints c ON a.authority_id = c.authority_id
+      GROUP BY a.authority_id
+      ORDER BY total_cases DESC
+      LIMIT 5
+    `;
+    const [rows] = await db.query(query);
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Performance data sync failed" });
+  }
+});
+
+// 3. MASTER RECENT ACTIVITY (Last 5 complaints from ANY department)
+router.get('/admin/all-recent', async (req, res) => {
+  try {
+    const query = `
+      SELECT c.*, a.name as authority_name, cit.fullName as citizen_name
+      FROM complaints c
+      LEFT JOIN authorities a ON c.authority_id = a.authority_id
+      LEFT JOIN citizens cit ON c.user_id = cit.user_id
+      ORDER BY c.created_at DESC
+      LIMIT 5
+    `;
+    const [rows] = await db.query(query);
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Master list sync failed" });
+  }
+});
+
+
 module.exports = router;
