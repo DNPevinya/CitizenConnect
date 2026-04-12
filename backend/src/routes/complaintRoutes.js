@@ -33,7 +33,92 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// 1. SUBMIT COMPLAINT
+
+// ==========================================================
+// 🚨 SUPER ADMIN ROUTES (MUST BE AT THE TOP)
+// ==========================================================
+
+// 1. GLOBAL STATS
+router.get('/admin/stats', async (req, res) => {
+  try {
+    const [total] = await db.query('SELECT COUNT(*) as count FROM complaints');
+    const [pending] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE status = 'PENDING'");
+    const [resolved] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE status = 'RESOLVED'");
+    const [inProgress] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE status = 'IN PROGRESS'");
+
+    res.json({ 
+      success: true, 
+      data: { total: total[0].count, pending: pending[0].count, resolved: resolved[0].count, active: inProgress[0].count } 
+    });
+  } catch (err) {
+    console.error("Admin Stats Error:", err);
+    res.status(500).json({ success: false, message: "Stats sync failed" });
+  }
+});
+
+// 2. PERFORMANCE BY AUTHORITY
+router.get('/admin/performance', async (req, res) => {
+  try {
+    const query = `
+      SELECT a.name, a.department, COUNT(c.complaint_id) as total_cases
+      FROM authorities a
+      LEFT JOIN complaints c ON a.authority_id = c.authority_id
+      GROUP BY a.authority_id
+      ORDER BY total_cases DESC
+      LIMIT 5
+    `;
+    const [rows] = await db.query(query);
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error("Admin Performance Error:", err);
+    res.status(500).json({ success: false, message: "Performance data sync failed" });
+  }
+});
+
+// 3. MASTER RECENT ACTIVITY (Latest 5 from ALL departments)
+router.get('/admin/all-recent', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        c.*, 
+        a.name AS authority_name, 
+        cit.fullName AS citizen_name
+      FROM complaints c
+      LEFT JOIN authorities a ON c.authority_id = a.authority_id
+      LEFT JOIN citizens cit ON c.user_id = cit.user_id
+      ORDER BY c.created_at DESC
+      LIMIT 5
+    `;
+    const [rows] = await db.query(query);
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error("Admin Recent Activity Error:", err);
+    res.status(500).json({ success: false, message: "Master list sync failed" });
+  }
+});
+
+// 4. GET ALL COMPLAINTS (For the Full Master List Page)
+router.get('/admin/all', async (req, res) => {
+  try {
+    const sql = `
+      SELECT c.*, a.name as authority_name, a.region 
+      FROM complaints c
+      LEFT JOIN authorities a ON c.authority_id = a.authority_id
+      ORDER BY c.created_at DESC
+    `;
+    const [complaints] = await db.query(sql);
+    res.status(200).json({ success: true, data: complaints });
+  } catch (error) { 
+    res.status(500).json({ success: false, message: "Error." }); 
+  }
+});
+
+
+// ==========================================================
+// 🏢 GENERAL & OFFICER ROUTES
+// ==========================================================
+
+// SUBMIT COMPLAINT
 router.post('/submit', upload.array('images', 3), async (req, res) => {
   const { user_id, category, title, description, location_text, latitude, longitude } = req.body;
   let image_url = null;
@@ -69,7 +154,7 @@ router.post('/submit', upload.array('images', 3), async (req, res) => {
   }
 });
 
-// 2. GET SINGLE USER COMPLAINTS (Citizen App)
+// GET SINGLE USER COMPLAINTS (Citizen App)
 router.get('/user/:userId', async (req, res) => {
   try {
     const [complaints] = await db.query(`SELECT * FROM complaints WHERE user_id = ? ORDER BY created_at DESC`, [req.params.userId]);
@@ -77,7 +162,18 @@ router.get('/user/:userId', async (req, res) => {
   } catch (error) { res.status(500).json({ success: false, message: "Failed to fetch complaints." }); }
 });
 
-// 3. GET AUTHORITY COMPLAINTS (Officer Dashboard) - FIXED WITH JOIN
+// CITIZEN STATS
+router.get('/stats/:userId', async (req, res) => {
+  try {
+      const userId = req.params.userId;
+      const [total] = await db.query('SELECT COUNT(*) as count FROM complaints WHERE user_id = ?', [userId]);
+      const [pending] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE user_id = ? AND status = 'Pending'", [userId]);
+      const [resolved] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE user_id = ? AND status = 'Resolved'", [userId]);
+      res.json({ total: total[0].count, pending: pending[0].count, resolved: resolved[0].count });
+  } catch (error) { res.status(500).json({ error: error.message }); }
+});
+
+// GET AUTHORITY COMPLAINTS (Officer Dashboard)
 router.get('/authority/:authorityId', async (req, res) => {
   try {
     const { authorityId } = req.params;
@@ -98,21 +194,12 @@ router.get('/authority/:authorityId', async (req, res) => {
   }
 });
 
-// 4. GET ALL COMPLAINTS (Super Admin)
-router.get('/admin/all', async (req, res) => {
-  try {
-    const sql = `
-      SELECT c.*, a.name as authority_name, a.region 
-      FROM complaints c
-      LEFT JOIN authorities a ON c.authority_id = a.authority_id
-      ORDER BY c.created_at DESC
-    `;
-    const [complaints] = await db.query(sql);
-    res.status(200).json({ success: true, data: complaints });
-  } catch (error) { res.status(500).json({ success: false, message: "Error." }); }
-});
 
-// 5. GET SINGLE COMPLAINT DETAILS
+// ==========================================================
+// ⚠️ DYNAMIC ROUTES (MUST BE AT THE VERY BOTTOM)
+// ==========================================================
+
+// GET SINGLE COMPLAINT DETAILS
 router.get('/:id', async (req, res) => {
   try {
     const sql = `
@@ -130,7 +217,7 @@ router.get('/:id', async (req, res) => {
   } catch (error) { res.status(500).json({ success: false, message: "Error." }); }
 });
 
-// 6. UPDATE STATUS & NOTIFY
+// UPDATE STATUS & NOTIFY
 router.patch('/update-status/:id', async (req, res) => {
   const { status } = req.body;
   const complaintId = req.params.id;
@@ -148,75 +235,5 @@ router.patch('/update-status/:id', async (req, res) => {
     res.status(200).json({ success: true, message: "Status updated and citizen notified!" });
   } catch (error) { res.status(500).json({ success: false, message: "Failed." }); }
 });
-
-// 7. CITIZEN STATS
-router.get('/stats/:userId', async (req, res) => {
-    try {
-        const userId = req.params.userId;
-        const [total] = await db.query('SELECT COUNT(*) as count FROM complaints WHERE user_id = ?', [userId]);
-        const [pending] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE user_id = ? AND status = 'Pending'", [userId]);
-        const [resolved] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE user_id = ? AND status = 'Resolved'", [userId]);
-        res.json({ total: total[0].count, pending: pending[0].count, resolved: resolved[0].count });
-    } catch (error) { res.status(500).json({ error: error.message }); }
-});
-
-// 1. GLOBAL STATS (Total, Pending, Resolved for the whole country)
-router.get('/admin/stats', async (req, res) => {
-  try {
-    const [total] = await db.query('SELECT COUNT(*) as count FROM complaints');
-    const [pending] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE status = 'PENDING'");
-    const [resolved] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE status = 'RESOLVED'");
-    const [inProgress] = await db.query("SELECT COUNT(*) as count FROM complaints WHERE status = 'IN PROGRESS'");
-
-    res.json({ 
-      success: true, 
-      data: { 
-        total: total[0].count, 
-        pending: pending[0].count, 
-        resolved: resolved[0].count,
-        active: inProgress[0].count
-      } 
-    });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Stats sync failed" });
-  }
-});
-
-// 2. PERFORMANCE BY AUTHORITY (For the Progress Bars)
-router.get('/admin/performance', async (req, res) => {
-  try {
-    const query = `
-      SELECT a.name, a.department, COUNT(c.complaint_id) as total_cases
-      FROM authorities a
-      LEFT JOIN complaints c ON a.authority_id = c.authority_id
-      GROUP BY a.authority_id
-      ORDER BY total_cases DESC
-      LIMIT 5
-    `;
-    const [rows] = await db.query(query);
-    res.json({ success: true, data: rows });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Performance data sync failed" });
-  }
-});
-
-// 3. MASTER RECENT ACTIVITY (Last 5 complaints from ANY department)
-router.get('/admin/all-recent', async (req, res) => {
-  try {
-    const query = `
-      SELECT c.*, a.name as authority_name, cit.fullName as citizen_name
-      FROM complaints c
-      LEFT JOIN authorities a ON c.authority_id = a.authority_id
-      LEFT JOIN citizens cit ON c.user_id = cit.user_id
-      ORDER BY c.created_at DESC
-      LIMIT 5
-    `;
-    const [rows] = await db.query(query);
-    res.json({ success: true, data: rows });
-  } catch (err) {
-    res.status(500).json({ success: false, message: "Master list sync failed" });
-  }
-});
-
 
 module.exports = router;

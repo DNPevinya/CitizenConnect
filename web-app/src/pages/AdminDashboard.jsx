@@ -1,208 +1,178 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar'; 
-import Footer from '../components/Footer'; 
 import Header from '../components/Header'; 
+import Footer from '../components/Footer'; 
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
+  
+  const [stats, setStats] = useState({ total: 0, pending: 0, active: 0, resolved: 0 });
+  const [performance, setPerformance] = useState([]);
+  const [recentData, setRecentData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('urbanSyncUser');
+    if (!savedUser) { navigate('/login'); return; }
+    
+    const user = JSON.parse(savedUser);
+    if (user.role !== 'super_admin') { navigate('/officer/dashboard'); return; }
+
+    const fetchAllAdminData = async () => {
+      try {
+        setLoading(true);
+        const [sRes, pRes, rRes] = await Promise.all([
+          fetch('http://localhost:5000/api/complaints/admin/stats'),
+          fetch('http://localhost:5000/api/complaints/admin/performance'),
+          fetch('http://localhost:5000/api/complaints/admin/all-recent')
+        ]);
+
+        const sData = await sRes.json();
+        const pData = await pRes.json();
+        const rData = await rRes.json();
+
+        if (sData.success) setStats(sData.data);
+        if (pData.success) setPerformance(pData.data);
+        if (rData.success) setRecentData(rData.data);
+        
+      } catch (error) {
+        console.error("Dashboard Sync Error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllAdminData();
+  }, [navigate]);
+
+  // Helper function to format date cleanly
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  };
+
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
-      
-      <Sidebar />
+      <Sidebar role="admin" />
 
       <div className="flex-1 flex flex-col h-full overflow-hidden">
-        
-        {/* USE THE NEW REUSABLE HEADER HERE */}
-        <Header title="Administrator Dashboard" />
+        <Header title="National Operations Command | Super Admin" />
 
-        {/* DASHBOARD BODY */}
         <main className="flex-1 overflow-y-auto p-8 flex flex-col">
           
-          {/* STAT CARDS */}
+          {/* STAT CARDS (Reverted to Clean UI) */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-[#FFFFFF] p-6 rounded-xl border border-[#E2E8F0]">
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-8 h-8 rounded bg-blue-50 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-[#0041C7]" fill="currentColor" viewBox="0 0 20 20"><path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" /></svg>
-                </div>
-                <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Overall</span>
-              </div>
-              <h3 className="text-3xl font-extrabold text-[#1E293B] mb-1">1,240</h3>
-              <p className="text-[11px] font-medium text-[#64748B]">Total Complaints Filed</p>
-            </div>
+             <div className="bg-white p-6 rounded-xl border border-[#E2E8F0] shadow-sm">
+                <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-widest mb-1">Total Complaints</p>
+                <h3 className="text-3xl font-extrabold text-[#0041C7]">{stats.total}</h3>
+             </div>
+             <div className="bg-white p-6 rounded-xl border border-[#E2E8F0] shadow-sm">
+                <p className="text-[10px] font-bold text-[#EF4444] uppercase tracking-widest mb-1">National Pending</p>
+                <h3 className="text-3xl font-extrabold text-[#EF4444]">{stats.pending}</h3>
+             </div>
+             <div className="bg-white p-6 rounded-xl border border-[#E2E8F0] shadow-sm">
+                <p className="text-[10px] font-bold text-[#FF9F43] uppercase tracking-widest mb-1">In Progress</p>
+                <h3 className="text-3xl font-extrabold text-[#FF9F43]">{stats.active}</h3>
+             </div>
+             <div className="bg-white p-6 rounded-xl border border-[#E2E8F0] shadow-sm">
+                <p className="text-[10px] font-bold text-[#28C76F] uppercase tracking-widest mb-1">National Resolved</p>
+                <h3 className="text-3xl font-extrabold text-[#28C76F]">{stats.resolved}</h3>
+             </div>
+          </div>
 
-            <div className="bg-[#FFFFFF] p-6 rounded-xl border border-[#E2E8F0]">
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-8 h-8 rounded bg-red-50 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-[#EF4444]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          {/* PERFORMANCE BARS (Full Width) */}
+          <div className="bg-white p-8 rounded-xl border border-[#E2E8F0] shadow-sm mb-8">
+            <h3 className="text-lg font-extrabold text-[#1E293B] mb-6">Departmental Workload Distribution</h3>
+            <div className="space-y-6">
+              {performance.map((auth, idx) => (
+                <div key={idx} className="w-full">
+                  <div className="flex justify-between text-[12px] font-bold text-[#1E293B] mb-2 uppercase tracking-wide">
+                    <span>{auth.name}</span>
+                    <span className="text-[#64748B]">{auth.total_cases} Active Cases</span>
+                  </div>
+                  <div className="w-full bg-[#F1F5F9] rounded-full h-2.5">
+                    <div 
+                      className="bg-[#0041C7] h-2.5 rounded-full transition-all duration-1000" 
+                      style={{ width: `${stats.total > 0 ? (auth.total_cases / stats.total) * 100 : 0}%` }}
+                    ></div>
+                  </div>
                 </div>
-                <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Urgent</span>
-              </div>
-              <h3 className="text-3xl font-extrabold text-[#EF4444] mb-1">450</h3>
-              <p className="text-[11px] font-medium text-[#64748B] mb-2">Pending Complaints</p>
-              <p className="text-[10px] text-[#EF4444] font-bold flex items-center"><span className="mr-1">!</span> Needs immediate attention</p>
-            </div>
-
-            <div className="bg-[#FFFFFF] p-6 rounded-xl border border-[#E2E8F0]">
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-8 h-8 rounded bg-orange-50 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-[#FF9F43]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" /></svg>
-                </div>
-                <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Active</span>
-              </div>
-              <h3 className="text-3xl font-extrabold text-[#FF9F43] mb-1">320</h3>
-              <p className="text-[11px] font-medium text-[#64748B]">Processing/In Review</p>
-            </div>
-
-            <div className="bg-[#FFFFFF] p-6 rounded-xl border border-[#E2E8F0]">
-              <div className="flex justify-between items-start mb-4">
-                <div className="w-8 h-8 rounded bg-green-50 flex items-center justify-center">
-                  <svg className="w-4 h-4 text-[#28C76F]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                </div>
-                <span className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Success</span>
-              </div>
-              <h3 className="text-3xl font-extrabold text-[#28C76F] mb-1">470</h3>
-              <p className="text-[11px] font-medium text-[#64748B]">Resolved Issues</p>
+              ))}
             </div>
           </div>
 
-          {/* CHARTS CARD */}
-          <div className="bg-[#FFFFFF] p-8 rounded-xl border border-[#E2E8F0] mb-8 max-w-4xl mx-auto w-full">
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <h3 className="text-lg font-bold text-[#1E293B]">Complaints by Responsible Authority</h3>
-                <p className="text-[13px] text-[#64748B] mt-1">Distribution of cases across key government sectors</p>
-              </div>
-              <button className="text-[11px] font-bold text-[#1E293B] bg-[#F8FAFC] border border-[#E2E8F0] px-4 py-2 rounded-lg flex items-center">
-                Last 30 Days
-                <svg className="w-3 h-3 ml-2 text-[#64748B]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
-              </button>
+          {/* NEW DATA-DENSE ACTIVITY TABLE */}
+          <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-sm overflow-hidden mb-8 flex-shrink-0">
+            <div className="px-8 py-5 border-b border-[#E2E8F0] flex justify-between items-center bg-[#F8FAFC]">
+              <h3 className="text-[15px] font-bold text-[#1E293B]">Latest High-Priority Reports (Global)</h3>
+              <button onClick={() => navigate('/admin/complaints')} className="text-[12px] font-bold text-[#0041C7] hover:underline">View Full Workbox</button>
             </div>
-
-            <div className="space-y-5">
-              <div className="w-full">
-                <div className="flex justify-between text-[13px] font-bold text-[#1E293B] mb-2">
-                  <span>Infrastructure</span>
-                  <span>425 Cases</span>
-                </div>
-                <div className="w-full bg-[#F8FAFC] rounded-full h-2.5">
-                  <div className="bg-[#0041C7] h-2.5 rounded-full" style={{ width: '85%' }}></div>
-                </div>
-              </div>
-
-              <div className="w-full">
-                <div className="flex justify-between text-[13px] font-bold text-[#1E293B] mb-2">
-                  <span>Waste Management</span>
-                  <span>310 Cases</span>
-                </div>
-                <div className="w-full bg-[#F8FAFC] rounded-full h-2.5">
-                  <div className="bg-[#0160C9] h-2.5 rounded-full" style={{ width: '65%' }}></div>
-                </div>
-              </div>
-
-              <div className="w-full">
-                <div className="flex justify-between text-[13px] font-bold text-[#1E293B] mb-2">
-                  <span>Water Services</span>
-                  <span>215 Cases</span>
-                </div>
-                <div className="w-full bg-[#F8FAFC] rounded-full h-2.5">
-                  <div className="bg-[#0D85D8] h-2.5 rounded-full" style={{ width: '45%' }}></div>
-                </div>
-              </div>
-
-              <div className="w-full">
-                <div className="flex justify-between text-[13px] font-bold text-[#1E293B] mb-2">
-                  <span>Electricity</span>
-                  <span>180 Cases</span>
-                </div>
-                <div className="w-full bg-[#F8FAFC] rounded-full h-2.5">
-                  <div className="bg-[#1CA3DE] h-2.5 rounded-full" style={{ width: '35%' }}></div>
-                </div>
-              </div>
-
-              <div className="w-full">
-                <div className="flex justify-between text-[13px] font-bold text-[#1E293B] mb-2">
-                  <span>Public Health</span>
-                  <span>110 Cases</span>
-                </div>
-                <div className="w-full bg-[#F8FAFC] rounded-full h-2.5">
-                  <div className="bg-[#1CA3DE] h-2.5 rounded-full opacity-60" style={{ width: '20%' }}></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 text-right">
-              <button className="text-[13px] font-bold text-[#0041C7] hover:underline flex items-center justify-end w-full">
-                View Full Analytics <svg className="w-4 h-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-              </button>
-            </div>
-          </div>
-
-          {/* TABLE SECTION */}
-          <div className="bg-[#FFFFFF] p-8 rounded-xl border border-[#E2E8F0] mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-[#1E293B]">Recent High-Priority Complaints</h3>
-              <button className="text-[13px] font-bold text-[#0041C7] hover:underline">View All</button>
-            </div>
-
+            
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-[#E2E8F0]">
-                    <th className="pb-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">ID</th>
-                    <th className="pb-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Citizen</th>
-                    <th className="pb-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Category</th>
-                    <th className="pb-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Subject</th>
-                    <th className="pb-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider">Status</th>
-                    <th className="pb-3 text-[10px] font-bold text-[#64748B] uppercase tracking-wider text-right">Actions</th>
+              <table className="w-full text-left">
+                <thead className="bg-[#F8FAFC] text-[10px] font-bold text-[#64748B] uppercase tracking-wider border-b border-[#E2E8F0]">
+                  <tr>
+                    <th className="px-6 py-4">ID & Date</th>
+                    <th className="px-6 py-4">Issue Details</th>
+                    <th className="px-6 py-4">Location</th>
+                    <th className="px-6 py-4">Assigned Authority</th>
+                    <th className="px-6 py-4 text-center">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#E2E8F0]">
-                  <tr>
-                    <td className="py-4 text-[13px] font-medium text-[#64748B]">#CMP-9821</td>
-                    <td className="py-4 text-[13px] font-bold text-[#1E293B]">Shantha Ranasighne</td>
-                    <td className="py-4 text-[13px] text-[#64748B]">Urban Infrastructure</td>
-                    <td className="py-4 text-[13px] text-[#64748B]">Broken street light on Main St.</td>
-                    <td className="py-4">
-                      <span className="px-2.5 py-1 bg-[#EF4444]/10 text-[#EF4444] text-[10px] font-bold rounded uppercase">Pending</span>
-                    </td>
-                    <td className="py-4 text-right">
-                      <button className="text-[#64748B] hover:text-[#1E293B] mr-3"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
-                      <button className="text-[#64748B] hover:text-[#1E293B]"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-4 text-[13px] font-medium text-[#64748B]">#CMP-9819</td>
-                    <td className="py-4 text-[13px] font-bold text-[#1E293B]">Janaka Nayanakkara</td>
-                    <td className="py-4 text-[13px] text-[#64748B]">Public Health</td>
-                    <td className="py-4 text-[13px] text-[#64748B]">Water contamination report</td>
-                    <td className="py-4">
-                      <span className="px-2.5 py-1 bg-[#FF9F43]/10 text-[#FF9F43] text-[10px] font-bold rounded uppercase">In Progress</span>
-                    </td>
-                    <td className="py-4 text-right">
-                      <button className="text-[#64748B] hover:text-[#1E293B] mr-3"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
-                      <button className="text-[#64748B] hover:text-[#1E293B]"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-4 text-[13px] font-medium text-[#64748B]">#CMP-9815</td>
-                    <td className="py-4 text-[13px] font-bold text-[#1E293B]">Kavinda Perera</td>
-                    <td className="py-4 text-[13px] text-[#64748B]">Water Services</td>
-                    <td className="py-4 text-[13px] text-[#64748B]">Request for facility maintenance</td>
-                    <td className="py-4">
-                      <span className="px-2.5 py-1 bg-[#28C76F]/10 text-[#28C76F] text-[10px] font-bold rounded uppercase">Resolved</span>
-                    </td>
-                    <td className="py-4 text-right">
-                      <button className="text-[#64748B] hover:text-[#1E293B] mr-3"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg></button>
-                      <button className="text-[#64748B] hover:text-[#1E293B]"><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
-                    </td>
-                  </tr>
+                  {loading ? (
+                    <tr><td colSpan="5" className="text-center py-10 font-bold text-[#64748B]">Syncing...</td></tr>
+                  ) : recentData.length > 0 ? recentData.map((c) => (
+                    <tr key={c.complaint_id} className="hover:bg-[#F8FAFC] transition-colors">
+                      
+                      {/* Column 1: ID & Date */}
+                      <td className="px-6 py-4">
+                        <p className="text-[13px] font-bold text-[#0041C7]">#CMP-{c.complaint_id}</p>
+                        <p className="text-[11px] font-medium text-[#64748B]">{formatDate(c.created_at)}</p>
+                      </td>
+
+                      {/* Column 2: Title & Category */}
+                      <td className="px-6 py-4 max-w-xs">
+                        <p className="text-[13px] font-bold text-[#1E293B] truncate">{c.title}</p>
+                        <p className="text-[11px] font-medium text-[#64748B] truncate">{c.category}</p>
+                      </td>
+
+                      {/* Column 3: Location */}
+                      <td className="px-6 py-4">
+                        <p className="text-[13px] font-medium text-[#1E293B] max-w-[150px] truncate" title={c.location_text}>
+                          {c.location_text || 'Location Not Provided'}
+                        </p>
+                      </td>
+
+                      {/* Column 4: Authority */}
+                      <td className="px-6 py-4">
+                        <span className={`text-[10px] px-2 py-1 rounded font-bold uppercase tracking-tight ${c.authority_name ? 'bg-[#0F172A] text-white' : 'bg-[#E2E8F0] text-[#64748B]'}`}>
+                          {c.authority_name || 'PENDING ASSIGNMENT'}
+                        </span>
+                      </td>
+
+                      {/* Column 5: Status */}
+                      <td className="px-6 py-4 text-center">
+                         <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${
+                           c.status === 'PENDING' ? 'bg-red-50 text-red-600' : 
+                           c.status === 'RESOLVED' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
+                         }`}>
+                           {c.status}
+                         </span>
+                      </td>
+
+                    </tr>
+                  )) : (
+                    <tr><td colSpan="5" className="text-center py-10 text-[#64748B] italic text-sm">No recent activity detected.</td></tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
           
           <Footer />
-
         </main>
       </div>
     </div>
