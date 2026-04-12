@@ -19,13 +19,11 @@ const issueToDepartmentMap = {
 function extractCity(locationText) {
   if (!locationText) return 'Colombo'; 
   const text = locationText.toLowerCase();
-  
   if (text.includes('kadawatha')) return 'Kadawatha';
   if (text.includes('dehiwala') || text.includes('mount lavinia')) return 'Dehiwala';
   if (text.includes('kaduwela') || text.includes('malabe')) return 'Kaduwela';
   if (text.includes('negombo')) return 'Negombo';
   if (text.includes('gampaha')) return 'Gampaha';
-  
   return 'Colombo';
 }
 
@@ -67,11 +65,11 @@ router.post('/submit', upload.array('images', 3), async (req, res) => {
 
     res.status(201).json({ success: true, message: "Complaint submitted successfully!", complaint_id: result.insertId });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to save complaint to database." });
+    res.status(500).json({ success: false, message: "Failed to save complaint." });
   }
 });
 
-// 2. GET SINGLE USER COMPLAINTS (For Citizen App)
+// 2. GET SINGLE USER COMPLAINTS (Citizen App)
 router.get('/user/:userId', async (req, res) => {
   try {
     const [complaints] = await db.query(`SELECT * FROM complaints WHERE user_id = ? ORDER BY created_at DESC`, [req.params.userId]);
@@ -79,15 +77,28 @@ router.get('/user/:userId', async (req, res) => {
   } catch (error) { res.status(500).json({ success: false, message: "Failed to fetch complaints." }); }
 });
 
-// 3. GET SPECIFIC AUTHORITY COMPLAINTS (For Officer Dashboard)
+// 3. GET AUTHORITY COMPLAINTS (Officer Dashboard) - FIXED WITH JOIN
 router.get('/authority/:authorityId', async (req, res) => {
   try {
-    const [complaints] = await db.query(`SELECT * FROM complaints WHERE authority_id = ? ORDER BY created_at DESC`, [req.params.authorityId]);
-    res.status(200).json({ success: true, data: complaints });
-  } catch (error) { res.status(500).json({ success: false, message: "Failed to fetch complaints." }); }
+    const { authorityId } = req.params;
+    const query = `
+      SELECT 
+        c.*, 
+        cit.fullName AS citizen_name, 
+        cit.phone AS citizen_phone
+      FROM complaints c
+      LEFT JOIN citizens cit ON c.user_id = cit.user_id
+      WHERE c.authority_id = ? AND c.status != 'CANCELLED'
+      ORDER BY c.created_at DESC
+    `;
+    const [rows] = await db.query(query, [authorityId]);
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Error fetching joined data" });
+  }
 });
 
-// 4. GET ALL COMPLAINTS (For Super Admin Dashboard)
+// 4. GET ALL COMPLAINTS (Super Admin)
 router.get('/admin/all', async (req, res) => {
   try {
     const sql = `
@@ -98,10 +109,10 @@ router.get('/admin/all', async (req, res) => {
     `;
     const [complaints] = await db.query(sql);
     res.status(200).json({ success: true, data: complaints });
-  } catch (error) { res.status(500).json({ success: false, message: "Failed to fetch all complaints." }); }
+  } catch (error) { res.status(500).json({ success: false, message: "Error." }); }
 });
 
-// GET SINGLE COMPLAINT DETAILS (Updated with Authority Name)
+// 5. GET SINGLE COMPLAINT DETAILS
 router.get('/:id', async (req, res) => {
   try {
     const sql = `
@@ -111,19 +122,34 @@ router.get('/:id', async (req, res) => {
       WHERE c.complaint_id = ?
     `;
     const [complaint] = await db.query(sql, [req.params.id]);
-    
     if (complaint.length > 0) {
       res.status(200).json({ success: true, data: complaint[0] });
     } else {
-      res.status(404).json({ success: false, message: "Complaint not found" });
+      res.status(404).json({ success: false, message: "Not found" });
     }
-  } catch (error) {
-    console.error("Fetch Details Error:", error);
-    res.status(500).json({ success: false, message: "Failed to fetch complaint details." });
-  }
+  } catch (error) { res.status(500).json({ success: false, message: "Error." }); }
 });
 
-// 6. GET CITIZEN DASHBOARD STATS
+// 6. UPDATE STATUS & NOTIFY
+router.patch('/update-status/:id', async (req, res) => {
+  const { status } = req.body;
+  const complaintId = req.params.id;
+
+  try {
+    const [complaintData] = await db.query("SELECT user_id, title FROM complaints WHERE complaint_id = ?", [complaintId]);
+    if (complaintData.length === 0) return res.status(404).json({ success: false, message: "Not found" });
+
+    const { user_id, title } = complaintData[0];
+    await db.query(`UPDATE complaints SET status = ? WHERE complaint_id = ?`, [status, complaintId]);
+    
+    const notificationMsg = `Update on "${title}": Your complaint is now ${status.toUpperCase()}.`;
+    await db.query(`INSERT INTO notifications (user_id, complaint_id, message) VALUES (?, ?, ?)`, [user_id, complaintId, notificationMsg]);
+
+    res.status(200).json({ success: true, message: "Status updated and citizen notified!" });
+  } catch (error) { res.status(500).json({ success: false, message: "Failed." }); }
+});
+
+// 7. CITIZEN STATS
 router.get('/stats/:userId', async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -134,59 +160,5 @@ router.get('/stats/:userId', async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
+// CRITICAL: Keep this at the absolute bottom
 module.exports = router;
-
-// =========================================================================
-// UPDATE COMPLAINT STATUS
-// =========================================================================
-router.patch('/update-status/:id', async (req, res) => {
-  const { status } = req.body;
-  const complaintId = req.params.id;
-
-  try {
-    // 1. Get the user_id and title of the complaint so we can personalize the message
-    const [complaintData] = await db.query(
-      "SELECT user_id, title FROM complaints WHERE complaint_id = ?", 
-      [complaintId]
-    );
-
-    if (complaintData.length === 0) {
-      return res.status(404).json({ success: false, message: "Complaint not found" });
-    }
-
-    const { user_id, title } = complaintData[0];
-
-    // 2. Update the complaint status
-    const updateSql = `UPDATE complaints SET status = ? WHERE complaint_id = ?`;
-    await db.query(updateSql, [status, complaintId]);
-    
-    // 3. AUTO-NOTIFICATION: Create the message based on the new status
-    const notificationMsg = `Update on "${title}": Your complaint is now ${status.toUpperCase()}.`;
-    const notifSql = `INSERT INTO notifications (user_id, complaint_id, message) VALUES (?, ?, ?)`;
-    await db.query(notifSql, [user_id, complaintId, notificationMsg]);
-
-    res.status(200).json({ 
-      success: true, 
-      message: "Status updated and notification sent to citizen!" 
-    });
-
-  } catch (error) {
-    console.error("Update Status & Notif Error:", error);
-    res.status(500).json({ success: false, message: "Failed to update status." });
-  }
-});
-
-// GET all complaints assigned to a specific authority
-router.get('/authority/:authorityId', async (req, res) => {
-  try {
-    const { authorityId } = req.params;
-    const [rows] = await db.query(
-      "SELECT * FROM complaints WHERE authority_id = ? AND status != 'CANCELLED' ORDER BY created_at DESC", 
-      [authorityId]
-    );
-    res.json({ success: true, data: rows });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, message: "Server error fetching complaints" });
-  }
-});
