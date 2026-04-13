@@ -4,8 +4,12 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function Settings() {
-  const [officerInfo, setOfficerInfo] = useState({ 
-    fullName: '', email: '', authorityName: '', role: ''
+  // --- STATE ---
+  const [userInfo, setUserInfo] = useState({ 
+    fullName: 'Loading...', 
+    email: 'Loading...', 
+    authorityName: 'Loading...', 
+    role: 'officer'
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -19,40 +23,50 @@ export default function Settings() {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // --- FETCH USER DATA ON LOAD ---
   useEffect(() => {
+    // Look for the user object in localStorage (Saved during Login)
     const savedUser = localStorage.getItem('urbanSyncUser');
+    
     if (savedUser) {
       const parsed = JSON.parse(savedUser);
-      setOfficerInfo({
-        fullName: parsed.fullName || 'Official User',
-        email: parsed.email || 'officer@UrbanSync.gov.lk',
-        authorityName: parsed.authorityName || 'Government Authority',
-        role: parsed.role
+      
+      setUserInfo({
+        fullName: parsed.fullName || (parsed.role === 'super_admin' ? 'System Administrator' : 'Official User'),
+        email: parsed.email || 'No email found',
+        // If it's a super admin, they don't have a specific authority, they control the whole system
+        authorityName: parsed.authorityName || (parsed.role === 'super_admin' ? 'UrbanSync Central System' : 'Unassigned Department'),
+        role: parsed.role || 'officer'
       });
     }
   }, []);
 
+  // --- HANDLE PASSWORD SUBMISSION ---
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     setStatus({ type: '', message: '' });
 
+    // 1. Validation: Match
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setStatus({ type: 'error', message: 'Mismatch Error: The new password and confirmation do not match.' });
       return; 
     }
 
+    // 2. Validation: Length
     if (passwordData.newPassword.length < 8) {
       setStatus({ type: 'error', message: 'Length Error: Password must be at least 8 characters.' });
       return;
     }
 
     setIsSubmitting(true);
+    
     try {
+      // 3. Send to our Backend Route
       const response = await fetch('http://localhost:5000/api/auth/update-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: officerInfo.email,
+          email: userInfo.email,
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword
         })
@@ -62,17 +76,20 @@ export default function Settings() {
 
       if (response.ok) {
         setStatus({ type: 'success', message: data.message });
+        // Clear the form on success
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
       } else {
         setStatus({ type: 'error', message: data.message });
       }
     } catch (err) {
+      console.error("Password Update Error:", err);
       setStatus({ type: 'error', message: 'Network Error: Cannot reach UrbanSync servers.' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // --- REUSABLE EYE ICON COMPONENT ---
   const EyeIcon = ({ isVisible, toggle }) => (
     <button type="button" onClick={toggle} className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#94A3B8] hover:text-[#1E293B]">
       {isVisible ? (
@@ -85,7 +102,7 @@ export default function Settings() {
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
-      <Sidebar role={officerInfo.role || 'officer'} />
+      <Sidebar role={userInfo.role} />
 
       <div className="flex-1 flex flex-col h-full overflow-hidden">
         <Header breadcrumbs={['Settings & Profile']} />
@@ -97,31 +114,39 @@ export default function Settings() {
               <p className="text-[13px] text-[#64748B] mt-1">Manage security and view assigned department identity.</p>
             </div>
 
-            {/* PROFILE SECTION (Read-Only) */}
+            {/* PROFILE SECTION (Strictly Read-Only) */}
             <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-8">
               <div className="px-8 py-6 border-b border-[#E2E8F0] flex justify-between items-center">
                 <div>
-                  <h3 className="text-lg font-bold text-[#1E293B]">Personal Profile</h3>
-                  <p className="text-[13px] text-[#64748B]">Core identity managed by the System Administrator.</p>
+                  <h3 className="text-lg font-bold text-[#1E293B]">Official Identity</h3>
+                  <p className="text-[13px] text-[#64748B]">Core identity managed by System Administrators.</p>
                 </div>
-                <span className="bg-[#F1F5F9] text-[#64748B] px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase">Locked</span>
+                <div className="flex items-center space-x-2">
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${userInfo.role === 'super_admin' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                    {userInfo.role === 'super_admin' ? 'Super Admin' : 'Dept. Officer'}
+                  </span>
+                  <span className="bg-[#F1F5F9] text-[#64748B] px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase flex items-center">
+                    <svg className="w-3 h-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    Locked
+                  </span>
+                </div>
               </div>
               
               <div className="p-8 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-[11px] font-bold text-[#1E293B] mb-2 uppercase">Full Name</label>
-                    <input type="text" value={officerInfo.fullName} className="block w-full px-4 py-2.5 border border-[#E2E8F0] rounded-lg text-[13px] font-bold text-[#94A3B8] bg-[#F8FAFC] outline-none cursor-not-allowed" readOnly />
+                    <input type="text" value={userInfo.fullName} className="block w-full px-4 py-2.5 border border-[#E2E8F0] rounded-lg text-[13px] font-bold text-[#94A3B8] bg-[#F8FAFC] outline-none cursor-not-allowed" readOnly />
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-[#1E293B] mb-2 uppercase">Official Email</label>
-                    <input type="email" value={officerInfo.email} className="block w-full px-4 py-2.5 border border-[#E2E8F0] rounded-lg text-[13px] font-bold text-[#94A3B8] bg-[#F8FAFC] outline-none cursor-not-allowed" readOnly />
+                    <input type="email" value={userInfo.email} className="block w-full px-4 py-2.5 border border-[#E2E8F0] rounded-lg text-[13px] font-bold text-[#94A3B8] bg-[#F8FAFC] outline-none cursor-not-allowed" readOnly />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[11px] font-bold text-[#1E293B] mb-2 uppercase">Department</label>
-                  <input type="text" value={officerInfo.authorityName} className="block w-full px-4 py-2.5 border border-[#E2E8F0] rounded-lg text-[13px] font-bold text-[#94A3B8] bg-[#F8FAFC] outline-none cursor-not-allowed" readOnly />
-                  <p className="text-[10px] text-[#94A3B8] mt-2 font-medium italic">Contact System Admin to request profile changes.</p>
+                  <label className="block text-[11px] font-bold text-[#1E293B] mb-2 uppercase">Assigned Department / Role</label>
+                  <input type="text" value={userInfo.authorityName} className="block w-full px-4 py-2.5 border border-[#E2E8F0] rounded-lg text-[13px] font-bold text-[#94A3B8] bg-[#F8FAFC] outline-none cursor-not-allowed" readOnly />
+                  <p className="text-[10px] text-[#94A3B8] mt-2 font-medium italic">Contact System Admin to request profile or department transfers.</p>
                 </div>
               </div>
             </div>
@@ -135,7 +160,7 @@ export default function Settings() {
               
               <div className="p-8 space-y-6">
                 
-                {/* MOVED: STATUS NOTIFICATION APPEARS RIGHT HERE NOW */}
+                {/* STATUS NOTIFICATION */}
                 {status.message && (
                   <div className={`p-4 rounded-lg flex items-center border ${status.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'}`}>
                     <p className="text-[12px] font-bold uppercase tracking-wider">{status.message}</p>
@@ -199,9 +224,17 @@ export default function Settings() {
                 <button 
                   type="submit"
                   disabled={isSubmitting || passwordData.newPassword.length < 8}
-                  className="px-6 py-2.5 bg-[#0041C7] hover:bg-[#0033A0] text-white text-[13px] font-extrabold rounded-lg shadow-sm transition-all disabled:bg-slate-300 disabled:cursor-not-allowed"
+                  className="px-6 py-2.5 bg-[#0041C7] hover:bg-[#0033A0] text-white text-[13px] font-extrabold rounded-lg shadow-sm transition-all disabled:bg-slate-300 disabled:cursor-not-allowed flex items-center"
                 >
-                  {isSubmitting ? 'Updating...' : 'Update Password'}
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Updating...
+                    </>
+                  ) : 'Update Password'}
                 </button>
               </div>
             </form>

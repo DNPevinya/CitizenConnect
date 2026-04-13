@@ -5,7 +5,9 @@ export default function Sidebar({ role = 'admin' }) {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // NEW: State to hold the user's real info
+  // 🚨 THE FIX: Normalize the role so 'super_admin' triggers the 'admin' menu items!
+  const effectiveRole = role === 'super_admin' ? 'admin' : role;
+  
   const [userInfo, setUserInfo] = useState({ fullName: '', authorityName: '' });
 
   useEffect(() => {
@@ -13,22 +15,23 @@ export default function Sidebar({ role = 'admin' }) {
     if (savedUser) {
       const parsed = JSON.parse(savedUser);
       setUserInfo({
-        fullName: parsed.fullName || (role === 'admin' ? 'Admin User' : 'Field Officer'),
+        // Set better defaults if the name isn't found
+        fullName: parsed.fullName || (parsed.role === 'super_admin' ? 'System Administrator' : 'Field Officer'),
         authorityName: parsed.authorityName || 'UrbanSync Portal'
       });
     }
   }, [role]);
 
   const menuItems = [
-  {
-    title: 'Dashboard',
-    path: role === 'officer' ? '/officer/dashboard' : '/admin/dashboard', 
-    allowedRoles: ['admin', 'officer'],
-    icon: <svg className="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-  },
+    {
+      title: 'Dashboard',
+      path: effectiveRole === 'officer' ? '/officer/dashboard' : '/admin/dashboard', 
+      allowedRoles: ['admin', 'officer'],
+      icon: <svg className="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+    },
     {
       title: 'Complaints',
-      path: role === 'officer' ? '/officer/complaints' : '/admin/complaints', 
+      path: effectiveRole === 'officer' ? '/officer/complaints' : '/admin/complaints', 
       allowedRoles: ['admin', 'officer'],
       icon: <svg className="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
     },
@@ -52,13 +55,14 @@ export default function Sidebar({ role = 'admin' }) {
     },
     {
       title: 'Settings',
-      path: role === 'officer' ? '/officer/settings' : '/settings', 
+      path: effectiveRole === 'officer' ? '/officer/settings' : '/settings', 
       allowedRoles: ['admin', 'officer'],
       icon: <svg className="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
     }
   ];
 
-  const visibleMenu = menuItems.filter(item => item.allowedRoles.includes(role));
+  // 🚨 Filter using the effectiveRole!
+  const visibleMenu = menuItems.filter(item => item.allowedRoles.includes(effectiveRole));
 
   return (
     <aside className="w-64 bg-[#0F172A] text-white h-screen flex flex-col flex-shrink-0">
@@ -95,16 +99,17 @@ export default function Sidebar({ role = 'admin' }) {
         <div className="flex items-center">
           <div className="w-10 h-10 rounded-full bg-[#F59E0B] flex items-center justify-center text-white font-bold text-[14px] uppercase flex-shrink-0">
             {userInfo.fullName 
-  ? userInfo.fullName.split(' ').map(name => name[0]).join('').substring(0, 2) 
-  : (role === 'admin' ? 'AU' : 'OF')
-}
+              ? userInfo.fullName.split(' ').map(name => name[0]).join('').substring(0, 2) 
+              : (effectiveRole === 'admin' ? 'AU' : 'OF')
+            }
           </div>
           <div className="ml-3 overflow-hidden">
             <p className="text-[13px] font-bold text-white truncate">
               {userInfo.fullName}
             </p>
             <p className="text-[10px] text-slate-400 truncate" title={userInfo.authorityName}>
-              {role === 'officer' ? userInfo.authorityName : 'System Admin'}
+              {/* Force 'System Admin' text if they are a super_admin */}
+              {role === 'super_admin' ? 'System Admin' : (effectiveRole === 'officer' ? userInfo.authorityName : 'System Admin')}
             </p>
           </div>
         </div>
