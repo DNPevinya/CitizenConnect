@@ -1,132 +1,195 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-export default function DetailsModal({ isOpen, onClose, complaintId = "#CMP-88291" }) {
+export default function DetailsModal({ isOpen, onClose, complaintId }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isOpen && complaintId) {
+      const fetchDetails = async () => {
+        setLoading(true);
+        try {
+          const response = await fetch(`http://localhost:5000/api/complaints/${complaintId}`);
+          const result = await response.json();
+          if (result.success) {
+            setData(result.data);
+          }
+        } catch (error) {
+          console.error("Error fetching complaint details:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchDetails();
+    }
+  }, [isOpen, complaintId]);
+
   if (!isOpen) return null;
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-GB', { 
+      day: '2-digit', month: 'short', year: 'numeric', 
+      hour: '2-digit', minute: '2-digit', hour12: true 
+    });
+  };
+
+  const evidenceImages = data?.image_url ? data.image_url.split(',') : [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
       
-      {/* Modal Container */}
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
         
-        {/* Header */}
+        {/* HEADER */}
         <div className="px-6 py-5 border-b border-[#E2E8F0] flex justify-between items-center bg-white">
           <div className="flex items-center">
             <svg className="w-5 h-5 text-[#0041C7] mr-2" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" /></svg>
-            <h3 className="text-[#1E293B] text-lg font-extrabold mr-4">Complaint {complaintId}</h3>
-            <span className="bg-[#FEF08A] text-[#854D0E] px-3 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase">
-              In Progress
-            </span>
+            <h3 className="text-[#1E293B] text-lg font-extrabold mr-4">Complaint #{complaintId}</h3>
+            
+            {!loading && data && (
+              <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase ${
+                data.status === 'PENDING' ? 'bg-red-50 text-red-600' : 
+                data.status === 'RESOLVED' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
+              }`}>
+                {data.status}
+              </span>
+            )}
           </div>
           <button onClick={onClose} className="text-[#64748B] hover:text-[#1E293B] transition-colors">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
-        {/* Body - Grid Layout */}
-        <div className="p-8 overflow-y-auto bg-[#F8FAFC]">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-            
-            {/* LEFT COLUMN: Citizen & Issue (Takes up 3/5 of space) */}
-            <div className="md:col-span-3 space-y-6">
+        {/* BODY */}
+        <div className="p-8 overflow-y-auto bg-[#F8FAFC] max-h-[80vh]">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+              <svg className="w-8 h-8 animate-spin mb-4 text-[#0041C7]" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+              <p className="font-bold">Retrieving secure records...</p>
+            </div>
+          ) : !data ? (
+            <div className="text-center text-red-500 font-bold py-10">Failed to load complaint data.</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
               
-              {/* Citizen Details Card */}
-              <div>
-                <h4 className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center mb-3">
-                  <svg className="w-4 h-4 mr-1.5 text-[#0041C7]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
-                  Citizen Details
-                </h4>
-                <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm">
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-[10px] text-[#64748B] font-semibold mb-1">Full Name</p>
-                      <p className="text-[13px] font-bold text-[#1E293B]">Sachini Dissanayake</p>
+              {/* LEFT COLUMN: Citizen & Issue */}
+              <div className="md:col-span-3 space-y-6">
+                
+                {/* Citizen Details */}
+                <div>
+                  <h4 className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center mb-3">
+                    <svg className="w-4 h-4 mr-1.5 text-[#0041C7]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
+                    Citizen Details
+                  </h4>
+                  <div className="bg-white border border-[#E2E8F0] rounded-xl p-5 shadow-sm">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-[10px] text-[#64748B] font-semibold mb-1">Full Name</p>
+                        <p className="text-[13px] font-bold text-[#1E293B]">{data.citizen_name || 'Anonymous User'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-[#64748B] font-semibold mb-1">Phone Number</p>
+                        <p className="text-[13px] font-bold text-[#1E293B]">{data.citizen_phone || 'Not Provided'}</p>
+                      </div>
                     </div>
                     <div>
-                      <p className="text-[10px] text-[#64748B] font-semibold mb-1">Phone Number</p>
-                      <p className="text-[13px] font-bold text-[#1E293B]">077-1234567</p>
+                      <p className="text-[10px] text-[#64748B] font-semibold mb-1">Email Address</p>
+                      <p className="text-[13px] font-bold text-[#1E293B]">{data.citizen_email || 'Not Provided'}</p>
                     </div>
                   </div>
+                </div>
+
+                {/* Issue Description */}
+                <div>
+                  <h4 className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center mb-3">
+                    <svg className="w-4 h-4 mr-1.5 text-[#0041C7]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
+                    Issue Description: {data.title}
+                  </h4>
+                  <div className="text-[13px] text-[#475569] leading-relaxed bg-white p-5 rounded-xl border border-[#E2E8F0] shadow-sm">
+                    <p>{data.description || 'No detailed description provided by the citizen.'}</p>
+                  </div>
+                </div>
+
+                {/* INTERACTIVE GOOGLE MAP */}
+                {data.latitude && data.longitude && (
                   <div>
-                    <p className="text-[10px] text-[#64748B] font-semibold mb-1">Email Address</p>
-                    <p className="text-[13px] font-bold text-[#1E293B]">sachini.d@gmail.com</p>
+                    <h4 className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center mb-3">
+                      <svg className="w-4 h-4 mr-1.5 text-[#0041C7]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
+                      Live GPS Location
+                    </h4>
+                    <div className="w-full h-64 rounded-xl overflow-hidden border border-[#E2E8F0] shadow-sm bg-slate-100 relative">
+                      <iframe 
+                        width="100%" 
+                        height="100%" 
+                        style={{ border: 0 }} 
+                        loading="lazy" 
+                        allowFullScreen 
+                        src={`https://maps.google.com/maps?q=${data.latitude},${data.longitude}&z=16&output=embed`}
+                      ></iframe>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+
+              {/* RIGHT COLUMN: Metadata & Evidence */}
+              <div className="md:col-span-2 space-y-6">
+                
+                {/* Internal Metadata */}
+                <div>
+                  <h4 className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center mb-3">
+                    <svg className="w-4 h-4 mr-1.5 text-[#0041C7]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+                    Internal Metadata
+                  </h4>
+                  <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm">
+                    <div className="space-y-3 divide-y divide-[#E2E8F0]">
+                      <div className="flex justify-between items-center pb-2">
+                        <span className="text-[11px] text-[#64748B] font-semibold">Submitted Date</span>
+                        <span className="text-[12px] font-bold text-[#1E293B] text-right">{formatDateTime(data.created_at)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-3 pb-2">
+                        <span className="text-[11px] text-[#64748B] font-semibold">Assigned Authority</span>
+                        <span className="text-[12px] font-bold text-[#1E293B] text-right max-w-[120px]">{data.authority_name || 'Pending Assignment'}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-3 pb-2">
+                        <span className="text-[11px] text-[#64748B] font-semibold">Category</span>
+                        <span className="text-[12px] font-bold text-[#1E293B] text-right max-w-[120px]">{data.category}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-3">
+                        <span className="text-[11px] text-[#64748B] font-semibold">Reported Area</span>
+                        <span className="text-[12px] font-bold text-[#1E293B] text-right truncate max-w-[120px]" title={data.location_text}>
+                          {data.location_text || 'GPS Only'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Issue Description Card */}
-              <div>
-                <h4 className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center mb-3">
-                  <svg className="w-4 h-4 mr-1.5 text-[#0041C7]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h7" /></svg>
-                  Issue Description
-                </h4>
-                <div className="text-[13px] text-[#475569] leading-relaxed bg-transparent">
-                  <p>There is a large pothole near the junction of Nawala Road close to the bus stop. It has caused several vehicles to slow down suddenly and is creating traffic congestion during peak hours. The pothole has been present for over two weeks and is increasing in size after recent rains.</p>
+                {/* Attached Evidence */}
+                <div>
+                  <h4 className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center mb-3">
+                    <svg className="w-4 h-4 mr-1.5 text-[#0041C7]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                    Attached Evidence
+                  </h4>
+                  <div className="flex flex-col gap-3">
+                    {evidenceImages.length > 0 ? (
+                      evidenceImages.map((img, idx) => (
+                        <a key={idx} href={`http://localhost:5000${img}`} target="_blank" rel="noopener noreferrer" className="w-full h-32 bg-slate-100 rounded-lg overflow-hidden border border-[#E2E8F0] flex items-center justify-center hover:opacity-80 transition-opacity">
+                          <img src={`http://localhost:5000${img}`} alt={`Evidence ${idx + 1}`} className="w-full h-full object-cover" />
+                        </a>
+                      ))
+                    ) : (
+                      <p className="text-[11px] text-slate-400 italic bg-white p-4 rounded-xl border border-[#E2E8F0] shadow-sm text-center">No photo evidence attached.</p>
+                    )}
+                  </div>
                 </div>
-              </div>
 
+              </div>
             </div>
-
-            {/* RIGHT COLUMN: Metadata & Evidence (Takes up 2/5 of space) */}
-            <div className="md:col-span-2 space-y-6">
-              
-              {/* Internal Metadata Card */}
-              <div>
-                <h4 className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center mb-3">
-                  <svg className="w-4 h-4 mr-1.5 text-[#0041C7]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
-                  Internal Metadata
-                </h4>
-                <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-sm">
-                  <div className="space-y-3 divide-y divide-[#E2E8F0]">
-                    <div className="flex justify-between items-center pb-2">
-                      <span className="text-[11px] text-[#64748B] font-semibold">Submitted Date</span>
-                      <span className="text-[12px] font-bold text-[#1E293B]">Oct 24, 2023, 09:12 AM</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-3 pb-2">
-                      <span className="text-[11px] text-[#64748B] font-semibold">Assigned Authority</span>
-                      <span className="text-[12px] font-bold text-[#1E293B] text-right">Urban<br/>Infrastructure</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-3 pb-2">
-                      <span className="text-[11px] text-[#64748B] font-semibold">Priority Level</span>
-                      <span className="text-[12px] font-bold text-[#EF4444] flex items-center">
-                        <span className="mr-1">!</span> High
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center pt-3">
-                      <span className="text-[11px] text-[#64748B] font-semibold">Verification ID</span>
-                      <span className="text-[12px] font-mono text-[#64748B]">VR-880-9X</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Attached Evidence Card */}
-              <div>
-                <h4 className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center mb-3">
-                  <svg className="w-4 h-4 mr-1.5 text-[#0041C7]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                  Attached Evidence
-                </h4>
-                <div className="flex space-x-3">
-                  {/* Image Thumbnails - using generic colored blocks for the mockup to ensure they always load */}
-                  <div className="w-20 h-20 bg-slate-300 rounded-lg overflow-hidden border border-[#E2E8F0] flex items-center justify-center">
-                    <img src="https://placehold.co/100x100/475569/FFFFFF?text=Photo+1" alt="Evidence 1" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="w-20 h-20 bg-slate-300 rounded-lg overflow-hidden border border-[#E2E8F0] flex items-center justify-center">
-                    <img src="https://placehold.co/100x100/475569/FFFFFF?text=Photo+2" alt="Evidence 2" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="w-20 h-20 bg-slate-800 rounded-lg overflow-hidden border border-[#E2E8F0] flex items-center justify-center relative">
-                    <img src="https://placehold.co/100x100/1E293B/FFFFFF?text=Map" alt="Location" className="w-full h-full object-cover opacity-50" />
-                    <svg className="w-6 h-6 text-[#FF9F43] absolute" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
+          )}
         </div>
-
       </div>
     </div>
   );

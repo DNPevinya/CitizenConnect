@@ -1,28 +1,87 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-export default function ReassignModal({ isOpen, onClose, complaintId = "#CMP-88219-24" }) {
+export default function ReassignModal({ isOpen, onClose, complaintId, onReassignSuccess }) {
+  // --- STATE ---
+  const [currentData, setCurrentData] = useState(null);
+  const [authorities, setAuthorities] = useState([]);
+  const [officers, setOfficers] = useState([]);
+  
   const [targetAuthority, setTargetAuthority] = useState('');
   const [targetOfficer, setTargetOfficer] = useState('');
   const [reason, setReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // --- FETCH INITIAL DATA ---
+  useEffect(() => {
+    if (isOpen && complaintId) {
+      // 1. Fetch current details
+      fetch(`http://localhost:5000/api/complaints/${complaintId}`)
+        .then(res => res.json())
+        .then(data => { if (data.success) setCurrentData(data.data); });
+
+      // 2. Fetch ALL authorities (UPDATED URL)
+      fetch(`http://localhost:5000/api/complaints/admin/authorities`)
+        .then(res => res.json())
+        .then(data => { if (data.success) setAuthorities(data.data); });
+    }
+  }, [isOpen, complaintId]);
+
+  // --- FETCH OFFICERS WHEN AUTHORITY CHANGES ---
+  useEffect(() => {
+    if (targetAuthority) {
+      setTargetOfficer(''); 
+      // Fetch officers for this authority (UPDATED URL)
+      fetch(`http://localhost:5000/api/complaints/admin/officers/${targetAuthority}`)
+        .then(res => res.json())
+        .then(data => { if (data.success) setOfficers(data.data); });
+    } else {
+      setOfficers([]);
+    }
+  }, [targetAuthority]);
+
+  // --- SUBMIT REASSIGNMENT ---
+  const handleReassign = async () => {
+    setIsSubmitting(true);
+    try {
+      // We send a PATCH request to update the complaint's authority_id
+      const response = await fetch(`http://localhost:5000/api/complaints/reassign/${complaintId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          new_authority_id: targetAuthority,
+          assigned_officer_id: targetOfficer, // Optional: if you want to track which specific officer it went to
+          reason: reason
+        })
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        onClose(); // Close the modal
+        if (onReassignSuccess) onReassignSuccess(); // Refresh the table behind it
+      } else {
+        alert("Failed to reassign: " + result.message);
+      }
+    } catch (error) {
+      console.error("Reassignment error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-      
-      {/* Modal Container */}
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
         
         {/* Header */}
         <div className="bg-[#0041C7] px-6 py-5 flex justify-between items-start">
           <div>
             <h3 className="text-white text-lg font-bold">Reassign Complaint</h3>
-            <p className="text-blue-100 text-xs font-medium mt-1">COMPLAINT ID: {complaintId}</p>
+            <p className="text-blue-100 text-xs font-medium mt-1">COMPLAINT ID: #{complaintId}</p>
           </div>
           <button onClick={onClose} className="text-blue-200 hover:text-white transition-colors">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
           </button>
         </div>
 
@@ -36,26 +95,18 @@ export default function ReassignModal({ isOpen, onClose, complaintId = "#CMP-882
               Current Assignment
             </h4>
             
-            <div className="flex gap-4">
-              <div className="flex-1 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3">
-                <p className="text-[10px] text-[#64748B] font-semibold mb-1.5">Current Authority</p>
-                <div className="flex items-center">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center mr-2 text-[#0041C7]">
-                    <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10.496 2.132a1 1 0 00-.992 0l-7 4A1 1 0 003 8v7a1 1 0 100 2h14a1 1 0 100-2V8a1 1 0 00-.504-.868l-7-4zM6 9a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1zm3 1a1 1 0 012 0v3a1 1 0 11-2 0v-3zm5-1a1 1 0 00-1 1v3a1 1 0 102 0v-3a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-                  </div>
-                  <span className="text-[13px] font-bold text-[#1E293B]">Kaduwela Municipal Council</span>
-                </div>
+            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] text-[#64748B] font-semibold mb-1">Assigned Authority</p>
+                <span className="text-[13px] font-bold text-[#1E293B]">
+                  {currentData ? (currentData.authority_name || 'Unassigned') : 'Loading...'}
+                </span>
               </div>
-
-              <div className="flex-1 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3">
-                <p className="text-[10px] text-[#64748B] font-semibold mb-1.5">Current Officer</p>
-                <div className="flex items-center">
-                  <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center mr-2 text-[#64748B] font-bold text-[10px]">
-                    NP
-                  </div>
-                  <span className="text-[13px] font-bold text-[#1E293B]">Mr. Nuwan Perera</span>
-                </div>
-              </div>
+              <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${
+                currentData?.status === 'PENDING' ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-600'
+              }`}>
+                {currentData ? currentData.status : '...'}
+              </span>
             </div>
           </div>
 
@@ -69,6 +120,7 @@ export default function ReassignModal({ isOpen, onClose, complaintId = "#CMP-882
             </h4>
 
             <div className="flex gap-4 mb-4">
+              {/* Target Authority Dropdown */}
               <div className="flex-1">
                 <label className="block text-[11px] font-bold text-[#1E293B] mb-1.5">Target Authority <span className="text-[#EF4444]">*</span></label>
                 <select 
@@ -76,27 +128,36 @@ export default function ReassignModal({ isOpen, onClose, complaintId = "#CMP-882
                   value={targetAuthority}
                   onChange={(e) => setTargetAuthority(e.target.value)}
                 >
-                  <option value="" disabled>Select Authority</option>
-                  <option value="colombo">Colombo Municipal Council</option>
-                  <option value="kandy">Kandy Municipal Council</option>
+                  <option value="" disabled>Select Department...</option>
+                  {authorities.map(auth => (
+                    <option key={auth.authority_id} value={auth.authority_id}>
+                      {auth.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 
+              {/* Target Officer Dropdown */}
               <div className="flex-1">
                 <label className="block text-[11px] font-bold text-[#1E293B] mb-1.5">Target Officer <span className="text-[#EF4444]">*</span></label>
                 <select 
                   className="w-full border border-[#E2E8F0] rounded-lg px-3 py-2.5 text-[13px] text-[#1E293B] bg-white focus:outline-none focus:ring-2 focus:ring-[#0041C7]"
                   value={targetOfficer}
                   onChange={(e) => setTargetOfficer(e.target.value)}
+                  disabled={!targetAuthority || officers.length === 0}
                 >
-                  <option value="" disabled>Select Officer</option>
-                  <option value="1">Unassigned (Department Pool)</option>
-                  <option value="2">Ms. Silva</option>
+                  <option value="" disabled>
+                    {!targetAuthority ? "Select Authority First" : officers.length === 0 ? "No Officers Found" : "Select Officer..."}
+                  </option>
+                  {officers.map(off => (
+                    <option key={off.user_id} value={off.user_id}>
+                      {off.fullName}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
 
-            {/* Added: Reason for Reassignment */}
             <div className="mb-2">
               <label className="block text-[11px] font-bold text-[#1E293B] mb-1.5">Reason for Reassignment <span className="text-[#EF4444]">*</span></label>
               <textarea 
@@ -108,7 +169,6 @@ export default function ReassignModal({ isOpen, onClose, complaintId = "#CMP-882
               ></textarea>
             </div>
             
-            {/* Added: Notification Toggle */}
             <div className="flex items-center mt-3">
               <input type="checkbox" id="notify" className="w-3.5 h-3.5 text-[#0041C7] border-[#E2E8F0] rounded focus:ring-[#0041C7]" defaultChecked />
               <label htmlFor="notify" className="ml-2 text-[11px] font-semibold text-[#64748B]">Notify target officer immediately via priority email</label>
@@ -119,18 +179,15 @@ export default function ReassignModal({ isOpen, onClose, complaintId = "#CMP-882
 
         {/* Footer Actions */}
         <div className="bg-[#F8FAFC] px-6 py-4 border-t border-[#E2E8F0] flex justify-end items-center gap-3">
-          <button 
-            onClick={onClose}
-            className="px-5 py-2.5 text-[13px] font-bold text-[#64748B] hover:text-[#1E293B] transition-colors"
-          >
+          <button onClick={onClose} className="px-5 py-2.5 text-[13px] font-bold text-[#64748B] hover:text-[#1E293B] transition-colors">
             Cancel
           </button>
           <button 
+            onClick={handleReassign}
             className="px-5 py-2.5 bg-[#0041C7] hover:bg-[#0033A0] text-white text-[13px] font-bold rounded-lg shadow-sm transition-colors flex items-center disabled:opacity-50"
-            disabled={!targetAuthority || !targetOfficer || !reason}
+            disabled={!targetAuthority || !targetOfficer || !reason || isSubmitting}
           >
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-            Confirm Reassignment
+            {isSubmitting ? "Processing..." : "Confirm Reassignment"}
           </button>
         </div>
 

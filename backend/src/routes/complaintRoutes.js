@@ -113,6 +113,45 @@ router.get('/admin/all', async (req, res) => {
   }
 });
 
+// 5. GET ALL AUTHORITIES (For Reassign Dropdown)
+router.get('/admin/authorities', async (req, res) => {
+  try {
+    const [rows] = await db.query('SELECT authority_id, name FROM authorities ORDER BY name ASC');
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Error fetching authorities" });
+  }
+});
+
+// 6. GET OFFICERS BY AUTHORITY (For Reassign Dropdown)
+router.get('/admin/officers/:authorityId', async (req, res) => {
+  try {
+    // We now query the 'officers' table and alias 'full_name' to 'fullName' so React understands it!
+    const sql = `SELECT user_id, full_name AS fullName FROM officers WHERE authority_id = ?`;
+    const [rows] = await db.query(sql, [req.params.authorityId]);
+    
+    res.json({ success: true, data: rows });
+  } catch (err) {
+    console.error("OFFICER FETCH CRASH:", err.message);
+    res.status(500).json({ success: false, message: "Error fetching officers" });
+  }
+});
+
+// 7. REASSIGN COMPLAINT
+router.patch('/reassign/:id', async (req, res) => {
+  const { new_authority_id, reason } = req.body;
+  const complaintId = req.params.id;
+
+  try {
+    // Move the complaint to the new authority and reset status to PENDING
+    await db.query(`UPDATE complaints SET authority_id = ?, status = 'PENDING' WHERE complaint_id = ?`, [new_authority_id, complaintId]);
+    res.status(200).json({ success: true, message: "Reassigned successfully!" });
+  } catch (error) { 
+    console.error("Reassign error:", error);
+    res.status(500).json({ success: false, message: "Failed to reassign." }); 
+  }
+});
+
 
 // ==========================================================
 // 🏢 GENERAL & OFFICER ROUTES
@@ -199,22 +238,33 @@ router.get('/authority/:authorityId', async (req, res) => {
 // ⚠️ DYNAMIC ROUTES (MUST BE AT THE VERY BOTTOM)
 // ==========================================================
 
-// GET SINGLE COMPLAINT DETAILS
+// 5. GET SINGLE COMPLAINT DETAILS
 router.get('/:id', async (req, res) => {
   try {
     const sql = `
-      SELECT c.*, a.name as authority_name 
+      SELECT 
+        c.*, 
+        a.name as authority_name,
+        cit.fullName as citizen_name,
+        cit.phone as citizen_phone,
+        u.email as citizen_email
       FROM complaints c 
       LEFT JOIN authorities a ON c.authority_id = a.authority_id 
+      LEFT JOIN citizens cit ON c.user_id = cit.user_id
+      LEFT JOIN users u ON c.user_id = u.user_id 
       WHERE c.complaint_id = ?
     `;
     const [complaint] = await db.query(sql, [req.params.id]);
+    
     if (complaint.length > 0) {
       res.status(200).json({ success: true, data: complaint[0] });
     } else {
       res.status(404).json({ success: false, message: "Not found" });
     }
-  } catch (error) { res.status(500).json({ success: false, message: "Error." }); }
+  } catch (error) { 
+    console.error("CRASH IN /:id ROUTE -->", error.message);
+    res.status(500).json({ success: false, message: "Error." }); 
+  }
 });
 
 // UPDATE STATUS & NOTIFY
