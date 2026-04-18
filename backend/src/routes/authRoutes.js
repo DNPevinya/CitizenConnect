@@ -70,18 +70,38 @@ router.post('/login', async (req, res) => {
 
         let userProfile = { id: user.user_id, email: user.email, role: user.role };
 
+        // ---------------------------------------------------------
+        // CITIZEN LOGIN BLOCK (NOW WITH 2FA INTERCEPT AND FULL PROFILE)
+        // ---------------------------------------------------------
         if (user.role === 'citizen') {
             const [citizens] = await db.query(`SELECT * FROM citizens WHERE user_id = ?`, [user.user_id]);
             if (citizens.length > 0) {
+                // 🚨 RESTORED: Pack their full profile data! 🚨
                 userProfile.fullName = citizens[0].fullName;
                 userProfile.phone = citizens[0].phone;
                 userProfile.district = citizens[0].district;
                 userProfile.division = citizens[0].division;
                 userProfile.profilePicture = citizens[0].profilePicture || null;
+
+                const citizenPhone = citizens[0].phone;
+
+                // Format the phone number for Firebase (+94)
+                let cleanPhone = citizenPhone.toString().replace(/\s+/g, '').replace(/^0+/, '');
+                let formattedPhone = `+94${cleanPhone}`;
+
+                // STOP THE LOGIN! Send the required 2FA data AND the full profile back to the app
+                return res.status(200).json({
+                    status: "2FA_REQUIRED",
+                    message: "Password verified. Proceed to OTP.",
+                    phone: formattedPhone, // Sending +9477... to the app
+                    userProfile: userProfile // NOW THIS CONTAINS THEIR NAME & PICTURE!
+                });
             }
-        } 
+        }
+        // ---------------------------------------------------------
+        // OFFICER LOGIN BLOCK (UNCHANGED)
+        // ---------------------------------------------------------
         else if (user.role === 'officer') {
-            // UPDATED: Grabs the Status to check for lockout!
             const officerQuery = `
                 SELECT o.full_name, o.authority_id, o.status, a.name as authority_name, a.department as dept_type
                 FROM officers o
@@ -91,7 +111,6 @@ router.post('/login', async (req, res) => {
             const [officers] = await db.query(officerQuery, [user.user_id]);
             
             if (officers.length > 0) {
-                // 🚨 LOCKOUT LOGIC: If Inactive, kick them out immediately! 🚨
                 if (officers[0].status === 'Inactive') {
                     return res.status(403).json({ message: "Your account has been deactivated. Please contact the Super Admin." });
                 }
@@ -103,6 +122,9 @@ router.post('/login', async (req, res) => {
             }
         }
 
+        // ---------------------------------------------------------
+        // FINAL SUCCESS (Only Officers and Admins reach this point now)
+        // ---------------------------------------------------------
         res.status(200).json({ message: "Login successful!", user: userProfile });
 
     } catch (error) {
