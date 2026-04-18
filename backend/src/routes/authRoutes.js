@@ -352,4 +352,56 @@ router.delete('/admin/delete-officer/:userId', async (req, res) => {
   }
 });
 
+// =========================================================================
+// 6. FORGOT PASSWORD (CITIZENS ONLY)
+// =========================================================================
+
+// Route A: Verify Email and get Phone Number
+router.post('/forgot-password-init', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const [users] = await db.query('SELECT user_id, role FROM users WHERE email = ?', [email]);
+        
+        if (users.length === 0 || users[0].role !== 'citizen') {
+            return res.status(404).json({ message: "No citizen account found with this email." });
+        }
+
+        const [citizens] = await db.query('SELECT phone FROM citizens WHERE user_id = ?', [users[0].user_id]);
+        
+        if (citizens.length === 0) {
+            return res.status(404).json({ message: "Phone number not found for this account." });
+        }
+
+        // Format the phone number for Firebase (+94)
+        let cleanPhone = citizens[0].phone.toString().replace(/\s+/g, '').replace(/^0+/, '');
+        let formattedPhone = `+94${cleanPhone}`;
+
+        res.status(200).json({ success: true, phone: formattedPhone });
+
+    } catch (error) {
+        console.error("Forgot Password Error:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+// Route B: Save the New Password
+router.post('/reset-password', async (req, res) => {
+    const { email, newPassword } = req.body;
+
+    try {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        await db.query('UPDATE users SET password = ? WHERE email = ?', [hashedPassword, email]);
+        
+        res.status(200).json({ success: true, message: "Password reset successfully!" });
+
+    } catch (error) {
+        console.error("Reset Password Error:", error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
+
 module.exports = router;
