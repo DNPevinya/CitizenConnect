@@ -1,22 +1,35 @@
-import React, { useState } from 'react'; 
+import React, { useState, useCallback } from 'react'; 
 import { StyleSheet, Text, View, Image, TouchableOpacity, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { translations } from '../../src/translations'; // --- IMPORT TRANSLATIONS ---
 import { BASE_URL } from '../../src/config';
 
-export default function ProfileScreen({ 
-  userName,
-  userEmail, 
-  initialData, 
-  onNavigateToEdit, 
-  onNavigateToHelp, 
-  onNavigateToFAQ, 
-  onNavigateToTerms, 
-  onNavigateToPrivacy, 
-  onLogout 
-}) {
+export default function ProfileScreen({ userName, userEmail, initialData, onNavigateToEdit, onNavigateToHelp, onNavigateToFAQ, onNavigateToTerms, onNavigateToPrivacy, onLogout }) {
   const SERVER_URL = BASE_URL;
   const [imageFailed, setImageFailed] = useState(false);
+
+  // --- LANGUAGE STATE ---
+  const [currentLang, setCurrentLang] = useState('en');
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadLang = async () => {
+        const savedLang = await AsyncStorage.getItem('userLanguage');
+        if (savedLang) setCurrentLang(savedLang);
+      };
+      loadLang();
+    }, [])
+  );
+
+  const changeLanguage = async (lang) => {
+    setCurrentLang(lang);
+    await AsyncStorage.setItem('userLanguage', lang);
+  };
+
+  const t = translations[currentLang]; // Translation helper
 
   const getInitials = (fullName) => {
     if (!fullName || fullName === 'Citizen') return "??";
@@ -31,13 +44,10 @@ export default function ProfileScreen({
     if (!initialData || !initialData.profilePicture || initialData.profilePicture === '' || initialData.profilePicture === 'null') {
       return null; 
     }
-    
     const cacheBuster = `?t=${new Date().getTime()}`;
-
     if (initialData.profilePicture.startsWith('http')) {
        return `${initialData.profilePicture}${cacheBuster}`;
     }
-
     if (Platform.OS === 'ios') {
       return `${SERVER_URL}/${initialData.profilePicture.replace(/\\/g, '/').replace(/^\//, '')}${cacheBuster}`;
     }
@@ -48,11 +58,10 @@ export default function ProfileScreen({
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      
       <View style={styles.topNavBar}>
         <View>
-          <Text style={styles.greetingText}>SETTINGS</Text>
-          <Text style={styles.navTitle}>My Profile</Text>
+          <Text style={styles.greetingText}>{t.settings}</Text>
+          <Text style={styles.navTitle}>{t.my_profile}</Text>
         </View>
         <TouchableOpacity style={styles.editBtn} onPress={onNavigateToEdit} activeOpacity={0.7}>
           <Ionicons name="pencil" size={20} color="#0041C7" />
@@ -64,11 +73,7 @@ export default function ProfileScreen({
         <View style={styles.profileHeaderCard}>
           <View style={styles.avatarWrapper}>
             {finalImageUri && !imageFailed ? (
-              <Image 
-                source={{ uri: finalImageUri }} 
-                style={styles.avatarImage} 
-                onError={() => setImageFailed(true)}
-              />
+              <Image source={{ uri: finalImageUri }} style={styles.avatarImage} onError={() => setImageFailed(true)} />
             ) : (
               <View style={styles.initialsContainer}>
                 <Text style={styles.initialsText}>{getInitials(userName)}</Text>
@@ -86,21 +91,35 @@ export default function ProfileScreen({
             )}
           </View>
         </View>
+
+        {/* --- APP LANGUAGE TOGGLE --- */}
+        <Text style={styles.sectionLabel}>{t.change_lang}</Text>
+        <View style={styles.langToggleContainer}>
+            {['en', 'si', 'ta'].map((lang) => (
+              <TouchableOpacity 
+                key={lang} 
+                onPress={() => changeLanguage(lang)} 
+                style={[styles.langBtn, currentLang === lang && styles.langBtnActive]}
+              >
+                <Text style={[styles.langBtnText, currentLang === lang && styles.langBtnTextActive]}>
+                  {lang === 'en' ? 'English' : lang === 'si' ? 'සිංහල' : 'தமிழ்'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+        </View>
         
-        <Text style={styles.sectionLabel}>ACCOUNT MANAGEMENT</Text>
-        <MenuOption icon="person-outline" label="Edit Profile Details" onPress={onNavigateToEdit} />
+        <Text style={styles.sectionLabel}>{t.account_mgmt}</Text>
+        <MenuOption icon="person-outline" label={t.edit_profile} onPress={onNavigateToEdit} />
 
-        {/* SUPPORT & LEGAL */}
-        <Text style={styles.sectionLabel}>SUPPORT & LEGAL</Text>
-        <MenuOption icon="help-circle-outline" label="Help & Instructions" onPress={onNavigateToHelp} />
-        <MenuOption icon="chatbubbles-outline" label="Frequently Asked Questions" onPress={onNavigateToFAQ} />
-        <MenuOption icon="document-text-outline" label="Terms of Service" onPress={onNavigateToTerms} />
-        <MenuOption icon="shield-checkmark-outline" label="Privacy Policy" onPress={onNavigateToPrivacy} />
+        <Text style={styles.sectionLabel}>{t.support_legal}</Text>
+        <MenuOption icon="help-circle-outline" label={t.help} onPress={onNavigateToHelp} />
+        <MenuOption icon="chatbubbles-outline" label={t.faq} onPress={onNavigateToFAQ} />
+        <MenuOption icon="document-text-outline" label={t.terms} onPress={onNavigateToTerms} />
+        <MenuOption icon="shield-checkmark-outline" label={t.privacy} onPress={onNavigateToPrivacy} />
 
-        {/* LOGOUT BUTTON */}
         <TouchableOpacity style={styles.logoutBtn} onPress={onLogout} activeOpacity={0.8}>
           <Ionicons name="log-out-outline" size={22} color="#EF4444" />
-          <Text style={styles.logoutText}>Sign Out</Text>
+          <Text style={styles.logoutText}>{t.signout}</Text>
         </TouchableOpacity>
 
         <View style={styles.footerInfo}>
@@ -113,7 +132,6 @@ export default function ProfileScreen({
   );
 }
 
-// --- UPGRADED UI COMPONENTS ---
 const MenuOption = ({ icon, label, onPress }) => (
   <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
     <View style={styles.menuIconContainer}>
@@ -126,16 +144,19 @@ const MenuOption = ({ icon, label, onPress }) => (
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
-  
-  // Standardized Navbar Styles
   topNavBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, paddingTop: 15, paddingBottom: 15, backgroundColor: '#F8FAFC' },
   greetingText: { fontSize: 12, color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2 },
   navTitle: { fontSize: 26, fontWeight: '800', color: '#0041C7' },
   editBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0, 65, 199, 0.08)', justifyContent: 'center', alignItems: 'center' },
-
   scrollContent: { paddingHorizontal: 25, paddingBottom: 40 },
   
-  // Profile Header Card
+  // --- NEW STYLES FOR LANGUAGE TOGGLE ---
+  langToggleContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
+  langBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0', marginHorizontal: 4, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.02, shadowRadius: 2 },
+  langBtnActive: { backgroundColor: '#0041C7', borderColor: '#0041C7' },
+  langBtnText: { fontSize: 13, fontWeight: '700', color: '#64748B' },
+  langBtnTextActive: { color: '#fff' },
+
   profileHeaderCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 20, borderRadius: 24, marginTop: 10, marginBottom: 30, elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 6, borderWidth: 1, borderColor: '#F1F5F9' },
   avatarWrapper: { width: 85, height: 85, borderRadius: 42.5, overflow: 'hidden', borderWidth: 3, borderColor: '#F1F5F9', backgroundColor: '#F8FAFC', justifyContent: 'center', alignItems: 'center', marginRight: 20 },
   avatarImage: { width: '100%', height: '100%' },
@@ -146,17 +167,12 @@ const styles = StyleSheet.create({
   userDetails: { fontSize: 13, color: '#64748B', fontWeight: '500', marginBottom: 8 },
   locationBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(1, 96, 201, 0.08)', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   locationText: { fontSize: 11, color: '#0160C9', fontWeight: '700', marginLeft: 4 },
-  
-  // Sections & Menus
   sectionLabel: { fontSize: 12, fontWeight: '800', color: '#94A3B8', letterSpacing: 1, marginBottom: 12, marginTop: 10, marginLeft: 5 },
   menuItem: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 20, marginBottom: 12, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.02, shadowRadius: 3, borderWidth: 1, borderColor: '#F8FAFC' },
   menuIconContainer: { width: 42, height: 42, borderRadius: 12, backgroundColor: 'rgba(0, 65, 199, 0.06)', justifyContent: 'center', alignItems: 'center', marginRight: 15 },
   menuLabel: { flex: 1, fontSize: 15, color: '#1E293B', fontWeight: '700' },
-  
-  // Action Buttons
   logoutBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#FEF2F2', padding: 18, borderRadius: 20, marginTop: 25, borderWidth: 1, borderColor: '#FECACA' },
   logoutText: { marginLeft: 10, color: '#EF4444', fontWeight: '800', fontSize: 16 },
-  
   footerInfo: { marginTop: 40, alignItems: 'center', opacity: 0.6 },
   footerText: { fontSize: 13, color: '#64748B', marginBottom: 4, fontWeight: '600' },
   versionText: { fontSize: 10, color: '#94A3B8', fontWeight: '800', letterSpacing: 1 }

@@ -1,18 +1,36 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Image, Alert, ActivityIndicator, Modal, Platform, KeyboardAvoidingView } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps'; // ADDED PROVIDER_GOOGLE
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import { useFocusEffect } from '@react-navigation/native'; // IMPORT FOR LANGUAGE
+import AsyncStorage from '@react-native-async-storage/async-storage'; // IMPORT FOR LANGUAGE
+import { translations } from '../../src/translations'; // IMPORT TRANSLATIONS
 import { BASE_URL } from '../../src/config';
 
 export default function SubmitComplaintScreen({ onBack, userId }) {
   const SERVER_URL = BASE_URL;
   const mapRef = useRef(null);
-  
   const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
+
+  // --- LANGUAGE LOGIC ---
+  const [currentLang, setCurrentLang] = useState('en');
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadLang = async () => {
+        const savedLang = await AsyncStorage.getItem('userLanguage');
+        if (savedLang) setCurrentLang(savedLang);
+      };
+      loadLang();
+    }, [])
+  );
+
+  // Default to English if the dictionary fails to load momentarily
+  const t = translations[currentLang] || translations['en']; 
 
   const complaintData = {
     'Urban Infrastructure & Municipal Services': ['Garbage Collection Delay', 'Illegal Waste Dumping', 'Street Cleaning Issue', 'Drainage Blockage / Flooding', 'Broken Road / Pothole', 'Damaged Footpath', 'Traffic Signal Malfunction', 'Public Park Maintenance Issue', 'Public Space Maintenance Issue'],
@@ -69,11 +87,9 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
         }
         return;
       }
-
       const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${coords.latitude},${coords.longitude}&key=${GOOGLE_API_KEY}`;
       const response = await fetch(url);
       const data = await response.json();
-      
       if (data.status === 'OK' && data.results.length > 0) {
         setLocationName(data.results[0].formatted_address);
       } else {
@@ -98,24 +114,19 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
 
   const handleLocationSearch = async () => {
     if (!searchQuery.trim()) return;
-    
     if (GOOGLE_API_KEY === 'PASTE_YOUR_API_KEY_HERE') {
-      Alert.alert("API Key Missing", "Please add your Google Maps API Key to search for specific shops or temples.");
+      Alert.alert("API Key Missing", "Please add your Google Maps API Key to search.");
       return;
     }
-
     setSearchingLocation(true);
     try {
       const query = searchQuery.toLowerCase().includes('sri lanka') ? searchQuery : `${searchQuery}, Sri Lanka`;
       const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${GOOGLE_API_KEY}`;
-      
       const response = await fetch(url);
       const data = await response.json();
-
       if (data.status === 'OK' && data.results.length > 0) {
         const { lat, lng } = data.results[0].geometry.location;
         const newCoords = { latitude: lat, longitude: lng };
-        
         setMarkerCoord(newCoords);
         const zoomRegion = { ...newCoords, latitudeDelta: 0.005, longitudeDelta: 0.005 };
         mapRef.current?.animateToRegion(zoomRegion, 1000);
@@ -160,13 +171,14 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
     }
   };
 
+  // --- THE BACKEND SUBMIT REMAINS 100% ENGLISH ---
   const handleSubmit = async () => {
     if (!description || images.length === 0) return Alert.alert("Required", "Please provide description and at least one photo.");
     setLoading(true);
     const formData = new FormData();
     formData.append('user_id', userId || '1');
-    formData.append('category', selectedCategory);
-    formData.append('title', selectedType);
+    formData.append('category', selectedCategory); // Submits English string
+    formData.append('title', selectedType); // Submits English string
     formData.append('description', description);
     formData.append('location_text', locationName);
     formData.append('latitude', markerCoord.latitude);
@@ -191,8 +203,8 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
   return (
     <SafeAreaView style={styles.container} edges={Platform.OS === 'android' ? ['top'] : []}>
       <View style={styles.topNavBar}>
-        <TouchableOpacity onPress={onBack} style={styles.backBtn}><Ionicons name="chevron-back" size={24} color="#0041C7" /><Text style={styles.backText}>Back</Text></TouchableOpacity>
-        <Text style={styles.navTitle}>New Report</Text>
+        <TouchableOpacity onPress={onBack} style={styles.backBtn}><Ionicons name="chevron-back" size={24} color="#0041C7" /><Text style={styles.backText}>{t.back}</Text></TouchableOpacity>
+        <Text style={styles.navTitle}>{t.new_report}</Text>
         <View style={{ width: 70 }} />
       </View>
 
@@ -200,27 +212,40 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           
           <View style={styles.formSection}>
-            <View style={styles.headerRow}><Text style={styles.label}>1. Category</Text><TouchableOpacity onPress={() => setShowCategoryGuide(true)} style={styles.helpLink}><Ionicons name="help-circle" size={16} color="#0041C7" /><Text style={styles.helpText}>Need help choosing?</Text></TouchableOpacity></View>
+            <View style={styles.headerRow}>
+              <Text style={styles.label}>{t.cat_label}</Text>
+              <TouchableOpacity onPress={() => setShowCategoryGuide(true)} style={styles.helpLink}>
+                <Ionicons name="help-circle" size={16} color="#0041C7" />
+                <Text style={styles.helpText}>{t.need_help}</Text>
+              </TouchableOpacity>
+            </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catScroll}>
               {categories.map((cat) => (
                 <TouchableOpacity key={cat.id} style={[styles.catCard, selectedCategory === cat.label && styles.catCardActive]} onPress={() => handleCategorySelect(cat.label)}>
                   <MaterialCommunityIcons name={cat.icon} size={28} color={selectedCategory === cat.label ? '#fff' : '#0160C9'} />
-                  <Text style={[styles.catLabel, selectedCategory === cat.label && styles.catLabelActive]}>{cat.label}</Text>
+                  {/* DATA MASKING: Translates category on UI only */}
+                  <Text style={[styles.catLabel, selectedCategory === cat.label && styles.catLabelActive]}>
+                    {t.categories[cat.label] || cat.label}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
           </View>
 
           <View style={styles.formSection}>
-            <Text style={styles.label}>2. Issue / Request Type</Text>
-            <TouchableOpacity style={styles.dropBtn} onPress={() => setShowTypeModal(true)}><Text style={styles.dropText}>{selectedType}</Text><Ionicons name="chevron-down-circle" size={22} color="#0041C7" /></TouchableOpacity>
+            <Text style={styles.label}>{t.issue_label}</Text>
+            <TouchableOpacity style={styles.dropBtn} onPress={() => setShowTypeModal(true)}>
+              {/* DATA MASKING: Translates selected issue type on UI only */}
+              <Text style={styles.dropText}>{t.issues[selectedType] || selectedType}</Text>
+              <Ionicons name="chevron-down-circle" size={22} color="#0041C7" />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.formSection}>
-            <Text style={styles.label}>3. Description</Text>
+            <Text style={styles.label}>{t.desc_label}</Text>
             <TextInput 
               style={styles.input} 
-              placeholder="Describe the issue or request in detail..." 
+              placeholder={t.desc_placeholder} 
               placeholderTextColor="#94A3B8"
               multiline 
               value={description} 
@@ -229,26 +254,29 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
           </View>
 
           <View style={styles.formSection}>
-            <Text style={styles.label}>4. Photos (Max 3)</Text>
-            <View style={styles.photoActions}><TouchableOpacity style={styles.pBtn} onPress={takePhoto}><Ionicons name="camera" size={20} color="#0041C7" /><Text style={styles.pText}>Camera</Text></TouchableOpacity><TouchableOpacity style={styles.pBtn} onPress={pickImages}><Ionicons name="images" size={20} color="#0041C7" /><Text style={styles.pText}>Gallery</Text></TouchableOpacity></View>
+            <Text style={styles.label}>{t.photo_label}</Text>
+            <View style={styles.photoActions}>
+              <TouchableOpacity style={styles.pBtn} onPress={takePhoto}><Ionicons name="camera" size={20} color="#0041C7" /><Text style={styles.pText}>{t.camera}</Text></TouchableOpacity>
+              <TouchableOpacity style={styles.pBtn} onPress={pickImages}><Ionicons name="images" size={20} color="#0041C7" /><Text style={styles.pText}>{t.gallery}</Text></TouchableOpacity>
+            </View>
             {images.length > 0 && <ScrollView horizontal style={styles.imgScroll}>{images.map((uri, i) => (<View key={i} style={styles.imgWrap}><Image source={{ uri }} style={styles.img} /><TouchableOpacity style={styles.rmv} onPress={() => setImages(images.filter((_, idx) => idx !== i))}><Ionicons name="close" size={14} color="#fff" /></TouchableOpacity></View>))}</ScrollView>}
           </View>
 
           <View style={styles.formSection}>
-            <Text style={styles.label}>5. Location</Text>
+            <Text style={styles.label}>{t.loc_label}</Text>
             <View style={styles.locBox}>
               <View style={styles.searchWrap}>
                  <Ionicons name="search" size={18} color="#0160C9" />
                  <TextInput 
                    style={styles.sInput} 
-                   placeholder="Search location..." 
+                   placeholder={t.search_loc} 
                    placeholderTextColor="#94A3B8"
                    value={searchQuery} 
                    onChangeText={setSearchQuery} 
                    onSubmitEditing={handleLocationSearch} 
                  />
                  <TouchableOpacity onPress={handleLocationSearch}>
-                    {searchingLocation ? <ActivityIndicator size="small" color="#0041C7" /> : <Text style={styles.sBtn}>Find</Text>}
+                    {searchingLocation ? <ActivityIndicator size="small" color="#0041C7" /> : <Text style={styles.sBtn}>{t.find}</Text>}
                  </TouchableOpacity>
               </View>
               <View style={styles.mapWrap}>
@@ -268,28 +296,63 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
             </View>
           </View>
 
-          <TouchableOpacity onPress={handleSubmit} disabled={loading}><LinearGradient colors={['#0041C7', '#0D85D8']} style={styles.submit}>{loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>Submit Report</Text>}</LinearGradient></TouchableOpacity>
+          <TouchableOpacity onPress={handleSubmit} disabled={loading}>
+            <LinearGradient colors={['#0041C7', '#0D85D8']} style={styles.submit}>
+              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.submitText}>{t.submit_btn}</Text>}
+            </LinearGradient>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <Modal visible={showTypeModal} animationType="slide" transparent><View style={styles.mOverlay}><View style={styles.mContent}><View style={styles.mHead}><Text style={styles.mTitle}>Select Issue</Text><TouchableOpacity onPress={() => setShowTypeModal(false)}><Ionicons name="close-circle" size={28} color="#94A3B8" /></TouchableOpacity></View><ScrollView contentContainerStyle={{ paddingBottom: 20 }}>{complaintData[selectedCategory].map((t, i) => (<TouchableOpacity key={i} style={styles.mItem} onPress={() => { setSelectedType(t); setShowTypeModal(false); }}><Text style={[styles.mItemT, selectedType === t && styles.mActive]}>{t}</Text></TouchableOpacity>))}</ScrollView></View></View></Modal>
+      {/* --- ISSUE TYPE SELECTOR MODAL --- */}
+      <Modal visible={showTypeModal} animationType="slide" transparent>
+        <View style={styles.mOverlay}>
+          <View style={styles.mContent}>
+            <View style={styles.mHead}>
+              <Text style={styles.mTitle}>{t.select_issue}</Text>
+              <TouchableOpacity onPress={() => setShowTypeModal(false)}><Ionicons name="close-circle" size={28} color="#94A3B8" /></TouchableOpacity>
+            </View>
+            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+              {complaintData[selectedCategory].map((type, i) => (
+                <TouchableOpacity key={i} style={styles.mItem} onPress={() => { setSelectedType(type); setShowTypeModal(false); }}>
+                  {/* DATA MASKING: Translates list items */}
+                  <Text style={[styles.mItemT, selectedType === type && styles.mActive]}>
+                    {t.issues[type] || type}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* --- CATEGORY GUIDE MODAL --- */}
       <Modal visible={showCategoryGuide} animationType="fade" transparent>
         <View style={styles.mOverlay}>
           <View style={styles.mContent}>
             <View style={styles.mHead}>
-              <Text style={styles.mTitle}>Category Guide</Text>
+              <Text style={styles.mTitle}>{t.cat_guide}</Text>
               <TouchableOpacity onPress={() => setShowCategoryGuide(false)}><Ionicons name="close-circle" size={28} color="#94A3B8" /></TouchableOpacity>
             </View>
             <ScrollView contentContainerStyle={{ paddingBottom: 30 }} showsVerticalScrollIndicator={false}>
-              <GuideItem icon="office-building" title="Urban Infrastructure & Municipal Services" desc="Garbage Collection Delay, Illegal Waste Dumping, Street Cleaning Issue, Drainage Blockage / Flooding, Broken Road / Pothole, Damaged Footpath, Traffic Signal Malfunction, Public Park Maintenance Issue, Public Space Maintenance Issue" />
-              <GuideItem icon="hospital-marker" title="Public Health & Sanitation" desc="Dengue Mosquito Breeding Site, Food Hygiene Complaint, Unsanitary Business Premises, Public Sanitation Issue, Waste Causing Health Hazard" />
-              <GuideItem icon="shield-check" title="Public Safety & Law Enforcement" desc="Noise Complaint, Parking Violation, Vandalism, Suspicious Activity, Public Disorder" />
-              <GuideItem icon="water" title="Water Supply Services" desc="Water Supply Interruption, Low Water Pressure, Pipe Leak, Water Contamination, Sewer Line Blockage" />
-              <GuideItem icon="tree" title="Environmental Protection" desc="Illegal Tree Cutting, Air Pollution, Water Body Pollution (River/Canal), Industrial Waste Disposal, Environmental Damage Complaint" />
-              <GuideItem icon="home-city" title="Urban Planning & Development" desc="Unauthorized Construction, Building Code Violation, Land Use Violation, Unsafe Construction Site" />
-              <GuideItem icon="flash" title="Electricity Services" desc="Power Outage, Streetlight Breakdown, Fallen Electrical Line, Unsafe Electrical Connection, Transformer Issue" />
-              <GuideItem icon="bus" title="Public Transport Infrastructure" desc="Bus Stop Maintenance Issue, Unsafe Bus Operation, Route Mismanagement, Public Transport Safety Concern" />
-              <GuideItem icon="account-group" title="Local Administrative Issues" desc="Resident Verification Issue, Local Documentation Concern, Community-Level Dispute (Non-Criminal)" />
+              {categories.map((cat, index) => {
+                // Auto-translate the category title
+                const translatedTitle = t.categories[cat.label] || cat.label;
+                
+                // Auto-translate the comma-separated list of issues based on the complaintData array
+                const translatedDesc = complaintData[cat.label]
+                  .map(issue => t.issues[issue] || issue)
+                  .join(', ');
+
+                return (
+                  <GuideItem 
+                    key={index} 
+                    icon={cat.icon} 
+                    title={translatedTitle} 
+                    desc={translatedDesc} 
+                  />
+                );
+              })}
             </ScrollView>
           </View>
         </View>
@@ -298,7 +361,15 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
   );
 }
 
-const GuideItem = ({ icon, title, desc }) => (<View style={styles.gItem}><MaterialCommunityIcons name={icon} size={24} color="#0160C9" /><View style={{marginLeft:15, flex: 1}}><Text style={styles.gTitle}>{title}</Text><Text style={styles.gDesc}>{desc}</Text></View></View>);
+const GuideItem = ({ icon, title, desc }) => (
+  <View style={styles.gItem}>
+    <MaterialCommunityIcons name={icon} size={24} color="#0160C9" />
+    <View style={{marginLeft:15, flex: 1}}>
+      <Text style={styles.gTitle}>{title}</Text>
+      <Text style={styles.gDesc}>{desc}</Text>
+    </View>
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
