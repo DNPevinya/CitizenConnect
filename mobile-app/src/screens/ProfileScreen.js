@@ -4,8 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { translations } from '../../src/translations'; // --- IMPORT TRANSLATIONS ---
+import { translations } from '../../src/translations'; 
 import { BASE_URL } from '../../src/config';
+
+// --- IMPORT THE BADGE ---
+import NationalBadge from '../components/NationalBadge';
 
 export default function ProfileScreen({ userName, userEmail, initialData, onNavigateToEdit, onNavigateToHelp, onNavigateToFAQ, onNavigateToTerms, onNavigateToPrivacy, onLogout }) {
   const SERVER_URL = BASE_URL;
@@ -63,9 +66,14 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
           <Text style={styles.greetingText}>{t.settings}</Text>
           <Text style={styles.navTitle}>{t.my_profile}</Text>
         </View>
-        <TouchableOpacity style={styles.editBtn} onPress={onNavigateToEdit} activeOpacity={0.7}>
-          <Ionicons name="pencil" size={20} color="#0041C7" />
-        </TouchableOpacity>
+
+        {/* --- HEADER RIGHT GROUP --- */}
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <NationalBadge size="small" />
+          <TouchableOpacity style={[styles.editBtn, { marginLeft: 12 }]} onPress={onNavigateToEdit} activeOpacity={0.7}>
+            <Ionicons name="pencil" size={20} color="#0041C7" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -150,7 +158,6 @@ const styles = StyleSheet.create({
   editBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(0, 65, 199, 0.08)', justifyContent: 'center', alignItems: 'center' },
   scrollContent: { paddingHorizontal: 25, paddingBottom: 40 },
   
-  // --- NEW STYLES FOR LANGUAGE TOGGLE ---
   langToggleContainer: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 20 },
   langBtn: { flex: 1, paddingVertical: 12, borderRadius: 12, backgroundColor: '#fff', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0', marginHorizontal: 4, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.02, shadowRadius: 2 },
   langBtnActive: { backgroundColor: '#0041C7', borderColor: '#0041C7' },

@@ -1,11 +1,11 @@
 export default {
   "expo": {
-    "name": "mobile-app",
-    "slug": "mobile-app",
+    "name": "UrbanSync", 
+    "slug": "urbansync", 
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "../../assets/images/icon.png",
-    "scheme": "mobileapp",
+    "icon": "./assets/images/icon.png", 
+    "scheme": "urbansync", 
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -16,13 +16,12 @@ export default {
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "../../assets/images/android-icon-foreground.png",
-        "backgroundImage": "../../assets/images/android-icon-background.png",
-        "monochromeImage": "../../assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/images/adaptive-icon.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
+      "package": "com.yourname.urbansync",
       "config": {
         "googleMaps": {
           "apiKey": process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
@@ -31,14 +30,14 @@ export default {
     },
     "web": {
       "output": "static",
-      "favicon": "../../assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/splash.png", 
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",

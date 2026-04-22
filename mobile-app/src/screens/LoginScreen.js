@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { BASE_URL } from '../../src/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { translations } from '../../src/translations'; // Added import
+import { translations } from '../../src/translations'; 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- 🚨 FIREBASE IMPORTS 🚨 ---
@@ -12,13 +12,16 @@ import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
 import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth } from '../../src/firebaseConfig'; 
 
+// --- IMPORT THE BADGE ---
+import NationalBadge from '../components/NationalBadge';
+
 export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigateToForgot }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [currentLang, setCurrentLang] = useState('en'); // Added language state
+  const [currentLang, setCurrentLang] = useState('en'); 
 
   // --- 2FA STATE VARIABLES ---
   const [isOtpMode, setIsOtpMode] = useState(false); 
@@ -155,19 +158,25 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           
-          {/* --- LANGUAGE TOGGLE BAR --- */}
-          <View style={styles.langToggleRow}>
-            {['en', 'si', 'ta'].map((lang) => (
-              <TouchableOpacity 
-                key={lang} 
-                onPress={() => changeLanguage(lang)} 
-                style={[styles.langBtn, currentLang === lang && styles.langBtnActive]}
-              >
-                <Text style={[styles.langBtnText, currentLang === lang && styles.langBtnTextActive]}>
-                  {lang === 'en' ? 'EN' : lang === 'si' ? 'සිං' : 'த'}
-                </Text>
-              </TouchableOpacity>
-            ))}
+          {/* --- HEADER ROW (Badge + Language Toggle) --- */}
+          <View style={styles.headerTopRow}>
+            {/* The Full Sri Lanka Badge on the Left */}
+            <NationalBadge size="large" />
+            
+            {/* The Language Buttons on the Right */}
+            <View style={styles.langToggleGroup}>
+              {['en', 'si', 'ta'].map((lang) => (
+                <TouchableOpacity 
+                  key={lang} 
+                  onPress={() => changeLanguage(lang)} 
+                  style={[styles.langBtn, currentLang === lang && styles.langBtnActive]}
+                >
+                  <Text style={[styles.langBtnText, currentLang === lang && styles.langBtnTextActive]}>
+                    {lang === 'en' ? 'EN' : lang === 'si' ? 'සිං' : 'த'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
           <View style={styles.header}>
@@ -294,8 +303,9 @@ const styles = StyleSheet.create({
   keyboardAvoid: { flex: 1 },
   scrollContent: { flexGrow: 1, paddingHorizontal: 25, paddingVertical: 30 },
   
-  // --- NEW LANGUAGE STYLES ---
-  langToggleRow: { flexDirection: 'row', justifyContent: 'flex-end', marginBottom: 15 },
+  // --- UPDATED TOP ROW STYLES ---
+  headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 },
+  langToggleGroup: { flexDirection: 'row', alignItems: 'center' },
   langBtn: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8, marginLeft: 8, backgroundColor: '#E2E8F0', borderWidth: 1, borderColor: '#CBD5E1' },
   langBtnActive: { backgroundColor: '#0160C9', borderColor: '#0041C7' },
   langBtnText: { fontSize: 12, fontWeight: '800', color: '#64748B' },
