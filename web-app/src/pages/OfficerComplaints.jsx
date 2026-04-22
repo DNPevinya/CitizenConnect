@@ -5,6 +5,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function OfficerComplaints() {
+  // 1. STATE & HOOKS
   const navigate = useNavigate();
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,6 +13,7 @@ export default function OfficerComplaints() {
   const [statusFilter, setStatusFilter] = useState('All Statuses');
   const [officerInfo, setOfficerInfo] = useState({ fullName: '', authority_id: null, authorityName: '' });
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     const savedUser = localStorage.getItem('urbanSyncUser');
     if (!savedUser) { navigate('/login'); return; }
@@ -32,6 +34,7 @@ export default function OfficerComplaints() {
     fetchComplaints();
   }, [navigate]);
 
+  // 3. HELPER VARIABLES
   const filteredComplaints = complaints.filter(c => {
     const s = searchQuery.toLowerCase();
     const matchesSearch = 
@@ -44,6 +47,7 @@ export default function OfficerComplaints() {
     return matchesSearch && matchesStatus;
   });
 
+  // 4. UI RENDER
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       <Sidebar role="officer" />

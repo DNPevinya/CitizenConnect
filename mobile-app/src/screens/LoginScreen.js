@@ -14,6 +14,7 @@ import { auth } from '../../src/firebaseConfig';
 import NationalBadge from '../components/NationalBadge';
 
 export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigateToForgot }) {
+  // 1. STATE & HOOKS
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,6 +29,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
   const recaptchaVerifier = useRef(null);
   const [verificationId, setVerificationId] = useState(null);
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     const loadLang = async () => {
       const savedLang = await AsyncStorage.getItem('userLanguage');
@@ -53,6 +55,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
     return Object.keys(newErrors).length === 0;
   };
 
+  // 3. API HANDLERS
   const handleLogin = async () => {
     if (!validateForm()) return;
     setLoading(true);
@@ -141,6 +144,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
     }
   };
 
+  // 4. UI RENDER
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.keyboardAvoid}>

@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 
 export default function WelcomeScreen({ onGetStarted }) {
+  // 1. UI RENDER
   return (
     <LinearGradient colors={['#0041C7', '#0D85D8']} style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
@@ -51,6 +52,7 @@ export default function WelcomeScreen({ onGetStarted }) {
   );
 }
 
+// 2. STYLES
 const styles = StyleSheet.create({
   container: {
     flex: 1,

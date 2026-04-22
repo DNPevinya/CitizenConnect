@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 export default function ReassignModal({ isOpen, onClose, complaintId, onReassignSuccess }) {
+  // 1. STATE & HOOKS
   const [currentData, setCurrentData] = useState(null);
   const [authorities, setAuthorities] = useState([]);
   const [officers, setOfficers] = useState([]);
@@ -10,6 +11,7 @@ export default function ReassignModal({ isOpen, onClose, complaintId, onReassign
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     if (isOpen && complaintId) {
       fetch(`http://localhost:5000/api/complaints/${complaintId}`)
@@ -33,6 +35,7 @@ export default function ReassignModal({ isOpen, onClose, complaintId, onReassign
     }
   }, [targetAuthority]);
 
+  // 3. API HANDLERS
   const handleReassign = async () => {
     setIsSubmitting(true);
     try {
@@ -62,6 +65,7 @@ export default function ReassignModal({ isOpen, onClose, complaintId, onReassign
 
   if (!isOpen) return null;
 
+  // 4. UI RENDER
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">

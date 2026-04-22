@@ -1,3 +1,4 @@
+// 1. MODULE IMPORTS
 const express = require('express');
 const router = express.Router();
 const db = require('./../db'); 
@@ -6,14 +7,16 @@ const multer = require('multer');
 const path = require('path');
 const crypto = require('crypto');
 
+// 2. CONFIGURATION & MIDDLEWARE
 const storage = multer.diskStorage({
-    destination: path.join(__dirname, '..', '..', 'uploads'), 
+    destination: path.join(__dirname, '..', '..', 'uploads'),
     filename: (req, file, cb) => {
         cb(null, Date.now() + '-' + file.originalname);
     }
 });
 const upload = multer({ storage: storage });
 
+// 3. API ROUTES
 router.post('/register', async (req, res) => {
     const { fullName, phone, email, district, division, password } = req.body;
 
@@ -214,6 +217,7 @@ router.post('/update-password', async (req, res) => {
     }
 });
 
+// 4. HELPER FUNCTIONS
 function generatePrefix(departmentName) {
   if (!departmentName) return "GEN";
   const words = departmentName.toUpperCase().split(' ');
@@ -221,6 +225,7 @@ function generatePrefix(departmentName) {
   return words.map(w => w[0]).join('').substring(0, 3);
 }
 
+// 5. ADMIN ROUTES
 router.get('/admin/officers-list', async (req, res) => {
   try {
     const query = `

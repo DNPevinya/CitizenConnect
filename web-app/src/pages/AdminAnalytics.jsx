@@ -11,9 +11,11 @@ import { Bar } from 'react-chartjs-2';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 export default function AdminAnalytics() {
+  // 1. STATE & HOOKS
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
@@ -31,6 +33,7 @@ export default function AdminAnalytics() {
     fetchAnalytics();
   }, []);
 
+  // 3. HELPER FUNCTIONS
   const exportToCSV = () => {
     if (!analytics || analytics.authorities.length === 0) return;
     
@@ -83,6 +86,7 @@ export default function AdminAnalytics() {
     }
   };
 
+  // 4. UI RENDER
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       <Sidebar role="admin" />

@@ -6,6 +6,7 @@ import { WebView } from 'react-native-webview';
 import { BASE_URL } from '../../src/config';
 
 export default function ComplaintDetailsScreen({ onBack, complaintId }) {
+  // 1. STATE & HOOKS
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
@@ -14,10 +15,12 @@ export default function ComplaintDetailsScreen({ onBack, complaintId }) {
 
   const SERVER_URL = BASE_URL;
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     if (complaintId) fetchComplaintDetails();
   }, [complaintId]);
 
+  // 3. API HANDLERS
   const fetchComplaintDetails = async () => {
     try {
       const response = await fetch(`${SERVER_URL}/api/complaints/${complaintId}`);
@@ -62,6 +65,7 @@ export default function ComplaintDetailsScreen({ onBack, complaintId }) {
     );
   };
 
+  // 4. UI RENDER
   if (loading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
@@ -295,6 +299,7 @@ export default function ComplaintDetailsScreen({ onBack, complaintId }) {
   );
 }
 
+// 5. STYLES
 const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' },
   loadingText: { marginTop: 15, color: '#64748B', fontWeight: '600', fontSize: 16 },

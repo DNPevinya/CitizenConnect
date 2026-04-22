@@ -22,10 +22,12 @@ const formatTime = (dateString) => {
 };
 
 export default function NotificationScreen({ onBack }) {
+  // 1. STATE & HOOKS
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // 2. API HANDLERS
   const fetchNotifications = async () => {
     try {
       const userData = await AsyncStorage.getItem('user');
@@ -51,6 +53,7 @@ export default function NotificationScreen({ onBack }) {
     }
   };
 
+  // 3. LIFECYCLE & UTILITIES
   useEffect(() => {
     fetchNotifications();
   }, []);
@@ -77,6 +80,7 @@ export default function NotificationScreen({ onBack }) {
     }
   };
 
+  // 4. UI RENDER
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       
@@ -153,6 +157,7 @@ export default function NotificationScreen({ onBack }) {
   );
 }
 
+// 5. STYLES
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   topNavBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 15, paddingBottom: 15, backgroundColor: '#F8FAFC' },

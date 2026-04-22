@@ -4,6 +4,7 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function Settings() {
+  // 1. STATE & HOOKS
   const [userInfo, setUserInfo] = useState({ 
     fullName: 'Loading...', 
     email: 'Loading...', 
@@ -22,6 +23,7 @@ export default function Settings() {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     const savedUser = localStorage.getItem('urbanSyncUser');
     
@@ -37,6 +39,7 @@ export default function Settings() {
     }
   }, []);
 
+  // 3. API HANDLERS
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     setStatus({ type: '', message: '' });
@@ -80,6 +83,7 @@ export default function Settings() {
     }
   };
 
+  // 4. HELPER COMPONENTS
   const EyeIcon = ({ isVisible, toggle }) => (
     <button type="button" onClick={toggle} className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#94A3B8] hover:text-[#1E293B]">
       {isVisible ? (
@@ -90,6 +94,7 @@ export default function Settings() {
     </button>
   );
 
+  // 5. UI RENDER
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       <Sidebar role={userInfo.role} />

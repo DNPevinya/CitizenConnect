@@ -4,12 +4,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ChatScreen({ onBack, complaintId }) {
+  // 1. STATE & HOOKS
   const [messages, setMessages] = useState([
     { id: '1', text: 'Ayubowan! We have received your report regarding the pothole.', sender: 'Officer', time: '10:30 AM' },
     { id: '2', text: 'A technical team is scheduled for inspection tomorrow morning.', sender: 'Officer', time: '10:32 AM' },
   ]);
   const [input, setInput] = useState('');
 
+  // 2. API HANDLERS
   const sendMessage = () => {
     if (input.trim()) {
       const newMsg = { id: Date.now().toString(), text: input, sender: 'You', time: 'Just now' };
@@ -18,6 +20,7 @@ export default function ChatScreen({ onBack, complaintId }) {
     }
   };
 
+  // 3. UI RENDER
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -68,6 +71,7 @@ export default function ChatScreen({ onBack, complaintId }) {
   );
 }
 
+// 4. STYLES
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   header: { 

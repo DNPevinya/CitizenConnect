@@ -3,10 +3,11 @@ import { View, Text, StyleSheet, Animated, ActivityIndicator, Image } from 'reac
 import { LinearGradient } from 'expo-linear-gradient';
 
 export default function LoadingScreen({ onFinish }) {
-  // --- Animation Setup ---
+  // 1. STATE & HOOKS
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.5)).current;
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     Animated.parallel([
       Animated.timing(fadeAnim, {
@@ -29,6 +30,7 @@ export default function LoadingScreen({ onFinish }) {
     return () => clearTimeout(timer);
   }, []);
 
+  // 3. UI RENDER
   return (
     <LinearGradient colors={['#0041C7', '#0D85D8']} style={styles.container}>
       
@@ -60,6 +62,7 @@ export default function LoadingScreen({ onFinish }) {
   );
 }
 
+// 4. STYLES
 const styles = StyleSheet.create({
   container: {
     flex: 1,

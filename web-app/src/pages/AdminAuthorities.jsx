@@ -7,6 +7,7 @@ import EditAuthorityModal from '../components/EditAuthorityModal';
 import DeleteModal from '../components/DeleteModal';
 
 export default function AdminAuthorities() {
+  // 1. STATE & HOOKS
   const [authorities, setAuthorities] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [regions, setRegions] = useState([]);
@@ -20,6 +21,7 @@ export default function AdminAuthorities() {
   const [editData, setEditData] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
 
+  // 2. API HANDLERS
   const fetchAuthorities = async () => {
     setLoading(true);
     try {
@@ -44,10 +46,12 @@ export default function AdminAuthorities() {
     }
   };
 
+  // 3. LIFECYCLE & UTILITIES
   useEffect(() => {
     fetchAuthorities();
   }, []);
 
+  // 4. HELPER VARIABLES
   const filteredAuths = authorities.filter(a => 
     a.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     a.department.toLowerCase().includes(searchTerm.toLowerCase())
@@ -59,6 +63,7 @@ export default function AdminAuthorities() {
   const openEdit = (auth) => { setEditData(auth); setIsEditOpen(true); };
   const openDelete = (id) => { setDeleteId(id); setIsDeleteOpen(true); };
 
+  // 5. UI RENDER
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       <Sidebar role="admin" />

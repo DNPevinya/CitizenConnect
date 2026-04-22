@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 
 export default function RejectComplaintModal({ isOpen, onClose, complaint, refreshData, officerName }) {
+  // 1. STATE & HOOKS
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen || !complaint) return null;
 
+  // 2. API HANDLERS
   const handleReject = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -35,6 +37,7 @@ export default function RejectComplaintModal({ isOpen, onClose, complaint, refre
     }
   };
 
+  // 3. UI RENDER
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
 export default function EditOfficerModal({ isOpen, onClose, refreshData, authorities, officerData }) {
+  // 1. STATE & HOOKS
   const [formData, setFormData] = useState({ full_name: '', email: '', authority_id: '', employee_id_code: '', status: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     if (officerData) {
       setFormData({
@@ -18,6 +20,7 @@ export default function EditOfficerModal({ isOpen, onClose, refreshData, authori
 
   if (!isOpen || !officerData) return null;
 
+  // 3. API HANDLERS
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -41,6 +44,7 @@ export default function EditOfficerModal({ isOpen, onClose, refreshData, authori
     }
   };
 
+  // 4. UI RENDER
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">

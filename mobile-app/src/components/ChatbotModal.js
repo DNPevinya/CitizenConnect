@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { BASE_URL } from '../../src/config';
 
 export default function ChatbotModal({ visible, onClose }) {
+  // 1. STATE & HOOKS
   const [messages, setMessages] = useState([
     { id: '1', text: 'Hello! I am the UrbanSync AI Assistant. How can I help you today?', sender: 'bot' }
   ]);
@@ -12,6 +13,7 @@ export default function ChatbotModal({ visible, onClose }) {
   const [isTyping, setIsTyping] = useState(false);
   const scrollViewRef = useRef();
 
+  // 2. API HANDLERS
   const handleSend = async () => {
     if (!inputText.trim()) return;
 
@@ -46,6 +48,7 @@ export default function ChatbotModal({ visible, onClose }) {
     }
   };
 
+  // 3. UI RENDER
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <View style={styles.modalOverlay}>
@@ -121,6 +124,7 @@ export default function ChatbotModal({ visible, onClose }) {
   );
 }
 
+// 4. STYLES
 const styles = StyleSheet.create({
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContainer: { height: '85%', backgroundColor: '#F8FAFC', borderTopLeftRadius: 30, borderTopRightRadius: 30, overflow: 'hidden' },

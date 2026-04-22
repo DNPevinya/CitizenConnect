@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PrivacyScreen({ onBack }) {
+  // 1. UI RENDER
   return (
     <SafeAreaView style={styles.container} edges={Platform.OS === 'android' ? ['top'] : []}>
       
@@ -57,6 +58,7 @@ export default function PrivacyScreen({ onBack }) {
   );
 }
 
+// 2. HELPER COMPONENTS
 const PolicySection = ({ title, body, icon }) => (
   <View style={styles.sectionCard}>
     <View style={styles.sectionHeader}>
@@ -69,6 +71,7 @@ const PolicySection = ({ title, body, icon }) => (
   </View>
 );
 
+// 3. STYLES
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   

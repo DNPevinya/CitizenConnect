@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function Sidebar({ role = 'admin' }) {
+  // 1. STATE & HOOKS
   const location = useLocation();
   const navigate = useNavigate();
   const effectiveRole = role === 'super_admin' ? 'admin' : role;
   
   const [userInfo, setUserInfo] = useState({ fullName: '', authorityName: '' });
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     const savedUser = localStorage.getItem('urbanSyncUser');
     if (savedUser) {
@@ -19,6 +21,7 @@ export default function Sidebar({ role = 'admin' }) {
     }
   }, [role]);
 
+  // 3. HELPER VARIABLES
   const menuItems = [
     {
       title: 'Dashboard',
@@ -60,6 +63,7 @@ export default function Sidebar({ role = 'admin' }) {
 
   const visibleMenu = menuItems.filter(item => item.allowedRoles.includes(effectiveRole));
 
+  // 4. UI RENDER
   return (
     <aside className="w-64 bg-[#0F172A] text-white h-screen flex flex-col flex-shrink-0">
       

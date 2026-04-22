@@ -1,5 +1,7 @@
+// 1. MODULE IMPORTS
 const pool = require('../config/db');
 
+// 2. CONTROLLERS
 exports.submitComplaint = async (req, res) => {
     try {
         const { 

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 
 export default function AddAuthorityModal({ isOpen, onClose, refreshData, departments, regions }) {
+  // 1. STATE & HOOKS
   const [name, setName] = useState('');
   const [department, setDepartment] = useState('');
   const [region, setRegion] = useState('');
@@ -8,6 +9,7 @@ export default function AddAuthorityModal({ isOpen, onClose, refreshData, depart
 
   if (!isOpen) return null;
 
+  // 2. API HANDLERS
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -34,6 +36,7 @@ export default function AddAuthorityModal({ isOpen, onClose, refreshData, depart
     }
   };
 
+  // 3. UI RENDER
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">

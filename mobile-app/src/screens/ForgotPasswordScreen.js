@@ -11,6 +11,7 @@ import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
 import { auth } from '../../src/firebaseConfig'; 
 
 export default function ForgotPasswordScreen({ onBack, onResetSuccess }) {
+  // 1. STATE & HOOKS
   const [step, setStep] = useState('email'); 
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -21,6 +22,7 @@ export default function ForgotPasswordScreen({ onBack, onResetSuccess }) {
   const [verificationId, setVerificationId] = useState(null);
   const recaptchaVerifier = useRef(null);
 
+  // 2. API HANDLERS
   const handleSendOTP = async () => {
     if (!email) return alert("Please enter your email.");
     setLoading(true);
@@ -83,6 +85,7 @@ export default function ForgotPasswordScreen({ onBack, onResetSuccess }) {
     }
   };
 
+  // 3. UI RENDER
   return (
     <SafeAreaView style={styles.container}>
       <FirebaseRecaptchaVerifierModal
@@ -166,6 +169,7 @@ export default function ForgotPasswordScreen({ onBack, onResetSuccess }) {
   );
 }
 
+// 4. STYLES
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   scrollContent: { paddingHorizontal: 25, paddingTop: 60, paddingBottom: 40 },

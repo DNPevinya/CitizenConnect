@@ -12,6 +12,7 @@ import ChatbotModal from '../components/ChatbotModal';
 import NationalBadge from '../components/NationalBadge';
 
 export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, onNavigateToView, onNavigateToDetails, onNavigateToNotifications }) {
+  // 1. STATE & HOOKS
   const [stats, setStats] = useState({ total: 0, inProgress: 0, resolved: 0 });
   const [recentActivities, setRecentActivities] = useState([]);
   const [hasUnread, setHasUnread] = useState(false);
@@ -22,6 +23,7 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
   const SERVER_URL = BASE_URL;
   const t = translations[currentLang];
 
+  // 2. LIFECYCLE & UTILITIES
   useFocusEffect(
     useCallback(() => {
       const loadLang = async () => {
@@ -33,6 +35,7 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
     }, [userId])
   );
 
+  // 3. API HANDLERS
   const fetchDashboardData = async () => {
     try {
       const complaintsRes = await fetch(`${SERVER_URL}/api/complaints/user/${userId || 1}`);
@@ -91,6 +94,7 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
     }
   };
 
+  // 4. UI RENDER
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.topNavBar}>
@@ -187,6 +191,7 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
   );
 }
 
+// 5. HELPER COMPONENTS
 const StatCard = ({ label, value, color, icon }) => (
   <View style={styles.statCard}>
     <View style={[styles.statIconWrapper, { backgroundColor: color + '15' }]}>
@@ -210,6 +215,7 @@ const ActivityItem = ({ title, desc, time, icon, color }) => (
   </View>
 );
 
+// 6. STYLES
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   topNavBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, paddingTop: 15, paddingBottom: 10, backgroundColor: '#F8FAFC' },

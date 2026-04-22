@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
+// 1. UI RENDER
 export default function NationalBadge({ size = 'large', style }) {
   const isLarge = size === 'large';
 
@@ -11,6 +12,7 @@ export default function NationalBadge({ size = 'large', style }) {
   );
 }
 
+// 2. STYLES
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#EFF6FF',

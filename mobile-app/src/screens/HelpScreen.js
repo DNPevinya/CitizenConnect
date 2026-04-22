@@ -4,6 +4,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function HelpScreen({ onBack, onNavigateToFAQ }) {
+  // 1. UI RENDER
   return (
     <SafeAreaView style={styles.container} edges={Platform.OS === 'android' ? ['top'] : []}>   
       <View style={[styles.topNavBar, Platform.OS === 'ios' && { paddingTop: 20 }]}>
@@ -85,6 +86,7 @@ export default function HelpScreen({ onBack, onNavigateToFAQ }) {
   );
 }
 
+// 2. STYLES
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   

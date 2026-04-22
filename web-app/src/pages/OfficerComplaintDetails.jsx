@@ -6,6 +6,7 @@ import Footer from '../components/Footer';
 import RejectComplaintModal from '../components/RejectComplaintModal'; 
 
 export default function OfficerComplaintDetails() {
+  // 1. STATE & HOOKS
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const complaintId = searchParams.get('id');
@@ -19,6 +20,7 @@ export default function OfficerComplaintDetails() {
 
   const savedUser = JSON.parse(localStorage.getItem('urbanSyncUser') || '{}');
 
+  // 2. API HANDLERS
   const fetchDetails = async () => {
     try {
       const response = await fetch(`http://localhost:5000/api/complaints/${complaintId}`);
@@ -34,10 +36,12 @@ export default function OfficerComplaintDetails() {
     }
   };
 
+  // 3. LIFECYCLE & UTILITIES
   useEffect(() => {
     if (complaintId) fetchDetails();
   }, [complaintId]);
 
+  // 4. ACTION HANDLERS
   const handleStatusChange = async () => {
     setUpdating(true);
     try {
@@ -58,6 +62,7 @@ export default function OfficerComplaintDetails() {
     }
   };
 
+  // 5. HELPER VARIABLES
   if (loading) return <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-bold text-[#64748B]">Loading Complaint Details...</div>;
   if (!complaint) return <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center font-bold text-red-500">Complaint not found.</div>;
 
@@ -65,6 +70,7 @@ export default function OfficerComplaintDetails() {
     year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'
   });
 
+  // 6. HELPER FUNCTIONS
   const getStatusColor = (status) => {
     const s = status.toUpperCase();
     if (s === 'PENDING') return 'bg-amber-100 text-amber-700';
@@ -74,6 +80,7 @@ export default function OfficerComplaintDetails() {
     return 'bg-[#F0F5FF] text-[#0041C7]';
   };
 
+  // 7. UI RENDER
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       <Sidebar role="officer" />

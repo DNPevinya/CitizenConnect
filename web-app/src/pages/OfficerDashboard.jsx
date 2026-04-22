@@ -5,11 +5,13 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function OfficerDashboard() {
+  // 1. STATE & HOOKS
   const navigate = useNavigate();
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [officerInfo, setOfficerInfo] = useState({ fullName: '', authority_id: null, authorityName: '' });
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     const savedUser = localStorage.getItem('urbanSyncUser');
     if (!savedUser) { navigate('/login'); return; }
@@ -30,6 +32,7 @@ export default function OfficerDashboard() {
     fetchComplaints();
   }, [navigate]);
 
+  // 3. UI RENDER
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       <Sidebar role="officer" />

@@ -12,12 +12,14 @@ import { translations } from '../../src/translations';
 import { BASE_URL } from '../../src/config';
 
 export default function SubmitComplaintScreen({ onBack, userId }) {
+  // 1. STATE & HOOKS
   const SERVER_URL = BASE_URL;
   const mapRef = useRef(null);
   const GOOGLE_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   const [currentLang, setCurrentLang] = useState('en');
 
+  // 2. LIFECYCLE & UTILITIES
   useFocusEffect(
     useCallback(() => {
       const loadLang = async () => {
@@ -92,6 +94,7 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchingLocation, setSearchingLocation] = useState(false);
 
+  // 3. API HANDLERS
   const handleCategorySelect = (catLabel) => {
     setSelectedCategory(catLabel);
     setSelectedType(complaintData[catLabel][0]); 
@@ -223,6 +226,7 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
     finally { setLoading(false); }
   };
 
+  // 4. UI RENDER
   return (
     <SafeAreaView style={styles.container} edges={Platform.OS === 'android' ? ['top'] : []}>
       <View style={styles.topNavBar}>

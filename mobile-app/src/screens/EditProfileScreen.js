@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { BASE_URL } from '../../src/config';
 
 export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSuccess }) {
+  // 1. STATE & HOOKS
   const [name, setName] = useState(initialData?.name || '');
   const [phone, setPhone] = useState(initialData?.phone || '');
   const [district, setDistrict] = useState(initialData?.district || 'Select District');
@@ -23,6 +24,7 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
 
   const SERVER_URL = BASE_URL;
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     if (initialData) {
       setName(initialData.name || '');
@@ -32,6 +34,7 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
     }
   }, [initialData]);
 
+  // 3. HELPER FUNCTIONS
   const getInitials = (fullName) => {
     if (!fullName || fullName === 'Citizen') return "??";
     const names = fullName.trim().split(/\s+/);
@@ -75,6 +78,7 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
     }
   };
 
+  // 4. API HANDLERS
   const handleUpdate = async () => {
     if (oldPassword && !newPassword) {
       Alert.alert("Incomplete", "You entered your current password. Please enter a new password if you wish to change it.");
@@ -154,6 +158,7 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
     }
   };
 
+  // 5. UI RENDER
   return (
     <SafeAreaView style={styles.container} edges={Platform.OS === 'android' ? ['top'] : []}>
       
@@ -267,7 +272,8 @@ export default function EditProfileScreen({ onBack, initialData = {}, onUpdateSu
   );
 }
 
-const EditableField = ({ label, icon, value, onChange, keyboardType }) => (
+// 6. HELPER COMPONENTS
+const EditableField = ({ label, icon, value, onChange, keyboardType = 'default' }) => (
   <View style={styles.inputGroup}>
     <Text style={styles.label}>{label}</Text>
     <View style={styles.inputContainer}>
@@ -298,6 +304,7 @@ const PasswordField = ({ label, value, onChange, visible, placeholder, onToggle,
   </View>
 );
 
+// 7. STYLES
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 15, backgroundColor: '#F8FAFC' },

@@ -27,6 +27,7 @@ export default function SignupScreen({
   onNavigateToPrivacy, 
   onSignupSuccess 
 }) {
+  // 1. STATE & HOOKS
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false); 
@@ -41,6 +42,7 @@ export default function SignupScreen({
   const [districtItems, setDistrictItems] = useState(Object.keys(locationData).map(dist => ({ label: dist, value: dist })));
   const [divisionItems, setDivisionItems] = useState([]);
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     const loadLang = async () => {
       const savedLang = await AsyncStorage.getItem('userLanguage');
@@ -82,6 +84,7 @@ export default function SignupScreen({
     return Object.keys(newErrors).length === 0;
   };
 
+  // 3. API HANDLERS
   const handleRegister = async () => {
     if (!validateForm()) return;
 
@@ -109,6 +112,7 @@ export default function SignupScreen({
     }
   };
 
+  // 4. UI RENDER
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>

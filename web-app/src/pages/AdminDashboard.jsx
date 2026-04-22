@@ -7,6 +7,7 @@ import ReassignModal from '../components/ReassignModal';
 import DetailsModal from '../components/DetailsModal';   
 
 export default function AdminDashboard() {
+  // 1. STATE & HOOKS
   const navigate = useNavigate();
   
   const [stats, setStats] = useState({ total: 0, pending: 0, active: 0, resolved: 0 });
@@ -19,6 +20,7 @@ export default function AdminDashboard() {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [detailsId, setDetailsId] = useState('');
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     const savedUser = localStorage.getItem('urbanSyncUser');
     if (!savedUser) { navigate('/login'); return; }
@@ -53,6 +55,7 @@ export default function AdminDashboard() {
     fetchAllAdminData();
   }, [navigate]);
 
+  // 3. HELPER FUNCTIONS
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -62,6 +65,7 @@ export default function AdminDashboard() {
   const openReassign = (id) => { setReassignId(id); setIsReassignOpen(true); };
   const openDetails = (id) => { setDetailsId(id); setIsDetailsOpen(true); };
 
+  // 4. UI RENDER
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       <Sidebar role="admin" />

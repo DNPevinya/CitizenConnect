@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 
 export default function DeleteComplaintModal({ isOpen, onClose, complaintId, refreshData }) {
+  // 1. STATE & HOOKS
   const [isDeleting, setIsDeleting] = useState(false);
 
   if (!isOpen || !complaintId) return null;
 
+  // 2. API HANDLERS
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
@@ -26,6 +28,7 @@ export default function DeleteComplaintModal({ isOpen, onClose, complaintId, ref
     }
   };
 
+  // 3. UI RENDER
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col p-6 text-center border border-[#E2E8F0] animate-in fade-in zoom-in duration-200">

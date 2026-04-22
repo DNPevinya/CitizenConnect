@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function FAQScreen({ onBack }) {
+  // 1. STATE & HOOKS
   const faqs = [
     {
       question: "How long does it take to fix a reported issue?",
@@ -27,6 +28,7 @@ export default function FAQScreen({ onBack }) {
     }
   ];
 
+  // 2. UI RENDER
   return (
     <SafeAreaView style={styles.container} edges={Platform.OS === 'android' ? ['top'] : []}>
       
@@ -68,6 +70,7 @@ export default function FAQScreen({ onBack }) {
   );
 }
 
+// 3. STYLES
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   

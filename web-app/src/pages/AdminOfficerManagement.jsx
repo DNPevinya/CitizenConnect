@@ -7,6 +7,7 @@ import EditOfficerModal from '../components/EditOfficerModal';
 import DeleteOfficerModal from '../components/DeleteOfficerModal';
 
 export default function AdminOfficerManagement() {
+  // 1. STATE & HOOKS
   const [officers, setOfficers] = useState([]);
   const [authorities, setAuthorities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +23,7 @@ export default function AdminOfficerManagement() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedOfficer, setSelectedOfficer] = useState(null);
 
+  // 2. API HANDLERS
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -41,9 +43,10 @@ export default function AdminOfficerManagement() {
     }
   };
 
+  // 3. LIFECYCLE & UTILITIES
   useEffect(() => { fetchData(); }, []);
 
-  // APPLY FILTERS
+  // 4. HELPER VARIABLES
   const filteredOfficers = officers.filter(o => {
     const matchesSearch = 
       o.full_name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -59,6 +62,7 @@ export default function AdminOfficerManagement() {
   const openEdit = (officer) => { setSelectedOfficer(officer); setIsEditOpen(true); };
   const openDelete = (officer) => { setSelectedOfficer(officer); setIsDeleteOpen(true); };
 
+  // 5. HELPER FUNCTIONS
   const getInitials = (name) => {
     if (!name) return "O";
     const parts = name.split(" ");
@@ -71,6 +75,7 @@ export default function AdminOfficerManagement() {
     return new Date(dateString).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
+  // 6. UI RENDER
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       <Sidebar role="admin" />

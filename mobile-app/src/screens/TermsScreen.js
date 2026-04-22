@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TermsScreen({ onBack }) {
+  // 1. UI RENDER
   return (
     <SafeAreaView style={styles.container} edges={Platform.OS === 'android' ? ['top'] : []}>
       <View style={[styles.topNavBar, Platform.OS === 'ios' && { paddingTop: 20 }]}>
@@ -61,6 +62,7 @@ export default function TermsScreen({ onBack }) {
   );
 }
 
+// 2. HELPER COMPONENTS
 const TermSection = ({ title, body, icon }) => (
   <View style={styles.sectionCard}>
     <View style={styles.sectionHeader}>
@@ -73,6 +75,7 @@ const TermSection = ({ title, body, icon }) => (
   </View>
 );
 
+// 3. STYLES
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   

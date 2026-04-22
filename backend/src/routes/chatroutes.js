@@ -1,7 +1,9 @@
+// 1. MODULE IMPORTS
 const express = require('express');
 const router = express.Router();
 const { OpenAI } = require('openai');
 
+// 2. CONFIGURATION
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
@@ -43,6 +45,7 @@ RULES:
 - If asked about something completely unrelated to Sri Lanka, civic issues, or the UrbanSync app, politely decline to answer.
 `;
 
+// 3. API ROUTES
 router.post('/ask', async (req, res) => {
     const { message } = req.body;
 
@@ -70,4 +73,5 @@ router.post('/ask', async (req, res) => {
     }
 });
 
+// 4. EXPORTS
 module.exports = router;

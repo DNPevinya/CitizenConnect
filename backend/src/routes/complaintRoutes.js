@@ -1,9 +1,11 @@
+// 1. MODULE IMPORTS
 const express = require('express');
 const router = express.Router();
 const db = require('./../db'); 
 const multer = require('multer');
 const path = require('path');
 
+// 2. HELPER VARIABLES
 const issueToDepartmentMap = {
   "Garbage Collection Delay": "Local Council",
   "Illegal Waste Dumping": "Local Council",
@@ -52,6 +54,7 @@ const issueToDepartmentMap = {
   "Community-Level Dispute (Non-Criminal)": "Grama Niladhari"
 };
 
+// 3. HELPER FUNCTIONS
 function extractCity(locationText) {
   if (!locationText) return 'Colombo'; 
   const text = locationText.toLowerCase();
@@ -63,12 +66,14 @@ function extractCity(locationText) {
   return 'Colombo';
 }
 
+// 4. CONFIGURATION & MIDDLEWARE
 const storage = multer.diskStorage({
   destination: (req, file, cb) => { cb(null, 'uploads/'); },
   filename: (req, file, cb) => { cb(null, `COMP-${Date.now()}-${Math.floor(Math.random() * 1000)}${path.extname(file.originalname)}`); }
 });
 const upload = multer({ storage: storage });
 
+// 5. API ROUTES
 router.get('/admin/stats', async (req, res) => {
   try {
     const [total] = await db.query('SELECT COUNT(*) as count FROM complaints');
@@ -485,4 +490,5 @@ router.patch('/update-status/:id', async (req, res) => {
   } catch (error) { res.status(500).json({ success: false, message: "Failed to update status." }); }
 });
 
+// 6. EXPORTS
 module.exports = router;

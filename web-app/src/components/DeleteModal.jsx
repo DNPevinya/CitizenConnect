@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 
 export default function DeleteModal({ isOpen, onClose, deleteId, authorities, refreshData }) {
+  // 1. STATE & HOOKS
   const [fallbackId, setFallbackId] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
   if (!isOpen || !deleteId) return null;
 
+  // 2. LIFECYCLE & UTILITIES
   const otherAuthorities = authorities.filter(a => a.authority_id !== deleteId);
 
+  // 3. API HANDLERS
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
@@ -31,6 +34,7 @@ export default function DeleteModal({ isOpen, onClose, deleteId, authorities, re
     }
   };
 
+  // 4. UI RENDER
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden flex flex-col p-6 text-center border border-[#E2E8F0]">

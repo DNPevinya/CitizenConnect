@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, View, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
+// 1. UI RENDER
 export default function MainLayout({ children, currentTab, onTabPress }) {
   return (
     <View style={styles.container}>
@@ -17,6 +18,7 @@ export default function MainLayout({ children, currentTab, onTabPress }) {
   );
 }
 
+// 2. HELPER COMPONENTS
 const TabItem = ({ icon, label, active, onPress }) => (
   <TouchableOpacity style={styles.tabItem} onPress={onPress}>
     <Ionicons name={active ? icon : `${icon}-outline`} size={24} color={active ? '#3A49F9' : '#94A3B8'} />
@@ -24,6 +26,7 @@ const TabItem = ({ icon, label, active, onPress }) => (
   </TouchableOpacity>
 );
 
+// 3. STYLES
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { flex: 1 },

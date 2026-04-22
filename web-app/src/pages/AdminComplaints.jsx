@@ -8,6 +8,7 @@ import DetailsModal from '../components/DetailsModal';
 import DeleteComplaintModal from '../components/DeleteComplaintModal'; 
 
 export default function AdminComplaints() {
+  // 1. STATE & HOOKS
   const navigate = useNavigate();
 
   const [complaints, setComplaints] = useState([]);
@@ -30,6 +31,7 @@ export default function AdminComplaints() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [deleteId, setDeleteId] = useState('');
 
+  // 2. API HANDLERS
   const fetchMasterData = async () => {
     try {
       setLoading(true);
@@ -48,6 +50,7 @@ export default function AdminComplaints() {
     }
   };
 
+  // 3. LIFECYCLE & UTILITIES
   useEffect(() => {
     const savedUser = localStorage.getItem('urbanSyncUser');
     if (!savedUser) { navigate('/login'); return; }
@@ -62,6 +65,7 @@ export default function AdminComplaints() {
     setCurrentPage(1);
   }, [searchTerm, filterCategory, filterStatus, filterDate]);
 
+  // 4. HELPER VARIABLES
   const filteredComplaints = complaints.filter(c => {
     const safeTitle = c.title || "";
     const safeStatus = c.status || "";
@@ -86,6 +90,7 @@ export default function AdminComplaints() {
   const currentRows = filteredComplaints.slice(indexOfFirstRow, indexOfLastRow);
   const totalPages = Math.ceil(filteredComplaints.length / rowsPerPage);
 
+  // 5. HELPER FUNCTIONS
   const clearFilters = () => {
     setSearchTerm(''); setFilterCategory('All Categories'); setFilterStatus('All Statuses'); setFilterDate('');
   };
@@ -95,6 +100,7 @@ export default function AdminComplaints() {
     return new Date(dateString).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
+  // 6. UI RENDER
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       <Sidebar role="admin" />

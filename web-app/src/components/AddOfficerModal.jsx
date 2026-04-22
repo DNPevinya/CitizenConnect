@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 
 export default function AddOfficerModal({ isOpen, onClose, refreshData, authorities }) {
+  // 1. STATE & HOOKS
   const [formData, setFormData] = useState({ full_name: '', email: '', authority_id: '', employee_id_code: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState(null);
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     if (formData.authority_id) {
       fetch(`http://localhost:5000/api/auth/admin/next-employee-id/${formData.authority_id}`)
@@ -18,6 +20,7 @@ export default function AddOfficerModal({ isOpen, onClose, refreshData, authorit
 
   if (!isOpen) return null;
 
+  // 3. API HANDLERS
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -48,6 +51,7 @@ export default function AddOfficerModal({ isOpen, onClose, refreshData, authorit
     onClose();
   };
 
+  // 4. UI RENDER
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">

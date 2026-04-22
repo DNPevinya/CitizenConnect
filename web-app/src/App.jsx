@@ -21,6 +21,7 @@ import OfficerComplaintDetails from './pages/OfficerComplaintDetails';
 import Settings from './pages/Settings';
 
 export default function App() {
+  // 1. UI RENDER
   return (
     <Router>
       <Routes>

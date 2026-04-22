@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BASE_URL } from '../../src/config';
 
 export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
+  // 1. STATE & HOOKS
   const [filter, setFilter] = useState('All');
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,10 +13,12 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
 
   const SERVER_URL = BASE_URL;
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     fetchMyComplaints();
   }, []);
 
+  // 3. API HANDLERS
   const fetchMyComplaints = async () => {
     try {
       const response = await fetch(`${SERVER_URL}/api/complaints/user/${userId || 1}`);
@@ -56,6 +59,7 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
     return matchesFilter && matchesSearch;
   });
 
+  // 4. UI RENDER
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       
@@ -159,6 +163,7 @@ export default function ViewComplaintsScreen({ onNavigateToDetails, userId }) {
   );
 }
 
+// 5. STYLES
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   topNavBar: { paddingHorizontal: 25, paddingTop: 15, paddingBottom: 15 },

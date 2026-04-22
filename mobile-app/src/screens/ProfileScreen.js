@@ -10,11 +10,13 @@ import { BASE_URL } from '../../src/config';
 import NationalBadge from '../components/NationalBadge';
 
 export default function ProfileScreen({ userName, userEmail, initialData, onNavigateToEdit, onNavigateToHelp, onNavigateToFAQ, onNavigateToTerms, onNavigateToPrivacy, onLogout }) {
+  // 1. STATE & HOOKS
   const SERVER_URL = BASE_URL;
   const [imageFailed, setImageFailed] = useState(false);
 
   const [currentLang, setCurrentLang] = useState('en');
 
+  // 2. LIFECYCLE & UTILITIES
   useFocusEffect(
     useCallback(() => {
       const loadLang = async () => {
@@ -32,6 +34,7 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
 
   const t = translations[currentLang]; 
 
+  // 3. HELPER FUNCTIONS
   const getInitials = (fullName) => {
     if (!fullName || fullName === 'Citizen') return "??";
     const names = fullName.trim().split(/\s+/);
@@ -57,6 +60,7 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
 
   const finalImageUri = getProfileImage();
 
+  // 4. UI RENDER
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.topNavBar}>
@@ -136,6 +140,7 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
   );
 }
 
+// 5. HELPER COMPONENTS
 const MenuOption = ({ icon, label, onPress }) => (
   <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
     <View style={styles.menuIconContainer}>
@@ -146,6 +151,7 @@ const MenuOption = ({ icon, label, onPress }) => (
   </TouchableOpacity>
 );
 
+// 6. STYLES
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   topNavBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, paddingTop: 15, paddingBottom: 15, backgroundColor: '#F8FAFC' },

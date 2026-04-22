@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
 export default function DetailsModal({ isOpen, onClose, complaintId }) {
+  // 1. STATE & HOOKS
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     if (isOpen && complaintId) {
       const fetchDetails = async () => {
@@ -26,6 +28,7 @@ export default function DetailsModal({ isOpen, onClose, complaintId }) {
 
   if (!isOpen) return null;
 
+  // 3. HELPER FUNCTIONS
   const formatDateTime = (dateString) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -37,6 +40,7 @@ export default function DetailsModal({ isOpen, onClose, complaintId }) {
 
   const evidenceImages = data?.image_url ? data.image_url.split(',') : [];
 
+  // 4. UI RENDER
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
       

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Login() {
+  // 1. STATE & HOOKS
   const navigate = useNavigate(); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -9,6 +10,7 @@ export default function Login() {
   const [error, setError] = useState(''); 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // 2. API HANDLERS
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -44,6 +46,7 @@ export default function Login() {
     }
   };
 
+  // 3. UI RENDER
   return (
     <div className="flex min-h-screen font-sans bg-white overflow-hidden">
       

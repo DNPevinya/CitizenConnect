@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 export default function Footer() {
+  // 1. UI RENDER
   return (
     <footer className="px-8 py-6 text-[11px] font-bold text-[#94A3B8] flex flex-col md:flex-row justify-between items-center border-t border-[#E2E8F0] mt-auto">
       <p>© 2026 National Governance Digital Division. All rights reserved.</p>

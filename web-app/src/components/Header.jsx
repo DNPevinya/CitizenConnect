@@ -2,8 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Header({ title, breadcrumbs }) {
+  // 1. STATE & HOOKS
   const navigate = useNavigate();
 
+  // 2. UI RENDER
   return (
     <header className="h-[72px] bg-[#FFFFFF] border-b border-[#E2E8F0] flex items-center justify-between px-8 flex-shrink-0">
       

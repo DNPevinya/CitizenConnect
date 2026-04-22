@@ -5,9 +5,11 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 
 export default function PrivacyPolicy() {
+  // 1. STATE & HOOKS
   const navigate = useNavigate();
   const [role, setRole] = useState('officer');
 
+  // 2. LIFECYCLE & UTILITIES
   useEffect(() => {
     const savedUser = localStorage.getItem('urbanSyncUser');
     if (!savedUser) {
@@ -18,6 +20,7 @@ export default function PrivacyPolicy() {
     setRole(user.role);
   }, [navigate]);
 
+  // 3. UI RENDER
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
       <Sidebar role={role} />
