@@ -1,5 +1,7 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+// --- Added getAuth back in for the safety fallback ---
+import { initializeAuth, getReactNativePersistence, getAuth } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Safely pulling the keys from your .env file
 const firebaseConfig = {
@@ -11,8 +13,18 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// 1. Initialize Firebase App safely (checks if it's already running)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firebase Authentication and export it
-export const auth = getAuth(app);
+// 2. Initialize Firebase Auth safely for Fast Refresh
+let auth;
+try {
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+  });
+} catch (error) {
+  // If it crashes because of a quick save, just grab the running instance!
+  auth = getAuth(app);
+}
+
+export { auth };

@@ -4,8 +4,10 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { translations } from '../../src/translations'; // --- IMPORT TRANSLATIONS ---
+import { LinearGradient } from 'expo-linear-gradient'; // --- ADDED FOR AI BUTTON ---
+import { translations } from '../../src/translations'; 
 import { BASE_URL } from '../../src/config';
+import ChatbotModal from '../components/ChatbotModal';
 
 export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, onNavigateToView, onNavigateToDetails, onNavigateToNotifications }) {
   const [stats, setStats] = useState({ total: 0, inProgress: 0, resolved: 0 });
@@ -15,6 +17,9 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
   
   // --- LANGUAGE STATE ---
   const [currentLang, setCurrentLang] = useState('en');
+
+  // --- CHATBOT STATE ---
+  const [showChatbot, setShowChatbot] = useState(false);
 
   const SERVER_URL = BASE_URL;
 
@@ -168,6 +173,21 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
         )}
 
       </ScrollView>
+
+      {/* --- FLOATING AI BUTTON --- */}
+      <TouchableOpacity 
+        style={styles.floatingBtn} 
+        onPress={() => setShowChatbot(true)}
+        activeOpacity={0.8}
+      >
+        <LinearGradient colors={['#0041C7', '#0D85D8']} style={styles.floatingGradient}>
+          <Ionicons name="chatbubbles" size={28} color="#fff" />
+        </LinearGradient>
+      </TouchableOpacity>
+
+      {/* --- THE CHATBOT MODAL --- */}
+      <ChatbotModal visible={showChatbot} onClose={() => setShowChatbot(false)} />
+
     </SafeAreaView>
   );
 }
@@ -195,7 +215,6 @@ const ActivityItem = ({ title, desc, time, icon, color }) => (
   </View>
 );
 
-// STYLES REMAIN EXACTLY THE SAME - NO CHANGES NEEDED
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F8FAFC' },
   topNavBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 25, paddingTop: 15, paddingBottom: 10, backgroundColor: '#F8FAFC' },
@@ -232,5 +251,9 @@ const styles = StyleSheet.create({
   actTitle: { fontSize: 16, fontWeight: '800', color: '#1E293B', marginBottom: 3 },
   actDesc: { fontSize: 13, color: '#64748B', fontWeight: '500' },
   actTime: { fontSize: 11, color: '#94A3B8', fontWeight: '800', letterSpacing: 0.5 },
-  emptyText: { color: '#94A3B8', marginTop: 20, fontSize: 14, fontWeight: '500', textAlign: 'center' }
+  emptyText: { color: '#94A3B8', marginTop: 20, fontSize: 14, fontWeight: '500', textAlign: 'center' },
+  
+  // --- ADDED CHATBOT FLOATING BUTTON STYLES ---
+  floatingBtn: { position: 'absolute', bottom: 30, right: 25, width: 65, height: 65, borderRadius: 32.5, elevation: 8, shadowColor: '#0041C7', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
+  floatingGradient: { width: '100%', height: '100%', borderRadius: 32.5, justifyContent: 'center', alignItems: 'center' }
 });

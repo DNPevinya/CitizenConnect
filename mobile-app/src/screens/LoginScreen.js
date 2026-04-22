@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator, Image, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { BASE_URL } from '../../src/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { translations } from '../../src/translations'; // Added import
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // --- 🚨 FIREBASE IMPORTS 🚨 ---
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
