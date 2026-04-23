@@ -1,11 +1,14 @@
 const request = require('supertest');
 const express = require('express');
 
-// 1. MOCK MULTER (Prevents tests from saving junk files to your hard drive)
+// Fake Multer (File Upload )
+// We absolutely do not want our automated tests saving random junk files to our computer.
+// This mock intercepts Multer, prevents it from writing to disk, and simply attaches 
+// a fake file object to the request so our route logic thinks an upload succeeded.
 jest.mock('multer', () => {
     const multer = () => ({
         array: () => (req, res, next) => {
-            // Fake a file being uploaded
+            // Attach a dummy file array to the request object
             req.files = [{ filename: 'test-image.jpg' }];
             return next();
         },
@@ -15,33 +18,31 @@ jest.mock('multer', () => {
     return multer;
 });
 
-// 2. MOCK THE DATABASE
+// Intercept database calls so we don't accidentally write or delete real data during tests
 jest.mock('../src/db', () => ({
     query: jest.fn()
 }));
 const db = require('../src/db');
 
-// 3. IMPORT ROUTES & SETUP GHOST SERVER
+// Spin up a fake Express app in memory
 const complaintRoutes = require('../src/routes/complaintRoutes');
 const app = express();
-app.use(express.json()); // Allow JSON body parsing
+app.use(express.json()); 
 app.use('/api/complaints', complaintRoutes);
 
-// ==========================================
-// TEST SUITE
-// ==========================================
 describe('Complaint API Routes', () => {
 
     beforeEach(() => {
+        // Wipe the slate clean before every test so database mock returns don't bleed over
         jest.clearAllMocks();
     });
 
-    // --- 1. SUBMISSION TESTS ---
     describe('POST /api/complaints/submit', () => {
-        it('should successfully submit a complaint and auto-assign authority (Happy Path - 201)', async () => {
-            // Mock 1: Find Authority based on location/department -> Returns Authority ID 5
+        
+        it('should successfully submit a complaint and auto-assign an authority (Happy Path - 201)', async () => {
+            // 1. Pretend the database analyzed the location/category and found Authority ID 5
             db.query.mockResolvedValueOnce([[{ authority_id: 5 }]]);
-            // Mock 2: Insert the complaint -> Returns new Complaint ID 100
+            // 2. Pretend the complaint insertion succeeded and the DB gave it ID 100
             db.query.mockResolvedValueOnce([{ insertId: 100 }]);
 
             const response = await request(app)
@@ -59,26 +60,30 @@ describe('Complaint API Routes', () => {
             expect(response.status).toBe(201);
             expect(response.body.success).toBe(true);
             expect(response.body.complaint_id).toBe(100);
+            
+            // Verify our logic actually performed both the assignment check and the insertion
             expect(db.query).toHaveBeenCalledTimes(2);
         });
 
         it('should handle database failure during submission gracefully (Sad Path - 500)', async () => {
-            // Force the database to throw an error
+            // Force the database to throw an error (e.g., connection lost)
             db.query.mockRejectedValueOnce(new Error('Database Connection Lost'));
 
             const response = await request(app)
                 .post('/api/complaints/submit')
                 .send({ user_id: 1, title: 'Test' });
 
+            // Verify our route caught the error instead of crashing the server
             expect(response.status).toBe(500);
             expect(response.body.success).toBe(false);
             expect(response.body.message).toBe('Failed to save complaint.');
         });
     });
 
-    // --- 2. CITIZEN VIEW TESTS ---
     describe('GET /api/complaints/user/:userId', () => {
+        
         it('should return a list of complaints for a specific user (Happy Path - 200)', async () => {
+            // Provide some dummy complaints for the DB to "find"
             const mockComplaints = [
                 { complaint_id: 1, title: 'Pothole', status: 'Pending' },
                 { complaint_id: 2, title: 'No Water', status: 'Resolved' }
@@ -89,13 +94,17 @@ describe('Complaint API Routes', () => {
 
             expect(response.status).toBe(200);
             expect(response.body.success).toBe(true);
+            
+            // Ensure both complaints were returned to the client
             expect(response.body.data.length).toBe(2);
             expect(response.body.data[0].title).toBe('Pothole');
         });
     });
 
     describe('GET /api/complaints/:id', () => {
+        
         it('should return full complaint details if found (Happy Path - 200)', async () => {
+            // Pretend the DB successfully joined all the tables and found the specific complaint
             db.query.mockResolvedValueOnce([[{ complaint_id: 99, title: 'Noise Complaint', citizen_name: 'John' }]]);
 
             const response = await request(app).get('/api/complaints/99');
@@ -106,7 +115,8 @@ describe('Complaint API Routes', () => {
         });
 
         it('should return 404 if the complaint does not exist (Sad Path - 404)', async () => {
-            db.query.mockResolvedValueOnce([[]]); // Returns empty array
+            // Pretend the DB found nothing
+            db.query.mockResolvedValueOnce([[]]); 
 
             const response = await request(app).get('/api/complaints/9999');
 
@@ -115,14 +125,14 @@ describe('Complaint API Routes', () => {
         });
     });
 
-    // --- 3. OFFICER / ADMIN UPDATE TESTS ---
     describe('PATCH /api/complaints/update-status/:id', () => {
-        it('should update status and trigger a notification (Happy Path - 200)', async () => {
-            // Mock 1: Find complaint to get user_id and title for notification
+        
+        it('should update status and trigger an automated user notification (Happy Path - 200)', async () => {
+            // 1. Pretend we found the complaint so we know WHICH user to notify
             db.query.mockResolvedValueOnce([[{ user_id: 10, title: 'Streetlight Broken' }]]);
-            // Mock 2: Update status
+            // 2. Pretend the status update in the 'complaints' table succeeded
             db.query.mockResolvedValueOnce([{}]);
-            // Mock 3: Insert Notification
+            // 3. Pretend we successfully inserted a new record into the 'notifications' table
             db.query.mockResolvedValueOnce([{}]);
 
             const response = await request(app)
@@ -132,14 +142,17 @@ describe('Complaint API Routes', () => {
             expect(response.status).toBe(200);
             expect(response.body.success).toBe(true);
             expect(response.body.message).toBe('Status updated and citizen notified!');
-            expect(db.query).toHaveBeenCalledTimes(3); // Proves the notification logic fired!
+            
+            // Prove that all three steps of our complex update/notify logic actually ran!
+            expect(db.query).toHaveBeenCalledTimes(3); 
         });
     });
 
-    // --- 4. ADMIN DASHBOARD TESTS ---
     describe('GET /api/complaints/admin/stats', () => {
+        
         it('should return aggregated counts for the admin dashboard (Happy Path - 200)', async () => {
-            // We have 4 separate queries in this route, so we mock 4 responses!
+            // Our dashboard route runs 4 separate queries to get its totals. 
+            // We have to mock 4 consecutive DB responses to satisfy it!
             db.query.mockResolvedValueOnce([[{ count: 100 }]]); // Total
             db.query.mockResolvedValueOnce([[{ count: 20 }]]);  // Pending
             db.query.mockResolvedValueOnce([[{ count: 50 }]]);  // Resolved
@@ -149,6 +162,8 @@ describe('Complaint API Routes', () => {
 
             expect(response.status).toBe(200);
             expect(response.body.success).toBe(true);
+            
+            // Verify our route packaged the 4 queries correctly into the response JSON
             expect(response.body.data.total).toBe(100);
             expect(response.body.data.resolved).toBe(50);
             expect(db.query).toHaveBeenCalledTimes(4);
@@ -156,7 +171,9 @@ describe('Complaint API Routes', () => {
     });
 
     describe('DELETE /api/complaints/admin/delete-complaint/:id', () => {
+        
         it('should permanently delete a complaint (Happy Path - 200)', async () => {
+            // Pretend the database delete succeeded
             db.query.mockResolvedValueOnce([{}]);
 
             const response = await request(app).delete('/api/complaints/admin/delete-complaint/5');

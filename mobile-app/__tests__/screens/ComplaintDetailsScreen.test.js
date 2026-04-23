@@ -3,22 +3,25 @@ import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import ComplaintDetailsScreen from '../../src/screens/ComplaintDetailsScreen';
 
-// ==========================================
-// 1. MOCKS
-// ==========================================
+
+// Fake Dependencies (Mocks)
+// We replace complex native libraries with simple views 
+// so the test runner doesn't crash trying to render them.
+
 jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: jest.fn().mockImplementation(({ children }) => children),
 }));
 
 jest.mock('@expo/vector-icons', () => {
   const { View } = require('react-native');
+  // Trick: Give every icon a testID based on its name so we can find it later
   return {
     Ionicons: (props) => <View testID={`icon-${props.name}`} {...props} />,
     MaterialCommunityIcons: (props) => <View testID={`icon-${props.name}`} {...props} />,
   };
 });
 
-// Mock react-native-webview since it doesn't run in Node/Jest
+// WebViews crash Node.js test environments, so we fake it out entirely
 jest.mock('react-native-webview', () => {
   const { View } = require('react-native');
   return {
@@ -30,15 +33,14 @@ jest.mock('../../src/config', () => ({
   BASE_URL: 'http://mock-server.com',
 }));
 
+// Intercept all API calls so we don't hit the real backend
 global.fetch = jest.fn();
 
-// ==========================================
-// 2. TEST SUITE
-// ==========================================
 describe('ComplaintDetailsScreen', () => {
   const mockOnBack = jest.fn();
   const mockComplaintId = '12345';
 
+  // Dummy data to feed into the screen when it tries to fetch details
   const mockComplaintData = {
     id: mockComplaintId,
     title: 'Huge Pothole on Main St',
@@ -54,14 +56,13 @@ describe('ComplaintDetailsScreen', () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    // Spy on Alert to simulate button presses later
+    jest.clearAllMocks(); // Start fresh for every test
+    // We spy on Alert so we can programmatically "click" its buttons during tests
     jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   });
 
-  // --- 1. RENDERING TESTS ---
-  it('renders the initial loading state correctly', () => {
-    // Return a Promise that never resolves to keep the loading state active
+  it('shows a loading spinner before the API responds', () => {
+    // Force the fetch to hang forever so we can inspect the loading state
     global.fetch.mockReturnValue(new Promise(() => {}));
 
     const { getByText } = render(
@@ -71,8 +72,8 @@ describe('ComplaintDetailsScreen', () => {
     expect(getByText('Loading Details...')).toBeTruthy();
   });
 
-  // --- 2. ERROR HANDLING TESTS ---
-  it('shows an error state with a Go Back button if complaint fetch fails or returns null', async () => {
+  it('shows an error screen with a back button if the complaint is deleted or fails to load', async () => {
+    // Pretend the server returned an empty result
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ success: false, data: null }),
@@ -82,77 +83,80 @@ describe('ComplaintDetailsScreen', () => {
       <ComplaintDetailsScreen onBack={mockOnBack} complaintId={mockComplaintId} />
     );
 
+    // Wait for the UI to show the error message
     await waitFor(() => {
       expect(getByText('Complaint not found.')).toBeTruthy();
     });
 
+    // Make sure the fallback back button actually works
     fireEvent.press(getByText('Go Back'));
     expect(mockOnBack).toHaveBeenCalledTimes(1);
   });
 
-  // --- 3. ASYNC/API DATA FETCHING TESTS ---
-  it('fetches and renders all complaint details including WebView and Images', async () => {
+  it('loads the complaint data and renders the text, images, and map correctly', async () => {
+    // Feed it our dummy data
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ success: true, data: mockComplaintData }),
     });
 
-    const { getByText, getByTestId, getAllByTestId } = render(
+    const { getByText, getByTestId } = render(
       <ComplaintDetailsScreen onBack={mockOnBack} complaintId={mockComplaintId} />
     );
 
     await waitFor(() => {
-      // Basic Text Details
+      // Check if all the crucial text blocks rendered
       expect(getByText('Huge Pothole on Main St')).toBeTruthy();
       expect(getByText('There is a massive pothole causing traffic near the junction.')).toBeTruthy();
       expect(getByText('Main St, Colombo')).toBeTruthy();
       expect(getByText('#SL-12345')).toBeTruthy();
       expect(getByText('IN PROGRESS')).toBeTruthy();
       
-      // Authority timeline
+      // Verify the dynamic timeline states
       expect(getByText('Road Development Authority')).toBeTruthy();
       expect(getByText('Work In Progress')).toBeTruthy();
 
-      // Ensure WebView mapped correctly
+      // Ensure the map (WebView) didn't crash and is present
       expect(getByTestId('mock-webview')).toBeTruthy();
     });
   });
 
-  // --- 4. STATE/INTERACTION TESTS ---
-  it('opens and closes the full-screen image modal', async () => {
+  it('allows the user to tap an image to view it full-screen', async () => {
+    // Feed it data so the images render
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: () => Promise.resolve({ success: true, data: mockComplaintData }),
     });
 
-    const { getByText, getAllByTestId, getByTestId, queryByTestId } = render(
+    const { getByText, getAllByTestId, getByTestId } = render(
       <ComplaintDetailsScreen onBack={mockOnBack} complaintId={mockComplaintId} />
     );
 
     await waitFor(() => expect(getByText('Huge Pothole on Main St')).toBeTruthy());
 
-    // 1. Find the expand icon (which bubbles up to TouchableOpacity)
+    // Find the expand icon over the images
     const expandIcons = getAllByTestId('icon-expand');
     expect(expandIcons.length).toBeGreaterThan(0);
 
-    // 2. Press to open Modal
+    // Tap the first one to open the modal
     fireEvent.press(expandIcons[0]);
 
-    // 3. Verify Modal Close button is accessible (meaning modal is open)
+    // If the close button exists, it proves the modal successfully opened
     const closeBtn = getByTestId('icon-close-circle');
     expect(closeBtn).toBeTruthy();
 
-    // 4. Press Close button
+    // Close it back up
     fireEvent.press(closeBtn);
   });
 
-  it('triggers the cancel complaint flow and makes a PATCH request', async () => {
+  it('handles the complex "Cancel Complaint" flow and hits the PATCH endpoint', async () => {
+    // This test requires TWO API mocks: one for the initial load, one for the cancellation
     global.fetch
-      .mockResolvedValueOnce({ // GET Details
+      .mockResolvedValueOnce({ // 1. Initial Load
         ok: true,
         json: () => Promise.resolve({ success: true, data: mockComplaintData }),
       })
-      .mockResolvedValueOnce({ // PATCH Cancel
+      .mockResolvedValueOnce({ // 2. The Cancel Request
         ok: true,
         json: () => Promise.resolve({ success: true }),
       });
@@ -161,24 +165,27 @@ describe('ComplaintDetailsScreen', () => {
       <ComplaintDetailsScreen onBack={mockOnBack} complaintId={mockComplaintId} />
     );
 
+    // Wait for the button to appear
     await waitFor(() => expect(getByText('Cancel Complaint')).toBeTruthy());
 
+    // Tap it
     const cancelBtn = getByText('Cancel Complaint');
     fireEvent.press(cancelBtn);
 
-    // Verify Alert was shown
+    // Check that the confirmation popup appeared
     expect(Alert.alert).toHaveBeenCalledWith(
       'Cancel Complaint',
       'Are you sure you want to withdraw this complaint? This cannot be undone.',
       expect.any(Array)
     );
 
-    // Simulate pressing "Yes, Cancel" in the Alert
+    // Dig into the Alert mock and artificially click the "destructive" (Yes, Cancel) button
     const confirmButton = Alert.alert.mock.calls[0][2].find(b => b.style === 'destructive');
     confirmButton.onPress();
 
+    // Verify the aftermath
     await waitFor(() => {
-      // Verify PATCH request fired
+      // Did it actually tell the backend to cancel?
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining(`/api/complaints/update-status/${mockComplaintId}`),
         expect.objectContaining({
@@ -187,10 +194,9 @@ describe('ComplaintDetailsScreen', () => {
         })
       );
       
-      // Verify success alert and back navigation
+      // Did it show a success message and kick the user back to the list?
       expect(Alert.alert).toHaveBeenCalledWith('Withdrawn', 'Your complaint has been cancelled.');
       expect(mockOnBack).toHaveBeenCalled();
     });
   });
-
 });

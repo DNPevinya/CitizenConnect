@@ -4,9 +4,7 @@ import LoginScreen from '../../src/screens/LoginScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PhoneAuthProvider, signInWithCredential } from 'firebase/auth';
 
-// --- Mocks ---
-
-// 1. React Native Safe Area Context
+// Fake the safe area providers so the UI layout doesn't crash in the test environment
 jest.mock('react-native-safe-area-context', () => {
   const inset = { top: 0, right: 0, bottom: 0, left: 0 };
   return {
@@ -17,7 +15,7 @@ jest.mock('react-native-safe-area-context', () => {
   };
 });
 
-// 2. Vector Icons
+// Auto-mock icons to simple Views and tag them with a testID so we can find them easily
 jest.mock('@expo/vector-icons', () => {
   const { View } = require('react-native');
   return {
@@ -27,7 +25,7 @@ jest.mock('@expo/vector-icons', () => {
   };
 });
 
-// 3. Linear Gradient
+// Mock the background gradient
 jest.mock('expo-linear-gradient', () => {
   const { View } = require('react-native');
   return {
@@ -35,14 +33,14 @@ jest.mock('expo-linear-gradient', () => {
   };
 });
 
-// 4. Async Storage
+// Stub out AsyncStorage so we can pretend to save the user session after a successful login
 jest.mock('@react-native-async-storage/async-storage', () => ({
   setItem: jest.fn(),
   getItem: jest.fn(() => Promise.resolve('en')),
   removeItem: jest.fn(),
 }));
 
-// 5. Firebase
+// Deep fake Firebase Auth. We absolutely don't want to send real SMS texts during an automated test!
 jest.mock('firebase/auth', () => ({
   PhoneAuthProvider: jest.fn().mockImplementation(() => ({
     verifyPhoneNumber: jest.fn(),
@@ -52,6 +50,7 @@ jest.mock('firebase/auth', () => ({
 
 PhoneAuthProvider.credential = jest.fn();
 
+// Provide a dummy config so Firebase doesn't panic on boot
 jest.mock('../../src/firebaseConfig', () => ({
   auth: {
     app: {
@@ -60,6 +59,7 @@ jest.mock('../../src/firebaseConfig', () => ({
   }
 }));
 
+// Replace the invisible reCAPTCHA modal with a dummy view
 jest.mock('expo-firebase-recaptcha', () => ({
   FirebaseRecaptchaVerifierModal: (props) => {
     const { View } = require('react-native');
@@ -67,22 +67,22 @@ jest.mock('expo-firebase-recaptcha', () => ({
   }
 }));
 
-// 6. Custom Components
+// Mock custom UI components
 jest.mock('../../src/components/NationalBadge', () => {
   const { View } = require('react-native');
   return () => <View testID="national-badge" />;
 });
 
-// 7. Global fetch
+// Intercept all network requests so we don't accidentally hit the real backend
 global.fetch = jest.fn();
 
-// --- Test Suite ---
 describe('LoginScreen Component', () => {
   const mockOnLoginSuccess = jest.fn();
   const mockOnCreateAccount = jest.fn();
   const mockOnNavigateToForgot = jest.fn();
 
   beforeEach(() => {
+    // Wipe the slate clean before every test so they don't interfere with each other
     jest.clearAllMocks();
   });
 
@@ -95,16 +95,16 @@ describe('LoginScreen Component', () => {
       />
     );
 
-    // Verify main inputs are present
+    // Check if the main inputs showed up on initial load
     expect(getByPlaceholderText('e.g. citizen@example.com')).toBeTruthy();
     expect(getByPlaceholderText('Enter your password')).toBeTruthy();
 
-    // Verify buttons and links are present based on translation 'en'
+    // Verify the buttons and links are present (assuming English default)
     expect(getByText('Sign In')).toBeTruthy();
     expect(getByText('Create an Account')).toBeTruthy();
     expect(getByText('Forgot Password?')).toBeTruthy();
     
-    // Verify custom components are rendered
+    // Verify our custom and mock components rendered
     expect(getByTestId('national-badge')).toBeTruthy();
     expect(getByTestId('recaptcha-modal')).toBeTruthy();
   });
@@ -118,9 +118,11 @@ describe('LoginScreen Component', () => {
       />
     );
 
+    // Smash the login button without typing anything
     const loginButton = getByText('Sign In');
     fireEvent.press(loginButton);
 
+    // Make sure the app yells at the user and blocks the API call
     await waitFor(() => {
       expect(getByText('Email or phone is required.')).toBeTruthy();
       expect(getByText('Password is required.')).toBeTruthy();
@@ -136,12 +138,14 @@ describe('LoginScreen Component', () => {
       />
     );
 
+    // Type a garbage email
     const emailInput = getByPlaceholderText('e.g. citizen@example.com');
     fireEvent.changeText(emailInput, 'invalidemail');
 
     const loginButton = getByText('Sign In');
     fireEvent.press(loginButton);
 
+    // Verify the format validation caught it
     await waitFor(() => {
       expect(getByText('Please enter a valid email format.')).toBeTruthy();
       expect(getByText('Password is required.')).toBeTruthy();
@@ -149,7 +153,7 @@ describe('LoginScreen Component', () => {
   });
 
   it('handles successful standard login flow', async () => {
-    // Mock successful backend response
+    // Pretend the server liked our credentials and gave us user data
     const mockUser = {
       id: '123',
       fullName: 'John Doe',
@@ -173,14 +177,20 @@ describe('LoginScreen Component', () => {
       />
     );
 
+    // Fill out the form correctly
     fireEvent.changeText(getByPlaceholderText('e.g. citizen@example.com'), 'john@example.com');
     fireEvent.changeText(getByPlaceholderText('Enter your password'), 'password123');
     fireEvent.press(getByText('Sign In'));
 
+    // Wait for the dust to settle and verify all success dominoes fell
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledTimes(1);
       expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/auth/login'), expect.any(Object));
+      
+      // Did it save the session token/user data?
       expect(AsyncStorage.setItem).toHaveBeenCalledWith('user', JSON.stringify(mockUser));
+      
+      // Did it tell the parent component to let the user into the app?
       expect(mockOnLoginSuccess).toHaveBeenCalledWith(
         mockUser.id, mockUser.fullName, mockUser.email, 
         mockUser.phone, mockUser.district, mockUser.division, 
@@ -190,6 +200,7 @@ describe('LoginScreen Component', () => {
   });
 
   it('handles server errors gracefully and displays error message', async () => {
+    // Force the API to fail so we can test the error popup
     global.fetch.mockResolvedValueOnce({
       ok: false,
       json: async () => ({ message: 'Invalid email or password.' }),
@@ -207,20 +218,21 @@ describe('LoginScreen Component', () => {
     fireEvent.changeText(getByPlaceholderText('Enter your password'), 'wrongpass');
     fireEvent.press(getByText('Sign In'));
 
+    // Verify the UI updated to show the server's error message
     await waitFor(() => {
       expect(getByText('Invalid email or password.')).toBeTruthy();
     });
   });
 
   it('handles 2FA REQUIRED response and enters OTP verification mode', async () => {
-    // Mock 2FA API response
+    // Pretend the server demands 2FA for this user
     const mockPendingUser = { id: '456', fullName: 'Jane Doe', email: 'jane@example.com' };
     global.fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ status: '2FA_REQUIRED', phone: '+94771234567', userProfile: mockPendingUser }),
     });
 
-    // Mock Firebase verification
+    // Mock the initial Firebase phone verification request
     const mockVerifyPhoneNumber = jest.fn().mockResolvedValue('verification-id-123');
     PhoneAuthProvider.mockImplementation(() => ({
       verifyPhoneNumber: mockVerifyPhoneNumber,
@@ -239,11 +251,12 @@ describe('LoginScreen Component', () => {
     fireEvent.press(getByText('Sign In'));
 
     await waitFor(() => {
-      // Verify OTP mode is active by checking translations
-      expect(getByText('Verify & Login')).toBeTruthy(); // OTP mode verify button
-      expect(getByPlaceholderText('------')).toBeTruthy(); // OTP input
-      expect(queryByText('Sign In')).toBeNull(); // Original Sign In button is removed
+      // Verify the screen morphed from a login form into an OTP form
+      expect(getByText('Verify & Login')).toBeTruthy(); 
+      expect(getByPlaceholderText('------')).toBeTruthy(); 
+      expect(queryByText('Sign In')).toBeNull(); 
       
+      // Verify it actually asked Firebase to send the SMS
       expect(mockVerifyPhoneNumber).toHaveBeenCalledWith('+94771234567', expect.anything());
     });
   });
@@ -260,7 +273,7 @@ describe('LoginScreen Component', () => {
       verifyPhoneNumber: mockVerifyPhoneNumber,
     }));
 
-    // Mock Firebase OTP submission
+    // Mock the actual Firebase OTP submission
     const mockCredential = { providerId: 'phone' };
     PhoneAuthProvider.credential.mockReturnValue(mockCredential);
     signInWithCredential.mockResolvedValueOnce({ user: { uid: 'firebase-uid' } });
@@ -273,21 +286,22 @@ describe('LoginScreen Component', () => {
       />
     );
 
-    // Trigger OTP mode
+    // Step 1: Trigger OTP mode
     fireEvent.changeText(getByPlaceholderText('e.g. citizen@example.com'), 'jane@example.com');
     fireEvent.changeText(getByPlaceholderText('Enter your password'), 'password123');
     fireEvent.press(getByText('Sign In'));
 
     await waitFor(() => expect(getByPlaceholderText('------')).toBeTruthy());
 
-    // Try to submit incomplete OTP
+    // Step 2: Try to submit an incomplete OTP
     fireEvent.press(getByText('Verify & Login'));
     await waitFor(() => expect(getByText('Please enter a valid 6-digit code.')).toBeTruthy());
 
-    // Submit correct length OTP
+    // Step 3: Submit the correct 6-digit OTP
     fireEvent.changeText(getByPlaceholderText('------'), '123456');
     fireEvent.press(getByText('Verify & Login'));
 
+    // Step 4: Verify it passed the code to Firebase and let the user in
     await waitFor(() => {
       expect(PhoneAuthProvider.credential).toHaveBeenCalledWith('verification-id-123', '123456');
       expect(signInWithCredential).toHaveBeenCalledWith(expect.anything(), mockCredential);
@@ -310,7 +324,7 @@ describe('LoginScreen Component', () => {
       verifyPhoneNumber: mockVerifyPhoneNumber,
     }));
 
-    // Mock Firebase OTP failure
+    // Force Firebase to reject the OTP code
     PhoneAuthProvider.credential.mockReturnValue({});
     signInWithCredential.mockRejectedValueOnce(new Error('invalid-code'));
 
@@ -322,15 +336,18 @@ describe('LoginScreen Component', () => {
       />
     );
 
+    // Get to the OTP screen
     fireEvent.changeText(getByPlaceholderText('e.g. citizen@example.com'), 'jane@example.com');
     fireEvent.changeText(getByPlaceholderText('Enter your password'), 'password123');
     fireEvent.press(getByText('Sign In'));
 
     await waitFor(() => expect(getByPlaceholderText('------')).toBeTruthy());
 
+    // Type the wrong code
     fireEvent.changeText(getByPlaceholderText('------'), '999999');
     fireEvent.press(getByText('Verify & Login'));
 
+    // Verify the error text appeared
     await waitFor(() => {
       expect(getByText('Invalid OTP code. Please try again.')).toBeTruthy();
     });
@@ -345,6 +362,7 @@ describe('LoginScreen Component', () => {
       />
     );
 
+    // Tap the bottom links to make sure they tell the router to change screens
     fireEvent.press(getByText('Create an Account'));
     expect(mockOnCreateAccount).toHaveBeenCalledTimes(1);
 

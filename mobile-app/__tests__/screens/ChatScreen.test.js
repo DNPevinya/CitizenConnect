@@ -2,16 +2,18 @@ import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import ChatScreen from '../../src/screens/ChatScreen';
 
-// ==========================================
-// MOCKS
-// ==========================================
+
+// Fake Dependencies (Mocks)
+// We don't want to test React Navigation or Expo Icons here, 
+// so we replace them with simple dummy views.
+
 jest.mock('react-native-safe-area-context', () => ({
   SafeAreaView: jest.fn().mockImplementation(({ children }) => children),
 }));
 
 jest.mock('@expo/vector-icons', () => {
   const { View } = require('react-native');
-  // Automatically applies a testID to every icon based on its name
+  // Trick to easily find icons later: give them a testID based on their name
   return { Ionicons: (props) => <View testID={`icon-${props.name}`} {...props} /> };
 });
 
@@ -19,64 +21,65 @@ describe('ChatScreen', () => {
   const mockOnBack = jest.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    jest.clearAllMocks(); // Clean up before each test so they don't mess with each other
   });
 
-  it('renders initial automated messages correctly', () => {
+  it('renders the initial automated messages right away', () => {
     const { getByText } = render(<ChatScreen onBack={mockOnBack} complaintId="SL-123" />);
 
-    // Verify header text
+    // Check if the header caught the props correctly
     expect(getByText('Tracking SL-123')).toBeTruthy();
 
-    // Verify initial simulated AI messages
+    // Check if the bot's welcome messages are showing
     expect(getByText('Ayubowan! We have received your report regarding the pothole.')).toBeTruthy();
     expect(getByText('A technical team is scheduled for inspection tomorrow morning.')).toBeTruthy();
   });
 
-  it('adds a new message to the list when the user types and sends', async () => {
+  it('lets the user type and send a new message', async () => {
     const { getByPlaceholderText, getByText, getByTestId } = render(<ChatScreen onBack={mockOnBack} />);
 
     const inputField = getByPlaceholderText('Write your message...');
 
-    // Wait for the component to settle
+    // Give the screen a split second to finish mounting
     await waitFor(() => expect(inputField).toBeTruthy());
 
-    // Type a message
+    // Simulate the user typing on their keyboard
     fireEvent.changeText(inputField, 'Thank you for the update.');
     expect(inputField.props.value).toBe('Thank you for the update.');
 
-    // Find the send icon by its testID and press it
+    // Find our send button and tap it
     const sendIcon = getByTestId('icon-send');
     fireEvent.press(sendIcon);
 
-    // Verify the new message appears in the list
+    // Wait for the UI to update and check if the new bubble appeared at the bottom
     await waitFor(() => {
       expect(getByText('Thank you for the update.')).toBeTruthy();
       expect(getByText('Just now')).toBeTruthy();
     });
   });
 
-  it('does not send an empty message', () => {
+  it('blocks the user from sending empty ghosts messages', () => {
     const { getByTestId, queryAllByText } = render(<ChatScreen onBack={mockOnBack} />);
 
-    // Count initial "Just now" messages (should be 0)
+    // Count how many messages say "Just now" before we do anything
     const initialCount = queryAllByText('Just now').length;
 
-    // Press send without typing anything
+    // Try to hit send without typing
     const sendIcon = getByTestId('icon-send');
     fireEvent.press(sendIcon);
 
-    // Verify no new messages were added
+    // Make sure the count didn't go up
     expect(queryAllByText('Just now').length).toBe(initialCount);
   });
 
-  it('navigates back when the back button is pressed', () => {
+  it('fires the back navigation prop when the back arrow is tapped', () => {
     const { getByTestId } = render(<ChatScreen onBack={mockOnBack} />);
 
-    // Find the back icon and press it
+    // Tap the back arrow
     const backIcon = getByTestId('icon-chevron-back');
     fireEvent.press(backIcon);
 
+    // Prove the component told the parent navigator to go back
     expect(mockOnBack).toHaveBeenCalledTimes(1);
   });
 });
