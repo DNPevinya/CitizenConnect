@@ -279,7 +279,8 @@ router.get('/admin/analytics', async (req, res) => {
       SELECT 
         COUNT(*) as total_complaints,
         COALESCE(SUM(CASE WHEN UPPER(status) IN ('PENDING', 'IN PROGRESS') THEN 1 ELSE 0 END), 0) as active_complaints,
-        COALESCE(SUM(CASE WHEN UPPER(status) = 'RESOLVED' THEN 1 ELSE 0 END), 0) as resolved_complaints
+        COALESCE(SUM(CASE WHEN UPPER(status) = 'RESOLVED' THEN 1 ELSE 0 END), 0) as resolved_complaints,
+        COALESCE(AVG(CASE WHEN UPPER(status) = 'RESOLVED' THEN DATEDIFF(resolved_at, created_at) END), 0) as avg_resolution_days
       FROM complaints
     `);
     
@@ -481,7 +482,13 @@ router.patch('/update-status/:id', async (req, res) => {
     if (complaintData.length === 0) return res.status(404).json({ success: false, message: "Not found" });
 
     const { user_id, title } = complaintData[0];
-    await db.query(`UPDATE complaints SET status = ? WHERE complaint_id = ?`, [status, complaintId]);
+    await db.query(`
+  UPDATE complaints 
+  SET 
+    status = ?, 
+    resolved_at = CASE WHEN UPPER(?) = 'RESOLVED' THEN NOW() ELSE resolved_at END 
+  WHERE complaint_id = ?
+`, [status, status, complaintId]);
     
     const notificationMsg = `Update on "${title}": Your complaint is now ${status.toUpperCase()}.`;
     await db.query(`INSERT INTO notifications (user_id, complaint_id, message) VALUES (?, ?, ?)`, [user_id, complaintId, notificationMsg]);

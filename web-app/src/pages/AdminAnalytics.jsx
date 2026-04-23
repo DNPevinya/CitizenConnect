@@ -118,7 +118,9 @@ export default function AdminAnalytics() {
             <div className="flex-1 flex items-center justify-center text-red-500 font-bold">Failed to load data.</div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+              {/* UPDATED: Changed md:grid-cols-4 to md:grid-cols-3 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                
                 <div className="bg-blue-50 p-5 rounded-xl border border-blue-100 shadow-sm relative">
                    <div className="w-8 h-8 rounded bg-blue-100 text-[#0041C7] flex items-center justify-center mb-3">
                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -141,14 +143,6 @@ export default function AdminAnalytics() {
                    </div>
                    <p className="text-[11px] font-bold text-[#F59E0B] mb-1">Active / Pending</p>
                    <h3 className="text-2xl font-extrabold text-orange-900">{analytics.kpis.active}</h3>
-                </div>
-
-                <div className="bg-purple-50 p-5 rounded-xl border border-purple-100 shadow-sm relative">
-                   <div className="w-8 h-8 rounded bg-purple-100 text-[#8B5CF6] flex items-center justify-center mb-3">
-                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                   </div>
-                   <p className="text-[11px] font-bold text-[#8B5CF6] mb-1">Citizen Satisfaction</p>
-                   <h3 className="text-2xl font-extrabold text-purple-900">{analytics.kpis.satisfaction}</h3>
                 </div>
               </div>
 
