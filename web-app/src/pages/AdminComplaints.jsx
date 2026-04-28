@@ -100,6 +100,17 @@ export default function AdminComplaints() {
     return new Date(dateString).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
+  // UNIFIED STATUS STYLE HELPER
+  const getStatusBadgeStyle = (status) => {
+    const s = status?.trim().toUpperCase();
+    if (s === 'PENDING') return 'bg-orange-50 text-orange-600 border-orange-200';
+    if (s === 'IN PROGRESS') return 'bg-blue-50 text-blue-600 border-blue-200';
+    if (s === 'RESOLVED') return 'bg-green-50 text-green-600 border-green-200';
+    if (s === 'REJECTED') return 'bg-red-100 text-red-700 border-red-300 animate-pulse';
+    if (s === 'CANCELLED') return 'bg-red-50 text-red-600 border-red-200'; // Now it is red!
+    return 'bg-slate-50 text-slate-600 border-slate-200'; // Fallback
+  };
+
   // 6. UI RENDER
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
@@ -133,6 +144,7 @@ export default function AdminComplaints() {
               <option value="IN PROGRESS">In Progress</option>
               <option value="RESOLVED">Resolved</option>
               <option value="REJECTED">Rejected (Action Required)</option>
+              <option value="CANCELLED">Cancelled</option>
             </select>
 
             <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} className="border border-[#E2E8F0] rounded-lg px-4 py-2.5 text-[13px] text-[#64748B] bg-[#FFFFFF] focus:outline-none focus:ring-2 focus:ring-[#0041C7]" />
@@ -181,12 +193,7 @@ export default function AdminComplaints() {
                         </td>
 
                         <td className="px-6 py-4 text-center">
-                          <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-md uppercase tracking-wider border ${
-                            c.status?.trim().toUpperCase() === 'PENDING' ? 'bg-orange-50 text-orange-600 border-orange-200' : 
-                            c.status?.trim().toUpperCase() === 'RESOLVED' ? 'bg-green-50 text-green-600 border-green-200' : 
-                            c.status?.trim().toUpperCase() === 'REJECTED' ? 'bg-red-100 text-red-700 border-red-300 animate-pulse' : 
-                            'bg-blue-50 text-blue-600 border-blue-200' 
-                          }`}>
+                          <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-md uppercase tracking-wider border ${getStatusBadgeStyle(c.status)}`}>
                             {c.status}
                           </span>
                         </td>

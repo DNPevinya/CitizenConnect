@@ -99,7 +99,7 @@ export default function AddAuthorityModal({ isOpen, onClose, refreshData, depart
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mt-4">
              <p className="text-[11px] text-[#0041C7] font-semibold">
                <span className="font-extrabold block mb-1">Note on Staffing:</span>
-               To assign officers to this new authority, please navigate to the User Management tab after creation.
+               To assign officers to this new authority, please navigate to the Officers tab after creation.
              </p>
           </div>
 

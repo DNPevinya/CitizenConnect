@@ -65,6 +65,17 @@ export default function AdminDashboard() {
   const openReassign = (id) => { setReassignId(id); setIsReassignOpen(true); };
   const openDetails = (id) => { setDetailsId(id); setIsDetailsOpen(true); };
 
+  // UNIFIED STATUS STYLE HELPER
+  const getStatusBadgeStyle = (status) => {
+    const s = status?.trim().toUpperCase();
+    if (s === 'PENDING') return 'bg-orange-50 text-orange-600 border-orange-200';
+    if (s === 'IN PROGRESS') return 'bg-blue-50 text-blue-600 border-blue-200';
+    if (s === 'RESOLVED') return 'bg-green-50 text-green-600 border-green-200';
+    if (s === 'REJECTED') return 'bg-red-100 text-red-700 border-red-300 animate-pulse';
+    if (s === 'CANCELLED') return 'bg-red-50 text-red-600 border-red-200'; // Now it is red!
+    return 'bg-slate-50 text-slate-600 border-slate-200'; // Fallback
+  };
+
   // 4. UI RENDER
   return (
     <div className="flex h-screen bg-[#F8FAFC] font-sans overflow-hidden">
@@ -154,10 +165,7 @@ export default function AdminDashboard() {
                       </td>
 
                       <td className="px-6 py-4 text-center">
-                         <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-md uppercase tracking-wider ${
-                           c.status?.trim().toUpperCase() === 'PENDING' ? 'bg-red-50 text-red-600 border border-red-100' : 
-                           c.status?.trim().toUpperCase() === 'RESOLVED' ? 'bg-green-50 text-green-600 border border-green-100' : 'bg-amber-50 text-amber-600 border border-amber-100'
-                         }`}>
+                         <span className={`px-2.5 py-1 text-[10px] font-extrabold rounded-md uppercase tracking-wider border ${getStatusBadgeStyle(c.status)}`}>
                            {c.status}
                          </span>
                       </td>
