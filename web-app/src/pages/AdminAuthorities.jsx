@@ -59,6 +59,10 @@ export default function AdminAuthorities() {
 
   const totalAuthorities = authorities.length;
   const totalOfficers = authorities.reduce((sum, a) => sum + (a.officer_count || 0), 0);
+  const authoritiesWithCoverage = authorities.filter(a => a.officer_count > 0).length;
+  const activeNetworkPercentage = totalAuthorities > 0 
+    ? Math.round((authoritiesWithCoverage / totalAuthorities) * 100) 
+    : 0;
 
   const openEdit = (auth) => { setEditData(auth); setIsEditOpen(true); };
   const openDelete = (id) => { setDeleteId(id); setIsDeleteOpen(true); };
@@ -104,7 +108,7 @@ export default function AdminAuthorities() {
               </div>
               <div>
                 <p className="text-[10px] font-bold text-[#64748B] uppercase tracking-wider mb-0.5">Active Network</p>
-                <h3 className="text-2xl font-extrabold text-[#1E293B]">100%</h3>
+                <h3 className="text-2xl font-extrabold text-[#1E293B]">{activeNetworkPercentage}%</h3>
               </div>
             </div>
 
@@ -160,7 +164,7 @@ export default function AdminAuthorities() {
                       <td className="px-6 py-4 text-[13px] text-[#64748B] font-semibold">{auth.department}</td>
                       <td className="px-6 py-4 text-[13px] font-bold text-[#1E293B]">{auth.region}</td>
                       <td className="px-6 py-4 text-[13px] font-bold text-[#0041C7] text-center">
-                        <span className="bg-blue-50 px-2 py-1 rounded">
+                        <span className={`px-2 py-1 rounded ${auth.officer_count === 0 ? 'bg-red-50 text-red-600' : 'bg-blue-50'}`}>
                           {auth.officer_count} Officers
                         </span>
                       </td>

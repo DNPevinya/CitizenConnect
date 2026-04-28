@@ -180,12 +180,13 @@ router.patch('/reassign/:id', async (req, res) => {
 
 router.get('/admin/authorities-list', async (req, res) => {
   try {
+    // UPDATED QUERY: Only counting Active officers now
     const query = `
       SELECT 
         a.authority_id, a.name, a.department, a.region, 
         COUNT(o.officer_id) as officer_count
       FROM authorities a
-      LEFT JOIN officers o ON a.authority_id = o.authority_id
+      LEFT JOIN officers o ON a.authority_id = o.authority_id AND UPPER(o.status) = 'ACTIVE'
       GROUP BY a.authority_id
       ORDER BY a.authority_id DESC
     `;
