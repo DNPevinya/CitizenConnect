@@ -355,6 +355,26 @@ router.post('/submit', upload.array('images', 3), async (req, res) => {
   if (req.files && req.files.length > 0) image_url = req.files.map(file => `/uploads/${file.filename}`).join(',');
 
   try {
+    if (latitude && longitude) {
+        const duplicateCheckQuery = `
+            SELECT complaint_id 
+            FROM complaints 
+            WHERE category = ? 
+            AND UPPER(status) NOT IN ('RESOLVED', 'REJECTED', 'CANCELLED')
+            AND latitude IS NOT NULL AND longitude IS NOT NULL
+            AND ST_Distance_Sphere(point(longitude, latitude), point(?, ?)) <= 50
+            LIMIT 1
+        `;
+        const [existingComplaints] = await db.query(duplicateCheckQuery, [category, longitude, latitude]);
+
+        if (existingComplaints.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: "An issue of this exact type has already been reported at this location. Our team is aware and it is currently in our system."
+            });
+        }
+    }
+
     const targetDept = issueToDepartmentMap[title] || "Local Council"; 
     const targetCity = extractCity(location_text);
     let assigned_authority_id = null;

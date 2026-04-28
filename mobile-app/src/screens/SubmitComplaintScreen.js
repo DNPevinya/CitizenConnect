@@ -220,10 +220,25 @@ export default function SubmitComplaintScreen({ onBack, userId }) {
       const res = await fetch(`${SERVER_URL}/api/complaints/submit`, {
         method: 'POST', body: formData, headers: { 'Accept': 'application/json', 'Content-Type': 'multipart/form-data' },
       });
-      if (res.ok) Alert.alert("Success", "Report Submitted!", [{ text: "OK", onPress: onBack }]);
-      else Alert.alert("Error", "Submission failed.");
-    } catch (e) { Alert.alert("Error", "Server error."); }
-    finally { setLoading(false); }
+      
+      const data = await res.json();
+
+      if (res.status === 409) {
+        Alert.alert(
+          "Already Reported",
+          data.message || "An issue of this type has already been reported at this location.",
+          [{ text: "Understood", style: "cancel" }]
+        );
+      } else if (res.ok) {
+        Alert.alert("Success", "Report Submitted!", [{ text: "OK", onPress: onBack }]);
+      } else {
+        Alert.alert("Error", data.message || "Submission failed.");
+      }
+    } catch (e) { 
+      Alert.alert("Error", "Server error. Please check your connection."); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   // 4. UI RENDER
