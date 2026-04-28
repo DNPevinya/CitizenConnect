@@ -180,7 +180,6 @@ router.patch('/reassign/:id', async (req, res) => {
 
 router.get('/admin/authorities-list', async (req, res) => {
   try {
-    // UPDATED QUERY: Only counting Active officers now
     const query = `
       SELECT 
         a.authority_id, a.name, a.department, a.region, 
