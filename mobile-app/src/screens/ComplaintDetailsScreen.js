@@ -6,7 +6,13 @@ import { WebView } from 'react-native-webview';
 import { BASE_URL } from '../../src/config';
 import { apiFetch } from '../utils/apiClient';
 
-export default function ComplaintDetailsScreen({ onBack, complaintId }) {
+/**
+ * @param {Object} props
+ * @param {() => void} props.onBack
+ * @param {string|number|null} props.complaintId
+ * @param {() => void} [props.onNavigateToChat]
+ */
+export default function ComplaintDetailsScreen({ onBack, complaintId, onNavigateToChat }) {
   // 1. STATE & HOOKS
   const [complaint, setComplaint] = useState(null);
   const [loading, setLoading] = useState(true);
