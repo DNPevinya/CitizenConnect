@@ -5,6 +5,15 @@ import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { apiFetch } from '../utils/apiClient';
 
+const getStatusBadgeStyle = (status) => {
+  const s = status?.trim().toUpperCase();
+  if (s === 'PENDING') return 'bg-red-50 text-red-600 border-red-200';
+  if (s === 'IN PROGRESS') return 'bg-yellow-50 text-yellow-600 border-yellow-200';
+  if (s === 'RESOLVED' || s === 'COMPLETED') return 'bg-green-50 text-green-600 border-green-200';
+  if (s === 'CANCELLED') return 'bg-gray-100 text-gray-700 border-gray-300';
+  return 'bg-slate-50 text-slate-600 border-slate-200';
+};
+
 export default function OfficerComplaints() {
   // 1. STATE & HOOKS
   const navigate = useNavigate();
@@ -64,6 +73,7 @@ export default function OfficerComplaints() {
                 <option>Pending</option>
                 <option>In Progress</option>
                 <option>Resolved</option>
+                <option>Cancelled</option>
               </select>
             </div>
             <div className="overflow-x-auto flex-1">
@@ -87,7 +97,7 @@ export default function OfficerComplaints() {
                       </td>
                       <td className="px-6 py-4 text-[13px] text-[#64748B]">{c.title}</td>
                       <td className="px-6 py-4">
-                        <span className="px-2.5 py-1 bg-[#F1F5F9] text-[#475569] text-[10px] font-bold rounded-full uppercase">{c.status}</span>
+                        <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase border tracking-wider ${getStatusBadgeStyle(c.status)}`}>{c.status}</span>
                       </td>
                       <td className="px-6 py-4 text-center">
                         <button onClick={() => navigate(`/officer/complaint-details?id=${c.complaint_id}`)} className="p-1.5 text-[#0041C7] bg-[#F0F5FF] rounded border border-[#DBEAFE] hover:bg-[#0041C7] hover:text-white transition-all">
