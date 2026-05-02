@@ -107,7 +107,6 @@ export default function Settings() {
           <div className="max-w-4xl mx-auto w-full flex-1">
             <div className="mb-8">
               <h2 className="text-2xl font-extrabold text-[#1E293B]">Settings & Profile</h2>
-              <p className="text-[13px] text-[#64748B] mt-1">Manage security and view assigned department identity.</p>
             </div>
 
             <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-sm mb-8">

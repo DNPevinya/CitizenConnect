@@ -100,7 +100,6 @@ export default function AdminAnalytics() {
           <div className="flex justify-between items-end mb-6">
             <div>
               <h2 className="text-2xl font-extrabold text-[#1E293B]">Statistical Insights</h2>
-              <p className="text-[13px] text-[#64748B] mt-1">Real-time national performance data.</p>
             </div>
             <div className="flex space-x-3">
               <button 

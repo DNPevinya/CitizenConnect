@@ -20,7 +20,7 @@ const upload = multer({ storage: storage });
 
 // 3. API ROUTES
 router.post('/register', async (req, res) => {
-    // ADDED: Destructured 'nic' from req.body
+    // Destructured 'nic' from req.body
     const { fullName, phone, email, district, division, password, nic } = req.body;
 
     try {
@@ -29,7 +29,7 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: "This email is already registered." });
         }
 
-        // ADDED: Check if the NIC already exists in the citizens table
+        // Check if the NIC already exists in the citizens table
         const [existingNic] = await db.query("SELECT * FROM citizens WHERE nic = ?", [nic]);
         if (existingNic.length > 0) {
             return res.status(409).json({ message: "An account with this NIC already exists." });
@@ -43,8 +43,8 @@ router.post('/register', async (req, res) => {
         
         const newUserId = userResult.insertId; 
 
-        // ADDED: Insert the 'nic' into the citizens table
-        const citizenSql = `INSERT INTO citizens (user_id, fullName, phone, district, division, nic) VALUES (?, ?, ?, ?, ?, ?)`;
+        // Insert the 'nic' and default 'Active' status into the citizens table
+        const citizenSql = `INSERT INTO citizens (user_id, fullName, phone, district, division, nic, status) VALUES (?, ?, ?, ?, ?, ?, 'Active')`;
         await db.query(citizenSql, [newUserId, fullName, phone, district, division, nic]);
 
         res.status(201).json({ message: "Citizen registered successfully!" });
@@ -79,16 +79,18 @@ router.post('/login', async (req, res) => {
         if (user.role === 'citizen') {
             const [citizens] = await db.query(`SELECT * FROM citizens WHERE user_id = ?`, [user.user_id]);
             if (citizens.length > 0) {
+                // Check if suspended
+                if (citizens[0].status === 'Suspended') {
+                    return res.status(403).json({ message: "Your account has been suspended. Please contact support." });
+                }
+
                 userProfile.fullName = citizens[0].fullName;
                 userProfile.phone = citizens[0].phone;
                 userProfile.district = citizens[0].district;
                 userProfile.division = citizens[0].division;
                 userProfile.profilePicture = citizens[0].profilePicture || null;
-                
-                // ADDED: Attach the NIC to the returned user profile
                 userProfile.nic = citizens[0].nic;
 
-                // Format the phone number for Firebase Recaptcha flow (+94 format required)
                 let cleanPhone = citizens[0].phone.toString().replace(/\s+/g, '').replace(/^0+/, '');
                 let formattedPhone = `+94${cleanPhone}`;
 
@@ -99,7 +101,6 @@ router.post('/login', async (req, res) => {
                     { expiresIn: '24h' }
                 );
 
-                // Intercept standard login for citizens to require 2FA
                 return res.status(200).json({
                     status: "2FA_REQUIRED",
                     message: "Password verified. Proceed to OTP.",
@@ -149,7 +150,6 @@ router.put('/update-profile', upload.single('profileImage'), async (req, res) =>
     const { email, fullName, phone, district, division, currentPassword, newPassword, deleteImage } = req.body;
 
     try {
-        // ADDED: Added c.nic to the SELECT query so the backend has access to it during profile updates
         const fetchSql = `
             SELECT u.*, c.profilePicture, c.nic 
             FROM users u 
@@ -247,6 +247,43 @@ router.post('/update-password', async (req, res) => {
 });
 
 // 4. ADMIN ROUTES
+router.get('/admin/citizens', authMiddleware, async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                c.citizen_id, 
+                c.fullName, 
+                u.email, 
+                c.phone, 
+                c.nic, 
+                c.district,
+                c.division,
+                c.status,
+                u.created_at 
+            FROM citizens c
+            JOIN users u ON c.user_id = u.user_id
+            WHERE u.role = 'citizen'
+            ORDER BY u.created_at DESC
+        `;
+        const [rows] = await db.query(query);
+        res.json({ success: true, data: rows });
+    } catch (err) {
+        console.error("Fetch Citizens Error:", err.message);
+        res.status(500).json({ success: false, message: "Failed to fetch citizen list." });
+    }
+});
+
+router.patch('/admin/suspend-citizen/:id', authMiddleware, async (req, res) => {
+    const { status } = req.body; 
+    try {
+        await db.query('UPDATE citizens SET status = ? WHERE citizen_id = ?', [status, req.params.id]);
+        res.json({ success: true, message: `Account status updated to ${status}` });
+    } catch (err) {
+        console.error("Suspension Error:", err.message);
+        res.status(500).json({ success: false, message: "Failed to update citizen status." });
+    }
+});
+
 router.get('/admin/officers-list', authMiddleware, async (req, res) => {
   try {
     const query = `

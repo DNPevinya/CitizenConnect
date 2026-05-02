@@ -474,6 +474,7 @@ router.get('/:id', async (req, res) => {
         a.name as authority_name,
         cit.fullName as citizen_name,
         cit.phone as citizen_phone,
+        cit.nic as citizen_nic,
         u.email as citizen_email
       FROM complaints c 
       LEFT JOIN authorities a ON c.authority_id = a.authority_id 

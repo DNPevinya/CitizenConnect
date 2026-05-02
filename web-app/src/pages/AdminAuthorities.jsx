@@ -81,7 +81,6 @@ export default function AdminAuthorities() {
           <div className="mb-6 flex justify-between items-end">
             <div>
               <h2 className="text-2xl font-extrabold text-[#1E293B]">Authority Management</h2>
-              <p className="text-[13px] text-[#64748B] mt-1">Configure and manage municipal authorities.</p>
             </div>
             <button 
               onClick={() => setIsAddOpen(true)} 

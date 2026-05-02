@@ -89,7 +89,6 @@ export default function AdminOfficerManagement() {
           <div className="mb-8 flex justify-between items-end">
             <div>
               <h2 className="text-2xl font-extrabold text-[#1E293B]">Officer Management</h2>
-              <p className="text-[13px] text-[#64748B] mt-1">Manage department officers, system access levels, and credentials.</p>
             </div>
             <button 
               onClick={() => setIsAddOpen(true)} 

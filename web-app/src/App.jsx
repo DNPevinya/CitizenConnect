@@ -11,6 +11,7 @@ import AdminComplaints from './pages/AdminComplaints';
 import AdminAuthorities from './pages/AdminAuthorities';
 import AdminOfficerManagement from './pages/AdminOfficerManagement';
 import AdminAnalytics from './pages/AdminAnalytics';
+import UserManagement from './pages/UserManagement';
 
 // Officer Pages
 import OfficerDashboard from './pages/OfficerDashboard';
@@ -33,6 +34,7 @@ export default function App() {
         {/* --- ADMIN ROUTES --- */}
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/complaints" element={<AdminComplaints />} />
+        <Route path="/admin/users" element={<UserManagement />} />
         <Route path="/authorities" element={<AdminAuthorities />} />
         <Route path="admin/officers" element={<AdminOfficerManagement />} />
         <Route path="/analytics" element={<AdminAnalytics />} />

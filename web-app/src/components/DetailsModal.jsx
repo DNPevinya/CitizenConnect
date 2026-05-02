@@ -44,7 +44,6 @@ export default function DetailsModal({ isOpen, onClose, complaintId }) {
   // 4. UI RENDER
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
-      
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
         
         <div className="px-6 py-5 border-b border-[#E2E8F0] flex justify-between items-center bg-white">
@@ -78,7 +77,6 @@ export default function DetailsModal({ isOpen, onClose, complaintId }) {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
               
               <div className="md:col-span-3 space-y-6">
-                
                 <div>
                   <h4 className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center mb-3">
                     <svg className="w-4 h-4 mr-1.5 text-[#0041C7]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
@@ -91,13 +89,19 @@ export default function DetailsModal({ isOpen, onClose, complaintId }) {
                         <p className="text-[13px] font-bold text-[#1E293B]">{data.citizen_name || 'Anonymous User'}</p>
                       </div>
                       <div>
+                        <p className="text-[10px] text-[#64748B] font-semibold mb-1">NIC Number</p>
+                        <p className="text-[13px] font-bold text-[#0041C7]">{data.citizen_nic || 'N/A'}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
                         <p className="text-[10px] text-[#64748B] font-semibold mb-1">Phone Number</p>
                         <p className="text-[13px] font-bold text-[#1E293B]">{data.citizen_phone || 'Not Provided'}</p>
                       </div>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-[#64748B] font-semibold mb-1">Email Address</p>
-                      <p className="text-[13px] font-bold text-[#1E293B]">{data.citizen_email || 'Not Provided'}</p>
+                      <div>
+                        <p className="text-[10px] text-[#64748B] font-semibold mb-1">Email Address</p>
+                        <p className="text-[13px] font-bold text-[#1E293B]">{data.citizen_email || 'Not Provided'}</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -130,11 +134,9 @@ export default function DetailsModal({ isOpen, onClose, complaintId }) {
                     </div>
                   </div>
                 )}
-
               </div>
 
               <div className="md:col-span-2 space-y-6">
-                
                 <div>
                   <h4 className="text-[11px] font-bold text-[#64748B] uppercase tracking-wider flex items-center mb-3">
                     <svg className="w-4 h-4 mr-1.5 text-[#0041C7]" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
@@ -181,7 +183,6 @@ export default function DetailsModal({ isOpen, onClose, complaintId }) {
                     )}
                   </div>
                 </div>
-
               </div>
             </div>
           )}
