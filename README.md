@@ -1,9 +1,9 @@
 <div align="center">
 
-# UrbanSync 🏙️
+# UrbanSync 
 
 <!-- Note: Add your logo to an 'assets' folder in your repository to display it here -->
-<img src="./assets/urbansync-logo.png" alt="UrbanSync Logo" width="220"/>
+<img src="./mobile-app/assets/images/smartlogo.png" alt="UrbanSync Logo" width="220"/>
 
 ### 🌍 Centralized Smart-Governance & Issue Management Platform
 
