@@ -4,7 +4,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { translations } from '../../src/translations'; 
+
+import i18n from '../../src/translations'; // 👈 Updated Import
 import { BASE_URL } from '../../src/config';
 
 import NationalBadge from '../components/NationalBadge';
@@ -13,7 +14,6 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
   // 1. STATE & HOOKS
   const SERVER_URL = BASE_URL;
   const [imageFailed, setImageFailed] = useState(false);
-
   const [currentLang, setCurrentLang] = useState('en');
 
   // 2. LIFECYCLE & UTILITIES
@@ -21,7 +21,10 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
     useCallback(() => {
       const loadLang = async () => {
         const savedLang = await AsyncStorage.getItem('userLanguage');
-        if (savedLang) setCurrentLang(savedLang);
+        if (savedLang) {
+          setCurrentLang(savedLang);
+          i18n.locale = savedLang; // 👈 Sync i18n engine with saved state
+        }
       };
       loadLang();
     }, [])
@@ -29,14 +32,13 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
 
   const changeLanguage = async (lang) => {
     setCurrentLang(lang);
+    i18n.locale = lang; // 👈 Update engine instantly on press
     await AsyncStorage.setItem('userLanguage', lang);
   };
 
-  const t = translations[currentLang]; 
-
   // 3. HELPER FUNCTIONS
   const getInitials = (fullName) => {
-    if (!fullName || fullName === 'Citizen') return "??";
+    if (!fullName || fullName === i18n.t('citizen_fallback', { defaultValue: 'Citizen' })) return "??";
     const names = fullName.trim().split(/\s+/);
     if (names.length > 1) {
       return (names[0][0] + names[names.length - 1][0]).toUpperCase();
@@ -65,8 +67,8 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.topNavBar}>
         <View>
-          <Text style={styles.greetingText}>{t.settings}</Text>
-          <Text style={styles.navTitle}>{t.my_profile}</Text>
+          <Text style={styles.greetingText}>{i18n.t('settings', { defaultValue: 'SETTINGS' })}</Text>
+          <Text style={styles.navTitle}>{i18n.t('my_profile', { defaultValue: 'My Profile' })}</Text>
         </View>
 
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -90,8 +92,14 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
             )}
           </View>
           <View style={styles.profileTextInfo}>
-            <Text style={styles.userName} numberOfLines={1}>{userName || 'Citizen'}</Text>
-            <Text style={styles.userDetails} numberOfLines={1}>{userEmail || 'email@example.com'}</Text>
+            <Text style={styles.userName} numberOfLines={1}>
+              {userName || i18n.t('citizen_fallback', { defaultValue: 'Citizen' })}
+            </Text>
+            
+            {/* SAFE EMAIL RENDER: Only shows if userEmail actually exists */}
+            {userEmail ? (
+              <Text style={styles.userDetails} numberOfLines={1}>{userEmail}</Text>
+            ) : null}
             
             {initialData?.nic && (
                <View style={styles.nicBadge}>
@@ -109,7 +117,7 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
           </View>
         </View>
 
-        <Text style={styles.sectionLabel}>{t.change_lang}</Text>
+        <Text style={styles.sectionLabel}>{i18n.t('change_lang', { defaultValue: 'CHANGE LANGUAGE' })}</Text>
         <View style={styles.langToggleContainer}>
             {['en', 'si', 'ta'].map((lang) => (
               <TouchableOpacity 
@@ -124,23 +132,23 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
             ))}
         </View>
         
-        <Text style={styles.sectionLabel}>{t.account_mgmt}</Text>
-        <MenuOption icon="person-outline" label={t.edit_profile} onPress={onNavigateToEdit} />
+        <Text style={styles.sectionLabel}>{i18n.t('account_mgmt', { defaultValue: 'ACCOUNT MANAGEMENT' })}</Text>
+        <MenuOption icon="person-outline" label={i18n.t('edit_profile', { defaultValue: 'Edit Profile' })} onPress={onNavigateToEdit} />
 
-        <Text style={styles.sectionLabel}>{t.support_legal}</Text>
-        <MenuOption icon="help-circle-outline" label={t.help} onPress={onNavigateToHelp} />
-        <MenuOption icon="chatbubbles-outline" label={t.faq} onPress={onNavigateToFAQ} />
-        <MenuOption icon="document-text-outline" label={t.terms} onPress={onNavigateToTerms} />
-        <MenuOption icon="shield-checkmark-outline" label={t.privacy} onPress={onNavigateToPrivacy} />
+        <Text style={styles.sectionLabel}>{i18n.t('support_legal', { defaultValue: 'SUPPORT & LEGAL' })}</Text>
+        <MenuOption icon="help-circle-outline" label={i18n.t('help', { defaultValue: 'Help Center' })} onPress={onNavigateToHelp} />
+        <MenuOption icon="chatbubbles-outline" label={i18n.t('faq', { defaultValue: 'FAQs' })} onPress={onNavigateToFAQ} />
+        <MenuOption icon="document-text-outline" label={i18n.t('terms', { defaultValue: 'Terms of Service' })} onPress={onNavigateToTerms} />
+        <MenuOption icon="shield-checkmark-outline" label={i18n.t('privacy', { defaultValue: 'Privacy Policy' })} onPress={onNavigateToPrivacy} />
 
         <TouchableOpacity style={styles.logoutBtn} onPress={onLogout} activeOpacity={0.8}>
           <Ionicons name="log-out-outline" size={22} color="#EF4444" />
-          <Text style={styles.logoutText}>{t.signout}</Text>
+          <Text style={styles.logoutText}>{i18n.t('signout', { defaultValue: 'Sign Out' })}</Text>
         </TouchableOpacity>
 
         <View style={styles.footerInfo}>
-          <Text style={styles.footerText}>UrbanSync Urban Services</Text>
-          <Text style={styles.versionText}>VERSION 1.0</Text>
+          <Text style={styles.footerText}>{i18n.t('footer_company', { defaultValue: 'UrbanSync Urban Services' })}</Text>
+          <Text style={styles.versionText}>{i18n.t('version_text', { defaultValue: 'VERSION 1.0' })}</Text>
         </View>
         
       </ScrollView>

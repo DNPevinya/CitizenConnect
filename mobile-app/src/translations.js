@@ -4,6 +4,7 @@ export const translations = {
     welcome: "Welcome Back",
     subtitle: "Log in to report a complaint or provide feedback to UrbanSync.",
     email_label: "Email Address",
+    nic_label: "NIC Number",
     pass_label: "Password",
     forgot: "Forgot Password?",
     signin: "Sign In",
@@ -127,6 +128,7 @@ export const translations = {
     welcome: "නැවතත් සාදරයෙන් පිළිගනිමු",
     subtitle: "පැමිණිල්ලක් ඉදිරිපත් කිරීමට හෝ UrbanSync වෙත ප්‍රතිපෝෂණ ලබා දීමට ලොග් වන්න.",
     email_label: "විද්‍යුත් තැපෑල",
+    nic_label: "ජාතික හැඳුනුම්පත් අංකය",
     pass_label: "මුරපදය",
     forgot: "මුරපදය අමතකද?",
     signin: "ඇතුල් වන්න",
@@ -250,6 +252,7 @@ export const translations = {
     welcome: "மீண்டும் வருக",
     subtitle: "புகாரைப் பதிவுசெய்ய அல்லது UrbanSync-க்கு கருத்து தெரிவிக்க உள்நுழையவும்.",
     email_label: "மின்னஞ்சல் முகவரி",
+    nic_label: "தேசிய அடையாள அட்டை எண்",
     pass_label: "கடவுச்சொல்",
     forgot: "கடவுச்சொல்லை மறந்தீர்களா?",
     signin: "உள்நுழைக",
@@ -370,3 +373,9 @@ export const translations = {
     }
   }
 };
+const i18n = new I18n(translations);
+
+i18n.locale = 'en';
+i18n.enableFallback = true;
+
+export default i18n;

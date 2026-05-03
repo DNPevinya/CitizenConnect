@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { BASE_URL } from '../../src/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { translations } from '../../src/translations';
+import i18n from '../../src/translations'; 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
@@ -33,24 +33,26 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
   useEffect(() => {
     const loadLang = async () => {
       const savedLang = await AsyncStorage.getItem('userLanguage');
-      if (savedLang) setCurrentLang(savedLang);
+      if (savedLang) {
+        setCurrentLang(savedLang);
+        i18n.locale = savedLang; 
+      }
     };
     loadLang();
   }, []);
 
   const changeLanguage = async (lang) => {
     setCurrentLang(lang);
+    i18n.locale = lang; // 👈 Instantly switch i18n language
     await AsyncStorage.setItem('userLanguage', lang);
   };
-
-  const t = translations[currentLang];
 
   const validateForm = () => {
     let newErrors = {};
     const emailRegex = /\S+@\S+\.\S+/;
-    if (!email.trim()) newErrors.email = "Email or phone is required.";
-    else if (!emailRegex.test(email) && isNaN(email)) newErrors.email = "Please enter a valid email format.";
-    if (!password) newErrors.password = "Password is required.";
+    if (!email.trim()) newErrors.email = i18n.t('error_req_email_phone', { defaultValue: "Email or phone is required." });
+    else if (!emailRegex.test(email) && isNaN(email)) newErrors.email = i18n.t('error_invalid_email', { defaultValue: "Please enter a valid email format." });
+    if (!password) newErrors.password = i18n.t('error_req_password_login', { defaultValue: "Password is required." });
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -84,7 +86,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
 
         } catch (firebaseErr) {
           console.error("Firebase SMS Error:", firebaseErr);
-          setErrors({ server: "Failed to send SMS. Please check your number." });
+          setErrors({ server: i18n.t('error_sms_failed', { defaultValue: "Failed to send SMS. Please check your number." }) });
         }
 
       } else if (response.ok && data.user) {
@@ -104,10 +106,10 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
           data.user.nic 
         );
       } else {
-        setErrors({ server: data.message || "Invalid email or password." });
+        setErrors({ server: data.message || i18n.t('error_invalid_credentials', { defaultValue: "Invalid email or password." }) });
       }
     } catch (error) {
-      setErrors({ server: "Connection error. Check your Server IP & Wi-Fi." });
+      setErrors({ server: i18n.t('error_connection', { defaultValue: "Connection error. Check your Server IP & Wi-Fi." }) });
     } finally {
       setLoading(false);
     }
@@ -115,7 +117,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
 
   const handleVerifyOtp = async () => {
     if (otpCode.length !== 6) {
-      setErrors({ server: "Please enter a valid 6-digit code." });
+      setErrors({ server: i18n.t('error_invalid_otp_length', { defaultValue: "Please enter a valid 6-digit code." }) });
       return;
     }
 
@@ -144,7 +146,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
 
     } catch (error) {
       console.error("OTP Error:", error);
-      setErrors({ server: "Invalid OTP code. Please try again." });
+      setErrors({ server: i18n.t('error_invalid_otp', { defaultValue: "Invalid OTP code. Please try again." }) });
     } finally {
       setLoading(false);
     }
@@ -184,8 +186,8 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
             <View style={styles.logoWrapper}>
               <Image source={require('../../assets/images/smartlogo.png')} style={styles.logoImage} resizeMode="cover" />
             </View>
-            <Text style={styles.welcomeText}>{t.welcome}</Text>
-            <Text style={styles.subtitle}>{t.subtitle}</Text>
+            <Text style={styles.welcomeText}>{i18n.t('welcome')}</Text>
+            <Text style={styles.subtitle}>{i18n.t('subtitle')}</Text>
           </View>
 
           <View style={styles.form}>
@@ -198,11 +200,11 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
 
             {!isOtpMode ? (
               <>
-                <Text style={styles.label}>{t.email_label}</Text>
+                <Text style={styles.label}>{i18n.t('email_label')}</Text>
                 <View style={[styles.inputContainer, errors.email && styles.inputErrorBorder]}>
                   <Ionicons name="mail-outline" size={20} color="#0160C9" style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input} placeholder="e.g. citizen@example.com" value={email}
+                    style={styles.input} placeholder={i18n.t('placeholder_email', { defaultValue: "e.g. citizen@example.com" })} value={email}
                     onChangeText={(val) => { setEmail(val); setErrors({ ...errors, email: null, server: null }); }}
                     keyboardType="email-address" autoCapitalize="none" placeholderTextColor="#94A3B8"
                   />
@@ -210,15 +212,15 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
                 {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
 
                 <View style={styles.labelRow}>
-                  <Text style={styles.label}>{t.pass_label}</Text>
+                  <Text style={styles.label}>{i18n.t('pass_label')}</Text>
                   <TouchableOpacity onPress={onNavigateToForgot}>
-                    <Text style={styles.forgotText}>{t.forgot}</Text>
+                    <Text style={styles.forgotText}>{i18n.t('forgot')}</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={[styles.inputContainer, errors.password && styles.inputErrorBorder]}>
                   <Ionicons name="lock-closed-outline" size={20} color="#0160C9" style={styles.inputIcon} />
                   <TextInput
-                    style={styles.input} placeholder="Enter your password" value={password}
+                    style={styles.input} placeholder={i18n.t('placeholder_password_login', { defaultValue: "Enter your password" })} value={password}
                     onChangeText={(val) => { setPassword(val); setErrors({ ...errors, password: null, server: null }); }}
                     secureTextEntry={!showPassword} placeholderTextColor="#94A3B8"
                   />
@@ -234,7 +236,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
                   <LinearGradient colors={['#0041C7', '#0D85D8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.button, loading && { opacity: 0.7 }]}>
                     {loading ? <ActivityIndicator color="#fff" /> : (
                       <>
-                        <Text style={styles.buttonText}>{t.signin}</Text>
+                        <Text style={styles.buttonText}>{i18n.t('signin')}</Text>
                         <Ionicons name="arrow-forward" size={20} color="#fff" />
                       </>
                     )}
@@ -243,9 +245,9 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
               </>
             ) : (
               <>
-                <Text style={styles.label}>{t.otp_title}</Text>
+                <Text style={styles.label}>{i18n.t('otp_title')}</Text>
                 <Text style={{ fontSize: 13, color: '#64748B', marginBottom: 15, lineHeight: 20 }}>
-                  {t.otp_sub}
+                  {i18n.t('otp_sub')}
                 </Text>
 
                 <View style={[styles.inputContainer, { borderColor: '#0160C9', borderWidth: 2 }]}>
@@ -263,7 +265,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
                   <LinearGradient colors={['#10B981', '#059669']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.button, loading && { opacity: 0.7 }]}>
                     {loading ? <ActivityIndicator color="#fff" /> : (
                       <>
-                        <Text style={styles.buttonText}>{t.verify_btn}</Text>
+                        <Text style={styles.buttonText}>{i18n.t('verify_btn')}</Text>
                         <Ionicons name="checkmark-circle" size={20} color="#fff" />
                       </>
                     )}
@@ -274,7 +276,7 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
                   onPress={() => { setIsOtpMode(false); setOtpCode(''); }}
                   style={{ marginTop: 25, alignItems: 'center' }}
                 >
-                  <Text style={{ color: '#64748B', fontWeight: '700', fontSize: 14 }}>{t.cancel}</Text>
+                  <Text style={{ color: '#64748B', fontWeight: '700', fontSize: 14 }}>{i18n.t('cancel')}</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -282,14 +284,14 @@ export default function LoginScreen({ onLoginSuccess, onCreateAccount, onNavigat
 
           <View style={styles.footer}>
             <View style={styles.signupRow}>
-              <Text style={styles.noAccountText}>{t.new_user}</Text>
+              <Text style={styles.noAccountText}>{i18n.t('new_user')}</Text>
               <TouchableOpacity onPress={onCreateAccount}>
-                <Text style={styles.signupLink}>{t.create}</Text>
+                <Text style={styles.signupLink}>{i18n.t('create')}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.securityRow}>
               <MaterialIcons name="security" size={14} color="#0160C9" />
-              <Text style={styles.securityText}>SECURE ENCRYPTED CONNECTION</Text>
+              <Text style={styles.securityText}>{i18n.t('secure_connection')}</Text>
             </View>
           </View>
 

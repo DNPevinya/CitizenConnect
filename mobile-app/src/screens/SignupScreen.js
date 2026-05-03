@@ -6,7 +6,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import DropDownPicker from 'react-native-dropdown-picker'; 
 import { BASE_URL } from '../../src/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { translations } from '../../src/translations';
+import i18n from '../../src/translations'; 
 
 import NationalBadge from '../components/NationalBadge';
 import { apiFetch } from '../utils/apiClient';
@@ -43,7 +43,10 @@ export default function SignupScreen({
   useEffect(() => {
     const loadLang = async () => {
       const savedLang = await AsyncStorage.getItem('userLanguage');
-      if (savedLang) setCurrentLang(savedLang);
+      if (savedLang) {
+        setCurrentLang(savedLang);
+        i18n.locale = savedLang; 
+      }
     };
     loadLang();
   }, []);
@@ -70,11 +73,9 @@ export default function SignupScreen({
 
   const changeLanguage = async (lang) => {
     setCurrentLang(lang);
+    i18n.locale = lang; // 
     await AsyncStorage.setItem('userLanguage', lang);
   };
-
-  const t = translations[currentLang];
-
 
   useEffect(() => {
     if (districtValue && dynamicLocationData[districtValue]) {
@@ -91,16 +92,16 @@ export default function SignupScreen({
     const phoneRegex = /^[7]\d{8}$/; 
     const nicRegex = /^([0-9]{9}[vVxX]|[0-9]{12})$/;
 
-    if (!formData.fullName.trim()) newErrors.fullName = "Full name is required.";
-    if (!phoneRegex.test(formData.phone)) newErrors.phone = "Enter 9 digits starting with 7 (e.g. 771234567).";
-    if (!emailRegex.test(formData.email)) newErrors.email = "Enter a valid email address.";
+    if (!formData.fullName.trim()) newErrors.fullName = i18n.t('error_req_name', { defaultValue: "Full name is required." });
+    if (!phoneRegex.test(formData.phone)) newErrors.phone = i18n.t('error_req_phone', { defaultValue: "Enter 9 digits starting with 7 (e.g. 771234567)." });
+    if (!emailRegex.test(formData.email)) newErrors.email = i18n.t('error_req_email', { defaultValue: "Enter a valid email address." });
     
-    if (!nicRegex.test(formData.nic)) newErrors.nic = "Enter a valid NIC (e.g., 987654321V or 199876543210).";
+    if (!nicRegex.test(formData.nic)) newErrors.nic = i18n.t('error_req_nic', { defaultValue: "Enter a valid NIC (e.g., 987654321V or 199876543210)." });
     
-    if (!districtValue) newErrors.district = "Please select a district.";
-    if (!divisionValue) newErrors.division = "Please select a division.";
-    if (formData.password.length < 8) newErrors.password = "Password must be at least 8 characters.";
-    if (!isAgreed) newErrors.agreement = "You must agree to the terms.";
+    if (!districtValue) newErrors.district = i18n.t('error_req_district', { defaultValue: "Please select a district." });
+    if (!divisionValue) newErrors.division = i18n.t('error_req_division', { defaultValue: "Please select a division." });
+    if (formData.password.length < 8) newErrors.password = i18n.t('error_req_password', { defaultValue: "Password must be at least 8 characters." });
+    if (!isAgreed) newErrors.agreement = i18n.t('error_req_agree', { defaultValue: "You must agree to the terms." });
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -121,14 +122,16 @@ export default function SignupScreen({
       const data = await response.json();
 
       if (response.ok) {
-        Alert.alert("Success", "Account created successfully!", [
-          { text: "OK", onPress: () => onSignupSuccess(formData.fullName, formData.email, formData.phone, districtValue, divisionValue) }
-        ]);
+        Alert.alert(
+          i18n.t('success_title', { defaultValue: "Success" }), 
+          i18n.t('success_msg', { defaultValue: "Account created successfully!" }), 
+          [{ text: "OK", onPress: () => onSignupSuccess(formData.fullName, formData.email, formData.phone, districtValue, divisionValue) }]
+        );
       } else {
-        setErrors({ server: data.message || "Registration failed." });
+        setErrors({ server: data.message || i18n.t('error_server_failed', { defaultValue: "Registration failed." }) });
       }
     } catch (err) {
-      setErrors({ server: "Network Error: Please check your server connection." });
+      setErrors({ server: i18n.t('error_server_network', { defaultValue: "Network Error: Please check your server connection." }) });
     } finally {
       setLoading(false);
     }
@@ -165,8 +168,8 @@ export default function SignupScreen({
                 resizeMode="cover"
               />
             </View>
-            <Text style={styles.title}>{t.create}</Text>
-            <Text style={styles.subtitle}>{t.help_sub}</Text>
+            <Text style={styles.title}>{i18n.t('create')}</Text>
+            <Text style={styles.subtitle}>{i18n.t('help_sub')}</Text>
           </View>
 
           <View style={styles.form}>
@@ -177,33 +180,33 @@ export default function SignupScreen({
                </View>
             )}
 
-            <Text style={styles.label}>{t.full_name}</Text>
+            <Text style={styles.label}>{i18n.t('full_name')}</Text>
             <View style={[styles.inputContainer, errors.fullName && styles.inputErrorBorder]}>
               <Ionicons name="person-outline" size={20} color="#0160C9" style={styles.inputIcon} />
-              <TextInput style={styles.input} placeholder="Sunil Perera" placeholderTextColor="#94A3B8" value={formData.fullName} onChangeText={(v) => {setFormData({...formData, fullName: v}); setErrors({...errors, fullName: null})}} />
+              <TextInput style={styles.input} placeholder={i18n.t('placeholder_name', { defaultValue: "Sunil Perera" })} placeholderTextColor="#94A3B8" value={formData.fullName} onChangeText={(v) => {setFormData({...formData, fullName: v}); setErrors({...errors, fullName: null})}} />
             </View>
             {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
 
-            <Text style={styles.label}>{t.phone_label}</Text>
+            <Text style={styles.label}>{i18n.t('phone_label')}</Text>
             <View style={[styles.inputContainer, errors.phone && styles.inputErrorBorder]}>
               <Text style={styles.countryCode}>+94</Text>
               <TextInput style={styles.input} placeholder="77 123 4567" placeholderTextColor="#94A3B8" keyboardType="phone-pad" maxLength={9} value={formData.phone} onChangeText={(v) => {setFormData({...formData, phone: v}); setErrors({...errors, phone: null})}} />
             </View>
             {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
 
-            <Text style={styles.label}>{t.email_label}</Text>
+            <Text style={styles.label}>{i18n.t('email_label')}</Text>
             <View style={[styles.inputContainer, errors.email && styles.inputErrorBorder]}>
               <Ionicons name="mail-outline" size={20} color="#0160C9" style={styles.inputIcon} />
               <TextInput style={styles.input} placeholder="citizen@example.com" placeholderTextColor="#94A3B8" keyboardType="email-address" autoCapitalize="none" value={formData.email} onChangeText={(v) => {setFormData({...formData, email: v}); setErrors({...errors, email: null})}} />
             </View>
             {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
             
-            <Text style={styles.label}>{t.nic_label || "NIC NUMBER"}</Text>
+            <Text style={styles.label}>{i18n.t('nic_label') || "NIC NUMBER"}</Text>
             <View style={[styles.inputContainer, errors.nic && styles.inputErrorBorder]}>
               <Ionicons name="card-outline" size={20} color="#0160C9" style={styles.inputIcon} />
               <TextInput 
                 style={styles.input} 
-                placeholder="e.g. 199912345678 or 991234567V" 
+                placeholder={i18n.t('placeholder_nic', { defaultValue: "e.g. 199912345678 or 991234567V" })} 
                 placeholderTextColor="#94A3B8" 
                 autoCapitalize="characters"
                 maxLength={12} 
@@ -213,7 +216,7 @@ export default function SignupScreen({
             </View>
             {errors.nic && <Text style={styles.errorText}>{errors.nic}</Text>}
 
-            <Text style={styles.label}>{t.district}</Text>
+            <Text style={styles.label}>{i18n.t('district')}</Text>
             <View> 
               <DropDownPicker
                 open={districtOpen}
@@ -223,20 +226,20 @@ export default function SignupScreen({
                 setValue={setDistrictValue}
                 setItems={setDistrictItems}
                 onChangeValue={() => { setDivisionValue(null); setErrors({...errors, district: null}); }}
-                placeholder={locationsLoading ? "Loading..." : t.select_district}
+                placeholder={locationsLoading ? i18n.t('loading', { defaultValue: "Loading..." }) : i18n.t('select_district')}
                 style={[styles.dropdownStyle, errors.district && styles.inputErrorBorder]}
                 textStyle={styles.dropdownText}
                 placeholderStyle={styles.dropdownPlaceholder}
                 listMode="MODAL"
                 modalProps={{ animationType: "slide" }}
-                modalTitle={t.select_district}
+                modalTitle={i18n.t('select_district')}
                 modalTitleStyle={{ fontWeight: 'bold', color: '#0041C7', fontSize: 18 }}
                 disabled={locationsLoading}
               />
             </View>
             {errors.district && <Text style={styles.errorText}>{errors.district}</Text>}
 
-            <Text style={styles.label}>{t.division}</Text>
+            <Text style={styles.label}>{i18n.t('division')}</Text>
             <View style={{ opacity: districtValue ? 1 : 0.5, zIndex: -1 }}>
               <DropDownPicker
                 open={divisionOpen}
@@ -246,25 +249,25 @@ export default function SignupScreen({
                 setValue={setDivisionValue}
                 setItems={setDivisionItems}
                 onChangeValue={() => setErrors({...errors, division: null})}
-                placeholder={t.select_division}
+                placeholder={i18n.t('select_division')}
                 disabled={!districtValue || locationsLoading} 
                 style={[styles.dropdownStyle, errors.division && styles.inputErrorBorder]}
                 textStyle={styles.dropdownText}
                 placeholderStyle={styles.dropdownPlaceholder}
                 listMode="MODAL"
                 modalProps={{ animationType: "slide" }}
-                modalTitle={t.select_division}
+                modalTitle={i18n.t('select_division')}
                 modalTitleStyle={{ fontWeight: 'bold', color: '#0041C7', fontSize: 18 }}
               />
             </View>
             {errors.division && <Text style={styles.errorText}>{errors.division}</Text>}
 
-            <Text style={styles.label}>{t.pass_label}</Text>
+            <Text style={styles.label}>{i18n.t('pass_label')}</Text>
             <View style={[styles.inputContainer, errors.password && styles.inputErrorBorder]}>
               <Ionicons name="lock-closed-outline" size={20} color="#0160C9" style={styles.inputIcon} />
               <TextInput 
                 style={styles.input} 
-                placeholder="Create password" 
+                placeholder={i18n.t('placeholder_password', { defaultValue: "Create password" })} 
                 placeholderTextColor="#94A3B8" 
                 secureTextEntry={!showPassword} 
                 value={formData.password} 
@@ -274,27 +277,29 @@ export default function SignupScreen({
                 <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color="#64748B" />
               </TouchableOpacity>
             </View>
-            <Text style={[styles.helperText, errors.password ? {color: '#EF4444'} : {color: '#94A3B8'}]}>Must be at least 8 characters long</Text>
+            <Text style={[styles.helperText, errors.password ? {color: '#EF4444'} : {color: '#94A3B8'}]}>
+              {i18n.t('password_helper', { defaultValue: "Must be at least 8 characters long" })}
+            </Text>
 
             <View style={styles.checkboxRow}>
               <TouchableOpacity style={[styles.checkbox, isAgreed && styles.checkboxActive, errors.agreement && {borderColor: '#EF4444'}]} onPress={() => {setIsAgreed(!isAgreed); setErrors({...errors, agreement: null})}}>
                 {isAgreed && <Ionicons name="checkmark" size={14} color="#fff" />}
               </TouchableOpacity>
-              <Text style={styles.checkboxText}>{t.agree_text}</Text>
+              <Text style={styles.checkboxText}>{i18n.t('agree_text')}</Text>
             </View>
             {errors.agreement && <Text style={styles.errorText}>{errors.agreement}</Text>}
 
             <TouchableOpacity onPress={handleRegister} disabled={loading} activeOpacity={0.8}>
               <LinearGradient colors={['#0041C7', '#0D85D8']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.button, loading && { opacity: 0.7 }]}>
-                <Text style={styles.buttonText}>{loading ? "Saving..." : t.create}</Text>
+                <Text style={styles.buttonText}>{loading ? i18n.t('saving', { defaultValue: "Saving..." }) : i18n.t('create')}</Text>
                 <Ionicons name="arrow-forward" size={20} color="#fff" />
               </LinearGradient>
             </TouchableOpacity>
 
             <View style={styles.footer}>
-              <Text style={styles.footerText}>{t.have_account}</Text>
+              <Text style={styles.footerText}>{i18n.t('have_account')}</Text>
               <TouchableOpacity onPress={onBackToLogin}>
-                <Text style={styles.loginLink}>{t.signin}</Text>
+                <Text style={styles.loginLink}>{i18n.t('signin')}</Text>
               </TouchableOpacity>
             </View>
           </View>

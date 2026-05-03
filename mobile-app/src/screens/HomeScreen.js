@@ -6,7 +6,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient'; 
 
-import { translations } from '../../src/translations'; 
+import i18n from '../../src/translations'; 
 import { BASE_URL } from '../../src/config';
 import ChatbotModal from '../components/ChatbotModal';
 import NationalBadge from '../components/NationalBadge';
@@ -22,9 +22,8 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
   const [showChatbot, setShowChatbot] = useState(false);
 
   const SERVER_URL = BASE_URL;
-  const t = translations[currentLang];
 
-// 2. API HANDLERS
+  // 2. API HANDLERS
   const fetchDashboardData = async () => {
     try {
       const complaintsRes = await apiFetch(`${SERVER_URL}/api/complaints/user/${userId || 1}`);
@@ -43,20 +42,20 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
           const status = c.status?.toUpperCase();
           let color = '#FF9F43'; 
           let icon = 'clock-outline';
-          let desc = 'Report submitted and awaiting review.';
+          let desc = i18n.t('desc_pending', { defaultValue: 'Report submitted and awaiting review.' });
 
           if (status === 'IN PROGRESS') {
             color = '#0041C7'; 
             icon = 'tools';
-            desc = 'Engineers are actively working on this.';
+            desc = i18n.t('desc_progress', { defaultValue: 'Engineers are actively working on this.' });
           } else if (status === 'RESOLVED') {
             color = '#28C76F'; 
             icon = 'check-decagram-outline';
-            desc = 'Issue has been successfully resolved.';
+            desc = i18n.t('desc_resolved', { defaultValue: 'Issue has been successfully resolved.' });
           } else if (status === 'CANCELLED') {
             color = '#94A3B8'; 
             icon = 'close-circle-outline';
-            desc = 'This complaint was withdrawn.';
+            desc = i18n.t('desc_cancelled', { defaultValue: 'This complaint was withdrawn.' });
           }
 
           return {
@@ -89,7 +88,10 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
     useCallback(() => {
       const loadLang = async () => {
         const savedLang = await AsyncStorage.getItem('userLanguage');
-        if (savedLang) setCurrentLang(savedLang);
+        if (savedLang) {
+          setCurrentLang(savedLang);
+          i18n.locale = savedLang; 
+        }
       };
       loadLang();
       fetchDashboardData();
@@ -102,7 +104,7 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.topNavBar}>
         <View>
-          <Text style={styles.greetingText}>{t.greeting} {userFirstName || 'Citizen'}</Text>
+          <Text style={styles.greetingText}>{i18n.t('greeting', { defaultValue: 'Hello,' })} {userFirstName || i18n.t('citizen_fallback', { defaultValue: 'Citizen' })}</Text>
           <Text style={styles.navTitle}>UrbanSync</Text>
         </View>
 
@@ -117,7 +119,7 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{t.summary}</Text>
+          <Text style={styles.sectionTitle}>{i18n.t('summary')}</Text>
         </View>
         
         <View style={styles.statsRow}>
@@ -127,25 +129,25 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
             </View>
           ) : (
             <>
-              <StatCard label={t.total} value={stats.total} color="#1E293B" icon="file-document-outline" />
-              <StatCard label={t.active} value={stats.inProgress} color="#0041C7" icon="tools" />
-              <StatCard label={t.resolved} value={stats.resolved} color="#28C76F" icon="check-decagram-outline" />
+              <StatCard label={i18n.t('total')} value={stats.total} color="#1E293B" icon="file-document-outline" />
+              <StatCard label={i18n.t('active')} value={stats.inProgress} color="#0041C7" icon="tools" />
+              <StatCard label={i18n.t('resolved')} value={stats.resolved} color="#28C76F" icon="check-decagram-outline" />
             </>
           )}
         </View>
 
         <View style={styles.servicesContainer}>
-          <Text style={styles.servicesLabel}>{t.services}</Text>
-          <Text style={styles.helpHeading}>{t.help_today}</Text>
-          <Text style={styles.helpSubheading}>{t.help_sub}</Text>
+          <Text style={styles.servicesLabel}>{i18n.t('services')}</Text>
+          <Text style={styles.helpHeading}>{i18n.t('help_today')}</Text>
+          <Text style={styles.helpSubheading}>{i18n.t('help_today_sub')}</Text>
 
           <TouchableOpacity activeOpacity={0.9} style={styles.blueCard} onPress={onNavigateToSubmit}>
             <MaterialCommunityIcons name="bullhorn" size={120} color="#ffffff" style={styles.watermarkIcon} />
             <View style={styles.blueIconCircle}>
               <MaterialCommunityIcons name="bullhorn-outline" size={20} color="#ffffff" />
             </View>
-            <Text style={styles.blueCardTitle}>{t.report_issue}</Text>
-            <Text style={styles.blueCardDesc}>{t.report_sub}</Text>
+            <Text style={styles.blueCardTitle}>{i18n.t('report_issue')}</Text>
+            <Text style={styles.blueCardDesc}>{i18n.t('report_sub')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity activeOpacity={0.8} style={styles.whiteCard} onPress={onNavigateToView}>
@@ -153,23 +155,23 @@ export default function HomeScreen({ userFirstName, userId, onNavigateToSubmit, 
               <MaterialCommunityIcons name="file-document-outline" size={26} color="#0041C7" />
             </View>
             <View style={styles.whiteCardTextContainer}>
-              <Text style={styles.whiteCardTitle}>{t.track_req}</Text>
-              <Text style={styles.whiteCardDesc}>{t.track_sub}</Text>
+              <Text style={styles.whiteCardTitle}>{i18n.t('track_req')}</Text>
+              <Text style={styles.whiteCardDesc}>{i18n.t('track_sub')}</Text>
             </View>
           </TouchableOpacity>
         </View>
 
         <View style={[styles.sectionHeader, { marginTop: 10 }]}>
-            <Text style={styles.sectionTitle}>{t.recent}</Text>
+            <Text style={styles.sectionTitle}>{i18n.t('recent')}</Text>
             <TouchableOpacity onPress={onNavigateToView} activeOpacity={0.6}>
-              <Text style={styles.seeAllLink}>{t.see_all}</Text>
+              <Text style={styles.seeAllLink}>{i18n.t('see_all')}</Text>
             </TouchableOpacity>
         </View>
         
         {loading ? (
           <ActivityIndicator color="#0041C7" style={{ marginTop: 20 }} />
         ) : recentActivities.length === 0 ? (
-          <Text style={styles.emptyText}>{t.no_activity}</Text>
+          <Text style={styles.emptyText}>{i18n.t('no_activity')}</Text>
         ) : (
           recentActivities.map((item) => (
             <TouchableOpacity key={item.id} onPress={() => onNavigateToDetails(item.id)} activeOpacity={0.7}>
