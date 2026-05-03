@@ -1,86 +1,114 @@
-<div align="center">
+# UrbanSync 🏛️
 
-# UrbanSync 
+<p align="center">
+  <img src="./mobile-app/assets/images/smartlogo.png" alt="UrbanSync Logo" width="200"/>
+</p>
 
-<!-- Note: Add your logo to an 'assets' folder in your repository to display it here -->
-<img src="./mobile-app/assets/images/smartlogo.png" alt="UrbanSync Logo" width="220"/>
-
-### 🌍 Centralized Smart-Governance & Issue Management Platform
-
-*Bridging the gap between citizens and local authorities through transparent, location-aware public issue reporting and automated resolution workflows.*
-
-</div>
+<p align="center">
+  <b>🌍 Centralized Smart-Governance Platform</b><br>
+  <i>Bridging the gap between citizens and local authorities through transparent, location-aware reporting.</i>
+</p>
 
 ---
 
 ## 🎯 Overview
 
-**UrbanSync** is a cutting-edge, comprehensive platform designed to revolutionize municipal governance. By integrating a mobile citizen app with powerful web-based departmental portals, UrbanSync replaces fragmented reporting methods with a unified, data-driven ecosystem. 
+**UrbanSync** is a cutting-edge smart-governance solution designed to revolutionize how urban complaints and municipal service requests are managed in Sri Lanka. Our platform transforms traditionally fragmented administrative processes into a structured, data-driven, and transparent digital workflow.
 
-### 🔥 Core Pillars
+### 🔥 Core Mission
 
-* **👁️ Transparency:** Real-time status tracking and automated citizen notifications for every step of the resolution lifecycle.
-* **⚡ Efficiency:** Intelligent auto-assignment of complaints based on precise geolocation and departmental jurisdictions.
-* **📊 Accountability:** Data-driven performance monitoring for government departments via a centralized Super Admin command center.
+*   **TRANSPARENCY:** Real-time status tracking and automated citizen notifications for every step of the resolution lifecycle.
+*   **EFFICIENCY:** Intelligent auto-assignment of complaints based on precise geolocation and departmental jurisdictions.
+*   **ACCOUNTABILITY:** Data-driven performance monitoring via a centralized Super Admin command center.
 
 ---
 
 ## ✨ Key Features
 
-### 👤 For Citizens (Mobile App)
-* **📍 Pinpoint Geotagged Reporting:** Submit issues with precise GPS coordinates for highly accurate field-team dispatch.
-* **🛡️ Smart Duplicate Detection:** A spatial-logic engine (`ST_Distance_Sphere`) automatically identifies and prevents redundant reports for the exact same issue within a 50-meter radius.
-* **🔐 Secure 2FA Onboarding:** Integrated Firebase OTP verification ensures every reporter is a verified, authentic citizen.
-* **📸 Evidence-Based Reporting:** Multi-image upload support provides immediate visual context to authorities.
+| 📍 Pinpoint Geotagged Reporting | 🤖 AI-Powered Chatbot | 🛡️ Secure 2FA Onboarding |
+| :---: | :---: | :---: |
+| precise GPS coordinates for accurate field-team dispatch | NLP-driven assistance for clear and actionable complaint descriptions | Integrated Firebase OTP verification for verified citizen identity |
 
-### 👮‍♂️ For Officers (Departmental Portal)
-* **🏢 Restricted Authority Workspace:** A streamlined dashboard securely filtered to show only complaints strictly within the officer's regional and departmental jurisdiction.
-* **🔄 Status Lifecycle Management:** Seamless one-click transitions (Pending → In Progress → Resolved) that instantly trigger live citizen alerts.
-* **🚩 Internal Escalation:** Flag complex or ambiguous reports to Super Admins using secure, internal "Escalation Notes".
-
-### 👑 For Super Admins (Master Dashboard)
-* **🗺️ Workload Heatmaps:** High-level visual analytics displaying real-time case distributions across all national departments.
-* **🔀 Dynamic Authority Reassignment:** Seamlessly route misfiled complaints to the correct authority without breaking data links or losing history.
-* **📈 Performance KPIs:** Automated tracking of average resolution times and departmental completion rates.
+| 📊 Workload Heatmaps | 🔄 Status Lifecycle | 🌐 Multi-language Support |
+| :---: | :---: | :---: |
+| Real-time case distribution analytics for Super Admins | One-click transitions (Pending → Resolved) with instant alerts | Full support for Sinhala, Tamil, and English (i18n) |
 
 ---
 
 ## 🛠️ Technology Stack
 
-**Frontend Ecosystem**
-* 📱 **Mobile:** React Native, Expo, React Navigation
-* 💻 **Web/Admin:** React.js (Vite), Tailwind CSS, Chart.js
-
-**Backend & Infrastructure**
-* ⚙️ **Server:** Node.js, Express.js (RESTful API)
-* 🗄️ **Database:** MySQL (Highly Normalized 3NF Architecture)
-* 🤖 **AI Integration:** OpenAI API (GPT-4) for automated issue categorization and priority analysis
-* 📁 **Media:** Multer (Secure multi-part image uploads and storage)
-
-**Security & Auth**
-* 🔑 **Authentication:** JWT (JSON Web Tokens) & Firebase OTP
-* 🛡️ **Encryption:** bcrypt (Industrial-grade password hashing)
-* 🚦 **Authorization:** Custom Role-Based Access Control (RBAC) middleware
+![React Native](https://img.shields.io/badge/React_Native-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-00000F?style=for-the-badge&logo=mysql&logoColor=white)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![OpenAI](https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
 ---
 
-## 🏛️ Architecture & Security Highlights
+## 🏗️ Architecture & Security
 
-* **Database Excellence (3NF):** Designed with a decoupled architecture. A master `users` table handles credentials, while `citizens` and `officers` store role-specific metadata. Geographical data is cleanly normalized into `districts` and `divisions`, enabling dynamic cascading reassignments and entirely eliminating data duplication.
-* **Regex-Validated Identity:** Strict NIC (National Identity Card) formatting validation prevents duplicate or fake citizen profiles.
-* **Bulletproof Middleware:** All administrative and officer routes are guarded by strict role-verification middleware, ensuring complete data isolation.
-* **SQL Sanitization:** Absolute reliance on parameterized queries (via `mysql2`) to completely neutralize SQL Injection vulnerabilities.
+*   **Database Excellence (3NF):** Highly normalized MySQL schema ensuring data integrity across users, citizens, officers, and complaints.
+*   **Spatial Logic Engine:** Uses `ST_Distance_Sphere` to identify and prevent redundant reports within a 50-meter radius.
+*   **Role-Based Access Control (RBAC):** Strict JWT-guarded middleware ensures officers only access departmental data while citizens are restricted to their own profiles.
+*   **Identity Validation:** Regex-validated NIC (National Identity Card) verification to eliminate duplicate profiles.
 
 ---
 
-## 🚀 Quick Start / Development Setup
-
-### Prerequisites
-* **Node.js** (v18 or higher) 📦
-* **MySQL Server** 🗄️
-* **Expo Go** app (for mobile testing) 📱
+## 🚀 Installation & Setup
 
 ### 1. Clone the Repository
 ```bash
 git clone [https://github.com/yourusername/UrbanSync.git](https://github.com/yourusername/UrbanSync.git)
 cd UrbanSync
+2. Environment Configuration
+Create a .env file in the root directory of your backend to store sensitive credentials. These variables ensure the system can connect to your database, handle security, and interact with the OpenAI API for the AI Chatbot.
+
+Code snippet
+# Database Configuration
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+DB_NAME=urbansync_db
+
+# Security
+JWT_SECRET=your_super_secret_key
+
+# Third-Party Integrations
+OPENAI_API_KEY=your_openai_api_key
+FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+5. Database Setup
+Initialize MySQL: Ensure your MySQL server (like XAMPP or MySQL Workbench) is running.
+
+Create Schema: Create a database named urbansync_db.
+
+Normalization: Ensure your tables follow the 3NF Architecture (Third Normal Form) discussed in your implementation, separating users, citizens, officers, and complaints to maintain data integrity.
+
+6. Launch Commands
+Run these commands in separate terminals to start the entire ecosystem:
+
+Backend (API)
+
+Bash
+cd backend
+npm install
+npm run dev
+The server typically runs on port 5000.
+
+Mobile App (Citizen Tier)
+
+Bash
+cd mobile-app
+npm install
+npx expo start
+Open the Expo Go app on your phone and scan the QR code to test features like GPS location capture and image uploads.
+
+Web Portal (Admin Tier)
+
+Bash
+cd web-app
+npm install
+npm run dev
+Access the Administrative Dashboard to manage complaints and view the Super Admin analytics.
