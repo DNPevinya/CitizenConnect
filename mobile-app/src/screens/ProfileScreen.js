@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import i18n from '../../src/translations'; // 👈 Updated Import
+import i18n from '../../src/translations'; 
 import { BASE_URL } from '../../src/config';
 
 import NationalBadge from '../components/NationalBadge';
@@ -23,7 +23,7 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
         const savedLang = await AsyncStorage.getItem('userLanguage');
         if (savedLang) {
           setCurrentLang(savedLang);
-          i18n.locale = savedLang; // 👈 Sync i18n engine with saved state
+          i18n.locale = savedLang; 
         }
       };
       loadLang();
@@ -32,7 +32,7 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
 
   const changeLanguage = async (lang) => {
     setCurrentLang(lang);
-    i18n.locale = lang; // 👈 Update engine instantly on press
+    i18n.locale = lang; 
     await AsyncStorage.setItem('userLanguage', lang);
   };
 
@@ -95,8 +95,7 @@ export default function ProfileScreen({ userName, userEmail, initialData, onNavi
             <Text style={styles.userName} numberOfLines={1}>
               {userName || i18n.t('citizen_fallback', { defaultValue: 'Citizen' })}
             </Text>
-            
-            {/* SAFE EMAIL RENDER: Only shows if userEmail actually exists */}
+   
             {userEmail ? (
               <Text style={styles.userDetails} numberOfLines={1}>{userEmail}</Text>
             ) : null}
